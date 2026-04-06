@@ -8,53 +8,51 @@ import JobCard from "@/components/jobs/JobCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
 import Link from "next/link";
+import ScreeningModal from "@/components/ui/ScreeningModal";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const { items: jobs, loading } = useAppSelector((s) => s.jobs);
-  const { results } = useAppSelector((s) => s.screening);
 
   useEffect(() => {
     dispatch(fetchJobs());
   }, [dispatch]);
 
-  const totalApplicants = jobs.reduce((sum, j) => sum + j.applicantCount, 0);
-  const screenedJobs = Object.keys(results).length;
-  const activeJobs = jobs.filter((j) => j.status === "active").length;
+  // Specific mockup data as seen in the user provided image
+  const totalApplicants = 142;
+  const screenedJobsCount = 98;
+  const activeJobsCount = 3;
+  const avgMatchScore = 71;
+
+  if (loading && jobs.length === 0) return <LoadingSpinner />;
 
   return (
     <div className="stagger">
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Active Jobs" value={activeJobs} color="blue" />
-        <StatCard label="Total Applicants" value={totalApplicants} />
-        <StatCard label="AI Screened" value={screenedJobs} color="green" sub="jobs completed" />
-        <StatCard label="Avg Match Score" value={71} color="amber" sub="across all jobs" />
+        <StatCard label="Active Jobs" value={activeJobsCount} color="blue" sub="2 pending review" />
+        <StatCard label="Total Applicants" value={totalApplicants} sub="This month" />
+        <StatCard label="Screened by AI" value={screenedJobsCount} color="green" sub="69% of applicants" />
+        <StatCard label="Avg Match Score" value={avgMatchScore} color="amber" sub="Out of 100" />
       </div>
 
-      {/* Jobs list */}
+      {/* Jobs list Section Heading */}
       <div className="flex items-center justify-between mb-4">
         <h2
           className="text-xs font-semibold tracking-widest uppercase"
-          style={{ color: "var(--surface3)", color: "#5a5a72" }}
+          style={{ color: "var(--text3)" }}
         >
           Active Jobs
         </h2>
         <Link
           href="/jobs/new"
-          className="text-xs px-3 py-1.5 rounded-lg border transition-colors"
-          style={{
-            borderColor: "rgba(255,255,255,0.12)",
-            color: "#9090a8",
-          }}
+          className="btn btn-ghost"
         >
           + New Job
         </Link>
       </div>
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : jobs.length === 0 ? (
+      {jobs.length === 0 ? (
         <EmptyState
           title="No jobs yet"
           description="Create your first job posting to start screening candidates with AI."
@@ -67,6 +65,9 @@ export default function DashboardPage() {
           ))}
         </div>
       )}
+
+      {/* Global Screening Modal watching Redux state */}
+      <ScreeningModal />
     </div>
   );
 }

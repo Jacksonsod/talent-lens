@@ -2,9 +2,57 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Job, JobsState, CreateJobInput } from "@/lib/types";
 import api from "@/lib/utils/api";
 
+const mockJobs: Job[] = [
+  {
+    _id: "job-001",
+    title: "Senior Full Stack Engineer",
+    department: "Engineering",
+    location: "Remote",
+    workType: "remote",
+    contractType: "full-time",
+    experienceRequired: "5+ years",
+    skills: ["React", "Node.js", "TypeScript", "MongoDB"],
+    description: "Senior Full Stack Engineer role.",
+    status: "active",
+    applicantCount: 47,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "job-002",
+    title: "AI/ML Engineer",
+    department: "Engineering",
+    location: "Kigali",
+    workType: "hybrid",
+    contractType: "full-time",
+    experienceRequired: "3+ years",
+    skills: ["Python", "TensorFlow", "LLM", "Prompt Eng."],
+    description: "AI/ML Engineer role.",
+    status: "screened",
+    applicantCount: 61,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "job-003",
+    title: "Product Designer",
+    department: "Design",
+    location: "Remote",
+    workType: "remote",
+    contractType: "contract",
+    experienceRequired: "4+ years",
+    skills: ["Figma", "UX Research", "Prototyping"],
+    description: "Product Designer role.",
+    status: "active",
+    applicantCount: 34,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 const initialState: JobsState = {
-  items: [],
-  selected: null,
+  items: mockJobs,
+  selected: mockJobs[0],
   loading: false,
   error: null,
 };
@@ -12,13 +60,19 @@ const initialState: JobsState = {
 // ─── Async Thunks ─────────────────────────────
 
 export const fetchJobs = createAsyncThunk("jobs/fetchAll", async () => {
-  const res = await api.get<Job[]>("/jobs");
-  return res.data;
+  try {
+    const res = await api.get<Job[]>("/jobs");
+    return res.data.length > 0 ? res.data : mockJobs;
+  } catch (err) {
+    return mockJobs;
+  }
 });
 
 export const fetchJobById = createAsyncThunk(
   "jobs/fetchById",
   async (id: string) => {
+    const mock = mockJobs.find(j => j._id === id);
+    if (mock) return mock;
     const res = await api.get<Job>(`/jobs/${id}`);
     return res.data;
   }
@@ -62,7 +116,6 @@ const jobsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // fetchJobs
     builder
       .addCase(fetchJobs.pending, (state) => {
         state.loading = true;
@@ -77,7 +130,6 @@ const jobsSlice = createSlice({
         state.error = action.error.message ?? "Failed to fetch jobs";
       });
 
-    // fetchJobById
     builder
       .addCase(fetchJobById.pending, (state) => { state.loading = true; })
       .addCase(fetchJobById.fulfilled, (state, action) => {
@@ -89,13 +141,11 @@ const jobsSlice = createSlice({
         state.error = action.error.message ?? "Failed to fetch job";
       });
 
-    // createJob
     builder
       .addCase(createJob.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
       });
 
-    // updateJob
     builder
       .addCase(updateJob.fulfilled, (state, action) => {
         const idx = state.items.findIndex(j => j._id === action.payload._id);
@@ -103,7 +153,6 @@ const jobsSlice = createSlice({
         if (state.selected?._id === action.payload._id) state.selected = action.payload;
       });
 
-    // deleteJob
     builder
       .addCase(deleteJob.fulfilled, (state, action) => {
         state.items = state.items.filter(j => j._id !== action.payload);

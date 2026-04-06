@@ -30,26 +30,20 @@ export default function Topbar() {
     >
       <h1
         className="font-display font-bold text-xl tracking-tight"
-        style={{ color: "#f0f0f5" }}
+        style={{ color: "var(--text)" }}
       >
         {title}
       </h1>
       <div className="flex items-center gap-2.5">
         <Link
           href="/upload"
-          className="px-4 py-2 rounded-lg text-[13px] font-medium border transition-colors"
-          style={{
-            background: "transparent",
-            borderColor: "rgba(255,255,255,0.12)",
-            color: "#9090a8",
-          }}
+          className="btn btn-ghost"
         >
           Upload CVs
         </Link>
         <Link
           href="/jobs/new"
-          className="px-4 py-2 rounded-lg text-[13px] font-medium transition-all"
-          style={{ background: "#7c6fff", color: "#fff" }}
+          className="btn btn-primary"
         >
           + New Job
         </Link>

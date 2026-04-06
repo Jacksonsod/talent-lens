@@ -44,21 +44,21 @@ export default function Sidebar() {
         style={{ borderBottom: "1px solid var(--border)" }}
       >
         <div
-          className="font-display font-black text-lg tracking-tight"
-          style={{ color: "#f0f0f5" }}
+          className="font-display font-extrabold text-[18px] tracking-tight"
+          style={{ color: "var(--text)" }}
         >
           TalentAI
         </div>
         <div
           className="text-[10px] tracking-widest uppercase mt-0.5"
-          style={{ color: "#5a5a72" }}
+          style={{ color: "var(--text3)" }}
         >
           Powered by Umurava
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 pt-4 overflow-y-auto">
+      <nav className="flex-1 px-3 mt-4 overflow-y-auto">
         <NavSection label="Main" items={navItems} isActive={isActive} />
         <NavSection label="Tools" items={toolItems} isActive={isActive} />
       </nav>
@@ -72,18 +72,18 @@ export default function Sidebar() {
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
             style={{
-              background: "rgba(124,111,255,0.15)",
-              border: "1px solid rgba(124,111,255,0.4)",
-              color: "#7c6fff",
+              background: "var(--accent-dim)",
+              border: "1px solid var(--accent)",
+              color: "var(--accent)",
             }}
           >
             HR
           </div>
-          <div>
-            <div className="text-[13px] font-medium" style={{ color: "#f0f0f5" }}>
+          <div className="min-w-0">
+            <div className="text-[13px] font-medium truncate" style={{ color: "var(--text)" }}>
               Hope Rukundo
             </div>
-            <div className="text-[11px]" style={{ color: "#5a5a72" }}>
+            <div className="text-[11px]" style={{ color: "var(--text3)" }}>
               Recruiter
             </div>
           </div>
@@ -106,7 +106,7 @@ function NavSection({
     <div className="mb-2">
       <div
         className="text-[10px] font-semibold tracking-widest uppercase px-2 mb-1.5 mt-4"
-        style={{ color: "#5a5a72" }}
+        style={{ color: "var(--text3)" }}
       >
         {label}
       </div>
@@ -118,15 +118,11 @@ function NavSection({
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] mb-0.5 transition-all",
+              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13.5px] mb-0.5 transition-all duration-150",
               active
-                ? "text-[#7c6fff]"
-                : "hover:text-[#f0f0f5]"
+                ? "text-[var(--accent)] bg-[var(--accent-dim)]"
+                : "text-[var(--text2)] hover:bg-[var(--surface2)] hover:text-[var(--text)]"
             )}
-            style={{
-              color: active ? "#7c6fff" : "#9090a8",
-              background: active ? "rgba(124,111,255,0.12)" : "transparent",
-            }}
           >
             <Icon size={15} />
             <span>{item.label}</span>
@@ -134,8 +130,8 @@ function NavSection({
               <span
                 className="ml-auto text-[11px] px-1.5 py-0.5 rounded-full"
                 style={{
-                  background: "rgba(124,111,255,0.15)",
-                  color: "#7c6fff",
+                  background: "var(--accent-dim)",
+                  color: "var(--accent)",
                 }}
               >
                 {item.badge}
