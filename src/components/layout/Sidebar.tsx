@@ -27,8 +27,11 @@ const toolItems = [
 export default function Sidebar() {
   const pathname = usePathname();
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    if (pathname === href) return true;
+    if (href === "/jobs" && pathname.startsWith("/jobs/new")) return false;
+    return pathname.startsWith(href + "/");
+  };
 
   return (
     <aside
