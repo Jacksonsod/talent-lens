@@ -4,14 +4,22 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/lib/hooks/redux";
 import { createJob } from "@/lib/slices/jobsSlice";
-import { runScreening } from "@/lib/slices/screeningSlice";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
+
+const SUGGESTIONS: Record<string, string[]> = {
+  "Full Stack": ["React", "Node.js", "TypeScript", "Next.js", "MongoDB"],
+  "Frontend": ["React", "CSS", "TypeScript", "Tailwind", "Next.js"],
+  "Backend": ["Node.js", "PostgreSQL", "Redis", "Docker", "AWS"],
+  "Designer": ["Figma", "UX Research", "Prototyping", "UI Design"],
+  "Mobile": ["React Native", "Swift", "Kotlin", "Firebase"],
+};
 
 export default function JobForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -21,8 +29,26 @@ export default function JobForm() {
     description: "Standard job description.",
   });
 
-  const [skills, setSkills] = useState<string[]>(["react"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
+
+  const handleSuggestSkills = async () => {
+    if (!formData.title) {
+      return toast.error("Enter a job title first!");
+    }
+    setSuggesting(true);
+    // Simulate AI suggestion
+    setTimeout(() => {
+      const match = Object.keys(SUGGESTIONS).find(k => 
+        formData.title.toLowerCase().includes(k.toLowerCase())
+      );
+      const newSkills = match ? SUGGESTIONS[match] : ["Communication", "Problem Solving", "Teamwork"];
+      
+      setSkills(Array.from(new Set([...skills, ...newSkills])));
+      setSuggesting(false);
+      toast.success("AI suggested skills added!", { icon: "✨" });
+    }, 1000);
+  };
 
   const handleAddSkill = (e: React.KeyboardEvent) => {
     if (e.key === "," || e.key === "Enter") {
@@ -56,10 +82,9 @@ export default function JobForm() {
         })
       ).unwrap();
 
-      toast.success("Job created successfully!");
-      // Automatically trigger the AI screening simulation
-      dispatch(runScreening(job._id));
-      router.push("/dashboard");
+      toast.success("Job created!");
+      // Phase 2 Alignment: Redirect to Job Hub [id]
+      router.push(`/jobs/${job._id}`);
     } catch (err) {
       toast.error("Failed to create job.");
     } finally {
@@ -116,9 +141,21 @@ export default function JobForm() {
           border: "1px solid var(--border)",
         }}
       >
-        <div className="font-display font-bold text-lg mb-4" style={{ color: "var(--text)" }}>
-          Required Skills
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-display font-bold text-lg" style={{ color: "var(--text)" }}>
+            Required Skills
+          </div>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent-dim)] transition-all animate-pulse-ai"
+            onClick={handleSuggestSkills}
+            disabled={suggesting}
+          >
+            <Sparkles size={14} />
+            {suggesting ? "AI Suggesting..." : "Suggest with Gemini"}
+          </button>
         </div>
+
         <div className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: "var(--text3)" }}>
           Add Skills Manually
         </div>
@@ -166,7 +203,7 @@ export default function JobForm() {
           className="btn btn-primary h-12 w-[80%] max-w-[600px] text-base"
           disabled={loading}
         >
-          {loading ? "Creating..." : "Create Job & Start Screening"}
+          {loading ? "Creating..." : "Create Job Post"}
         </button>
         <button
           type="button"
