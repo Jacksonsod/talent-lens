@@ -1,6 +1,5 @@
 name: TalentLens API CI
 
-# This triggers the workflow on pushes or pull requests to the main branch
 on:
   push:
     branches: [ "main" ]
@@ -12,17 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x' # Using a stable, modern Node version
+          node-version: '20.x'
           cache: 'npm'
 
-      - name: Install Dependencies
-        run: npm ci # npm ci is faster and stricter than npm install for automated environments
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Build TypeScript Code
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build TypeScript
         run: npm run build
