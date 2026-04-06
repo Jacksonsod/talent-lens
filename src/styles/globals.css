@@ -147,3 +147,206 @@ h1, h2, h3, .font-display {
 .btn-green:hover {
   background: var(--green-mid);
 }
+
+/* ════════════════════════════════════════════════════
+   LOGIN PAGE
+   ════════════════════════════════════════════════════ */
+
+.lp-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F0F2F5;
+  padding: 32px 16px;
+  overflow: auto;
+}
+
+/* Card */
+.lp-card {
+  width: 100%;
+  max-width: 480px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 44px 48px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  animation: fadeUp 0.45s ease forwards;
+}
+
+/* Header */
+.lp-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.lp-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: #111827;
+  letter-spacing: -0.6px;
+  margin-bottom: 8px;
+}
+.lp-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.5;
+}
+
+/* Error */
+.lp-error {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.22);
+  color: #DC2626;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* Fields */
+.lp-field {
+  margin-bottom: 20px;
+}
+.lp-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 8px;
+}
+.lp-input-wrap {
+  position: relative;
+}
+.lp-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.lp-input::placeholder {
+  color: #9CA3AF;
+}
+.lp-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+}
+.lp-input-wrap .lp-input {
+  padding-right: 48px;
+}
+.lp-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+.lp-eye:hover { color: #2563EB; }
+
+/* Submit */
+.lp-submit {
+  width: 100%;
+  height: 50px;
+  background: #2563EB;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+  margin-bottom: 20px;
+  margin-top: 8px;
+  letter-spacing: 0.1px;
+}
+.lp-submit:hover:not(:disabled) {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+}
+.lp-submit:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+.lp-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Divider */
+.lp-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: #9CA3AF;
+  font-size: 13px;
+}
+.lp-divider::before,
+.lp-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #E5E7EB;
+}
+
+/* Google */
+.lp-google {
+  width: 100%;
+  height: 50px;
+  background: #fff;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  margin-bottom: 28px;
+}
+.lp-google:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+/* Footer */
+.lp-footer {
+  font-size: 13.5px;
+  color: #6B7280;
+  text-align: center;
+}
+.lp-signup-link {
+  color: #2563EB;
+  font-weight: 600;
+  text-decoration: none;
+}
+.lp-signup-link:hover { text-decoration: underline; }
+
