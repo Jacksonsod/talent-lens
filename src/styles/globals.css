@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --surface3: #242432;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --green: #00e5a0;
+  --amber: #ffb547;
+  --red: #ff6b6b;
+  --blue: #6b8aff;
+  --accent: #7c6fff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background: var(--bg);
+  color: #f0f0f5;
+  font-family: 'DM Sans', sans-serif;
+  height: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a52; }
+
+/* Pulse animation for AI dot */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Fade up animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease forwards;
+}
+
+/* Stagger children */
+.stagger > *:nth-child(1) { animation-delay: 0.05s; opacity: 0; animation: fadeUp 0.4s ease forwards; }
+.stagger > *:nth-child(2) { animation-delay: 0.1s;  opacity: 0; animation: fadeUp 0.4s ease forwards; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; opacity: 0; animation: fadeUp 0.4s ease forwards; }
+.stagger > *:nth-child(4) { animation-delay: 0.2s;  opacity: 0; animation: fadeUp 0.4s ease forwards; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; opacity: 0; animation: fadeUp 0.4s ease forwards; }
