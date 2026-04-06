@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
+import { Job } from "@/lib/types";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
 import StatCard from "@/components/ui/StatCard";
 import JobCard from "@/components/jobs/JobCard";
@@ -44,12 +45,6 @@ export default function DashboardPage() {
         >
           Active Jobs
         </h2>
-        <Link
-          href="/jobs/new"
-          className="btn btn-ghost"
-        >
-          + New Job
-        </Link>
       </div>
 
       {jobs.length === 0 ? (
@@ -60,7 +55,7 @@ export default function DashboardPage() {
         />
       ) : (
         <div className="flex flex-col gap-3">
-          {jobs.map((job) => (
+          {jobs.map((job: Job) => (
             <JobCard key={job._id} job={job} />
           ))}
         </div>

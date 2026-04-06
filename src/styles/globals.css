@@ -141,8 +141,8 @@ h1, h2, h3, .font-display {
 
 .btn-green {
   background: var(--green-dim);
-  color: var(--green);
-  border-color: rgba(0,229,160,0.2);
+  color: #047857; /* Darker green for accessibility */
+  border-color: rgba(16,185,129,0.2);
 }
 .btn-green:hover {
   background: var(--green-mid);
