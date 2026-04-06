@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 import { useAppDispatch } from "@/lib/hooks/redux";
-import { uploadCandidates } from "@/lib/slices/screeningSlice";
+import { runScreening } from "@/lib/slices/screeningSlice";
+import ScreeningModal from "@/components/ui/ScreeningModal";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const handleUpload = async () => {
     setIsUploading(true);
@@ -19,6 +22,12 @@ export default function UploadPage() {
       setIsUploading(false);
       toast.success("5 candidates parsed successfully!", { id: "upload" });
     }, 1500);
+  };
+
+  const handleStartScreening = () => {
+    // Defaulting to job-001 for the demo workflow
+    dispatch(runScreening("job-001"));
+    toast.success("AI Screening started for Senior Full Stack Engineer");
   };
 
   return (
@@ -43,7 +52,10 @@ export default function UploadPage() {
             <h2 className="text-sm font-bold font-display text-[var(--text2)] uppercase tracking-wider">
               Preview — 5 candidates parsed
             </h2>
-            <button className="btn btn-green">
+            <button 
+              className="btn btn-green animate-pulse-ai"
+              onClick={handleStartScreening}
+            >
               ▶ Screen These Candidates
             </button>
           </div>
@@ -81,6 +93,9 @@ export default function UploadPage() {
           </div>
         </div>
       )}
+
+      {/* Global Screening Modal */}
+      <ScreeningModal />
     </div>
   );
 }
