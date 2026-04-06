@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { ScanSearch } from "lucide-react";
 
 // ─── EmptyState ───────────────────────────────
 interface EmptyStateProps {
@@ -19,7 +20,14 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
         borderColor: "var(--border)",
       }}
     >
-      <div className="text-4xl mb-4">🔍</div>
+      <div className="flex justify-center mb-4">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center"
+          style={{ background: "#EFF6FF", border: "1.5px solid #BFDBFE" }}
+        >
+          <ScanSearch size={30} color="#2563EB" strokeWidth={1.6} />
+        </div>
+      </div>
       <div
         className="font-display font-bold text-base mb-2"
         style={{ color: "var(--text)" }}

@@ -9,6 +9,7 @@ import CandidateCard from "@/components/screening/CandidateCard";
 import StatCard from "@/components/ui/StatCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { calcAverageScore } from "@/lib/utils/helpers";
+import { ClipboardList } from "lucide-react";
 
 export default function ShortlistPage() {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +32,14 @@ export default function ShortlistPage() {
   if (!shortlist) {
     return (
       <div className="text-center py-20" style={{ color: "var(--text3)" }}>
-        <div className="text-3xl mb-3">📋</div>
+        <div className="flex justify-center mb-3">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: "#EEF2FF", border: "1.5px solid #C7D2FE" }}
+          >
+            <ClipboardList size={28} color="#4F46E5" strokeWidth={1.6} />
+          </div>
+        </div>
         <div className="font-display font-bold text-base mb-2" style={{ color: "var(--text)" }}>
           No shortlist yet
         </div>

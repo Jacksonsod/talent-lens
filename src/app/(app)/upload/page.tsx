@@ -6,6 +6,7 @@ import { runScreening } from "@/lib/slices/screeningSlice";
 import ScreeningModal from "@/components/ui/ScreeningModal";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { UploadCloud } from "lucide-react";
 
 export default function UploadPage() {
   const [showPreview, setShowPreview] = useState(false);
@@ -37,7 +38,14 @@ export default function UploadPage() {
         className="border-1.5 border-dashed border-[var(--border2)] rounded-xl py-12 px-6 text-center cursor-pointer transition-all hover:border-[var(--accent)] hover:bg-[var(--accent-dim)] group mb-8"
         onClick={handleUpload}
       >
-        <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📁</div>
+        <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{ background: "#EFF6FF", border: "1.5px solid #BFDBFE" }}
+          >
+            <UploadCloud size={30} color="#2563EB" strokeWidth={1.6} />
+          </div>
+        </div>
         <div className="font-display font-semibold text-base mb-1" style={{ color: "var(--text)" }}>
           Drop your CSV or PDF resumes here
         </div>

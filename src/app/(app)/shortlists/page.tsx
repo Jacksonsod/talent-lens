@@ -4,6 +4,7 @@ import React from "react";
 import EmptyState from "@/components/ui/EmptyState";
 import { useAppSelector } from "@/lib/hooks/redux";
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 
 export default function ShortlistsPage() {
   const { results } = useAppSelector((s) => s.screening);
@@ -30,8 +31,11 @@ export default function ShortlistsPage() {
                 className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] transition-all group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-dim)] flex items-center justify-center text-xl">
-                    📋
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ background: "#EEF2FF", border: "1.5px solid #C7D2FE" }}
+                  >
+                    <ClipboardList size={19} color="#4F46E5" strokeWidth={1.8} />
                   </div>
                   <div className="text-[12px] text-[var(--text3)]">
                     {results[id].shortlistCount} candidates
