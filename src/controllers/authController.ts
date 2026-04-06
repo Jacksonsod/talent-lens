@@ -95,6 +95,17 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       user: toAuthResponseUser(user),
     });
   } catch (error) {
+    if (error instanceof Error) {
+      console.error('Register user error:', error.message);
+    } else {
+      console.error('Register user error:', error);
+    }
+
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000) {
+      res.status(409).json({ message: 'User already exists.' });
+      return;
+    }
+
     res.status(500).json({ message: 'Failed to register user.' });
   }
 };
@@ -145,6 +156,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       user: toAuthResponseUser(user),
     });
   } catch (error) {
+    if (error instanceof Error) {
+      console.error('Login user error:', error.message);
+    } else {
+      console.error('Login user error:', error);
+    }
+
     res.status(500).json({ message: 'Failed to log in user.' });
   }
 };

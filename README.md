@@ -106,3 +106,19 @@ After login/register, copy the returned token and send this header in Postman:
 Authorization: Bearer <jwt_token>
 ```
 
+## Troubleshooting
+
+If you see a MongoDB Atlas connection error like:
+
+```text
+MongooseServerSelectionError: Could not connect to any servers in your MongoDB Atlas cluster
+```
+
+check these items:
+
+- Your current IP address is added to the Atlas IP Access List
+- `MONGO_URI` is correct in `.env`
+- The Atlas database user has read/write access
+
+When MongoDB is unreachable, the server will not start until the Atlas connection is fixed.
+
