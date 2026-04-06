@@ -15,10 +15,13 @@ const pageTitles: Record<string, string> = {
 export default function Topbar() {
   const pathname = usePathname();
 
+  // Check for exact match first, then fall back to startsWith (sorted by length to match deeper routes first)
   const title =
-    Object.entries(pageTitles).find(([key]) =>
-      pathname === key || pathname.startsWith(key + "/")
-    )?.[1] ?? "TalentAI";
+    pageTitles[pathname] ||
+    (Object.entries(pageTitles)
+      .sort((a, b) => b[0].length - a[0].length)
+      .find(([key]) => pathname.startsWith(key + "/"))?.[1] ??
+      "TalentAI");
 
   return (
     <header

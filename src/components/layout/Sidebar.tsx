@@ -52,7 +52,6 @@ export default function Sidebar() {
 
   const isActive = (href: string) => {
     if (pathname === href) return true;
-    if (href === "/jobs" && pathname.startsWith("/jobs/new")) return false;
     return pathname.startsWith(href + "/");
   };
 
@@ -73,16 +72,25 @@ export default function Sidebar() {
     >
       {/* ── Header: logo + collapse btn ── */}
       <div
-        className="flex items-center justify-between px-4 pt-5 pb-4"
-        style={{ minHeight: 64 }}
+        className="flex items-center justify-between px-4 pt-5 pb-5"
+        style={{ 
+          minHeight: 64,
+          borderBottom: "1px solid rgba(255,255,255,0.12)"
+        }}
       >
         {!collapsed && (
-          <div className="flex flex-col leading-none">
+          <div className="flex flex-col leading-none mt-1">
             <span
-              className="font-display font-extrabold text-[20px] tracking-tight text-white"
+              className="font-display font-extrabold text-[20px] tracking-tight text-white mb-0.5"
               style={{ letterSpacing: "-0.5px" }}
             >
               TalentAI<span className="text-white">.</span>
+            </span>
+            <span
+              className="text-[9px] tracking-widest uppercase font-semibold"
+              style={{ color: "rgba(255,255,255,0.55)" }}
+            >
+              Powered by Umurava
             </span>
           </div>
         )}
@@ -105,7 +113,7 @@ export default function Sidebar() {
       </div>
 
       {/* ── Main nav ── */}
-      <nav className="flex-1 overflow-y-auto px-3 mt-1 flex flex-col gap-0.5">
+      <nav className="flex-1 overflow-y-auto px-3 mt-4 flex flex-col gap-0.5">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -122,8 +130,8 @@ export default function Sidebar() {
                   className="w-full flex items-center gap-3 rounded-xl text-[13.5px] font-medium transition-all duration-150"
                   style={{
                     padding: "10px 12px",
-                    background: active || isOpen ? "#FFFFFF" : "transparent",
-                    color: active || isOpen ? "#2563EB" : "rgba(255,255,255,0.92)",
+                    background: active ? "#FFFFFF" : isOpen ? "rgba(255,255,255,0.12)" : "transparent",
+                    color: active ? "#2563EB" : "rgba(255,255,255,0.92)",
                     textAlign: "left",
                   }}
                   title={collapsed ? item.label : undefined}
@@ -137,10 +145,10 @@ export default function Sidebar() {
                           className="text-[11px] px-1.5 py-0.5 rounded-full font-bold"
                           style={{
                             background:
-                              active || isOpen
+                              active 
                                 ? "rgba(37,99,235,0.14)"
                                 : "rgba(255,255,255,0.18)",
-                            color: active || isOpen ? "#2563EB" : "#fff",
+                            color: active ? "#2563EB" : "#fff",
                           }}
                         >
                           {item.badge}
