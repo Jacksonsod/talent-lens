@@ -242,6 +242,21 @@ export const getApplicantById = async (req: Request, res: Response): Promise<voi
   }
 };
 
+const extractRetryAfterSeconds = (error: unknown): number | null => {
+  if (error instanceof Error) {
+    const match = error.message.match(/Please retry in ([\d.]+)s/);
+    if (match && match[1]) {
+      const seconds = parseFloat(match[1]);
+      // Return milliseconds with a minimum of 2 seconds
+      return Math.max(2000, Math.ceil(seconds * 1000) + 2000);
+    }
+  }
+  return null;
+};
+
+const isRateLimitError = (error: unknown): boolean =>
+  error instanceof Error && (error.message.includes('429') || error.message.includes('Too Many Requests'));
+
 export const bulkUploadAndExtract = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
 
@@ -274,23 +289,30 @@ export const bulkUploadAndExtract = async (req: Request, res: Response): Promise
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
+      model: process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite-preview',
       generationConfig: { responseMimeType: 'application/json' },
     });
 
     const results: unknown[] = [];
-    const errors: { fileName: string; error: string }[] = [];
+    const errors: { fileName: string; error: string; retryAfter?: number }[] = [];
+
+    const MAX_RETRIES = 3;
+    const BASE_DELAY_MS = 2000; // 2 seconds base delay between files
+    const EXPONENTIAL_BASE_MS = 15000; // 15 seconds base for exponential backoff (instead of 5)
 
     for (let i = 0; i < files.length; i += 1) {
       const file = files[i];
+      let processed = false;
+      let retryCount = 0;
 
-      try {
-        const parser = new PDFParse({ data: file.buffer });
-        const parsedPdf = await parser.getText();
-        const pdfText = parsedPdf.text ?? '';
-        await parser.destroy();
+      while (!processed && retryCount < MAX_RETRIES) {
+        try {
+          const parser = new PDFParse({ data: file.buffer });
+          const parsedPdf = await parser.getText();
+          const pdfText = parsedPdf.text ?? '';
+          await parser.destroy();
 
-        const prompt = `You are an HR Data Extractor. Extract applicant data from this resume text and return ONLY a valid raw JSON object with exactly these keys:
+          const prompt = `You are an HR Data Extractor. Extract applicant data from this resume text and return ONLY a valid raw JSON object with exactly these keys:
 {
   "firstName": "string (default 'Unknown')",
   "lastName": "string (default 'Candidate')",
@@ -303,34 +325,61 @@ export const bulkUploadAndExtract = async (req: Request, res: Response): Promise
 Resume text:
 ${pdfText.slice(0, 15000)}`;
 
-        const aiResponse = await model.generateContent(prompt);
-        const responseText = aiResponse.response.text();
-        const parsed = JSON.parse(sanitizeJson(responseText)) as ExtractedApplicantPayload;
+          const aiResponse = await model.generateContent(prompt);
+          const responseText = aiResponse.response.text();
+          const parsed = JSON.parse(sanitizeJson(responseText)) as ExtractedApplicantPayload;
 
-        const applicant = await Applicant.create({
-          jobId,
-          source: 'External',
-          status: 'pending',
-          firstName: (parsed.firstName ?? 'Unknown').trim() || 'Unknown',
-          lastName: (parsed.lastName ?? 'Candidate').trim() || 'Candidate',
-          email: (parsed.email ?? `fake-email-${Date.now()}-${i}@example.com`).trim() || `fake-email-${Date.now()}-${i}@example.com`,
-          skills: Array.isArray(parsed.skills) ? parsed.skills.filter((skill) => typeof skill === 'string') : [],
-          yearsOfExperience: typeof parsed.yearsOfExperience === 'number' ? parsed.yearsOfExperience : 0,
-          educationLevel: (parsed.educationLevel ?? 'Not specified').trim() || 'Not specified',
-          currentRole: (parsed.currentRole ?? '').trim() || undefined,
-          profileData: { rawResumeText: pdfText },
-        });
+          const applicant = await Applicant.create({
+            jobId,
+            source: 'External',
+            status: 'pending',
+            firstName: (parsed.firstName ?? 'Unknown').trim() || 'Unknown',
+            lastName: (parsed.lastName ?? 'Candidate').trim() || 'Candidate',
+            email: (parsed.email ?? `fake-email-${Date.now()}-${i}@example.com`).trim() || `fake-email-${Date.now()}-${i}@example.com`,
+            skills: Array.isArray(parsed.skills) ? parsed.skills.filter((skill) => typeof skill === 'string') : [],
+            yearsOfExperience: typeof parsed.yearsOfExperience === 'number' ? parsed.yearsOfExperience : 0,
+            educationLevel: (parsed.educationLevel ?? 'Not specified').trim() || 'Not specified',
+            currentRole: (parsed.currentRole ?? '').trim() || undefined,
+            profileData: { rawResumeText: pdfText },
+          });
 
-        results.push(applicant);
-      } catch (error) {
-        errors.push({
-          fileName: file.originalname,
-          error: error instanceof Error ? error.message : 'Failed to process file.',
-        });
+          results.push(applicant);
+          processed = true;
+        } catch (error) {
+          if (isRateLimitError(error)) {
+            const apiRetryAfterMs = extractRetryAfterSeconds(error);
+            const exponentialBackoffMs = Math.pow(2, retryCount) * EXPONENTIAL_BASE_MS; // 15s, 30s, 60s
+            const backoffDelay = Math.max(apiRetryAfterMs ?? exponentialBackoffMs, 5000); // Minimum 5 seconds
+            retryCount += 1;
+
+            if (retryCount >= MAX_RETRIES) {
+              errors.push({
+                fileName: file.originalname,
+                error: error instanceof Error ? error.message : 'Rate limit exceeded after retries.',
+                retryAfter: apiRetryAfterMs ?? undefined,
+              });
+              processed = true;
+            } else {
+              const delaySeconds = (backoffDelay / 1000).toFixed(1);
+              console.warn(
+                `Rate limit hit for ${file.originalname}. Retrying in ${delaySeconds}s (attempt ${retryCount}/${MAX_RETRIES})`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+            }
+          } else {
+            errors.push({
+              fileName: file.originalname,
+              error: error instanceof Error ? error.message : 'Failed to process file.',
+            });
+            processed = true;
+          }
+        }
       }
 
-      if (files.length > 5 && i < files.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 4000));
+      // Add spacing between files to reduce rate-limit issues
+      if (i < files.length - 1) {
+        const delayMs = files.length > 5 ? 6000 : BASE_DELAY_MS; // 6s for large batches, 2s otherwise
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
