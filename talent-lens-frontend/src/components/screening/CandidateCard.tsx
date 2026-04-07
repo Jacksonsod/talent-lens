@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ScreeningResult } from "@/lib/types";
-import { getInitials, recBadgeStyle, cn } from "@/lib/utils/helpers";
-import { ScoreBadge, ScoreBar } from "@/components/ui/StatCard";
-import { ChevronDown } from "lucide-react";
+import { Applicant, ScreeningResult } from "@/lib/types";
+import { cn } from "@/lib/utils/helpers";
+import { ScoreBar } from "@/components/ui/StatCard";
+import { ChevronDown, ReasoningIcon } from "lucide-react"; // Assume basic lucide icons
 
 const AVATAR_COLORS = [
   { bg: "rgba(0,229,160,0.12)", text: "#00e5a0" },
@@ -23,15 +23,24 @@ const rankColorClass = (rank: number) => {
 
 interface CandidateCardProps {
   result: ScreeningResult;
+  rank: number;
   defaultOpen?: boolean;
 }
 
 export default function CandidateCard({
   result,
+  rank,
   defaultOpen = false,
 }: CandidateCardProps) {
   const [open, setOpen] = useState(defaultOpen);
-  const { applicant, rank, totalScore, scoreBreakdown, skillTags, strengths, gaps, recommendation } = result;
+  
+  const app = result.applicantId as Applicant;
+  const matchScore = result.matchScore;
+  const scoreBreakdown = result.scoreBreakdown;
+  const strengths = result.strengths;
+  const gaps = result.gaps;
+  const reasoning = result.reasoning;
+  const finalRecommendation = result.finalRecommendation;
   
   const avatarColor = AVATAR_COLORS[(rank - 1) % AVATAR_COLORS.length];
 
@@ -41,6 +50,8 @@ export default function CandidateCard({
     { label: "Education", value: scoreBreakdown.education },
     { label: "Relevance", value: scoreBreakdown.relevance },
   ];
+
+  const fullName = `${app.firstName} ${app.lastName}`;
 
   return (
     <div
@@ -67,31 +78,16 @@ export default function CandidateCard({
           className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
           style={{ background: avatarColor.bg, color: avatarColor.text }}
         >
-          {getInitials(applicant.name)}
+          {app.firstName.charAt(0)}{app.lastName.charAt(0)}
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="font-medium text-[14px]" style={{ color: "var(--text)" }}>
-            {applicant.name}
+            {fullName}
           </div>
           <div className="text-[12px] truncate" style={{ color: "var(--text3)" }}>
-            {applicant.currentRole} · {applicant.yearsOfExperience}yr exp
-          </div>
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {skillTags.map((tag, i) => (
-              <span
-                key={i}
-                className={cn(
-                  "ctag text-[10px] px-2 py-0.5 rounded-full font-medium border",
-                  tag.type === "match" ? "bg-[rgba(0,229,160,0.1)] text-[var(--green)] border-[rgba(0,229,160,0.2)]" :
-                  tag.type === "gap" ? "bg-[rgba(255,107,107,0.08)] text-[var(--red)] border-[rgba(255,107,107,0.2)]" :
-                  "bg-[var(--surface3)] text-[var(--text2)] border-[var(--border)]"
-                )}
-              >
-                {tag.skill}
-              </span>
-            ))}
+            {app.currentRole || "Candidate"} · {app.yearsOfExperience}yr exp · {app.educationLevel}
           </div>
         </div>
 
@@ -100,12 +96,12 @@ export default function CandidateCard({
           <div
             className={cn(
               "font-display font-extrabold text-[22px] tracking-tight",
-              totalScore >= 80 ? "text-[var(--green)]" : totalScore >= 65 ? "text-[var(--amber)]" : "text-[var(--red)]"
+              matchScore >= 80 ? "text-[var(--green)]" : matchScore >= 65 ? "text-[var(--amber)]" : "text-[var(--red)]"
             )}
           >
-            {totalScore}
+            {matchScore}
           </div>
-          <ScoreBar value={totalScore} className="w-[72px] mt-1.5" />
+          <ScoreBar value={matchScore} className="w-[72px] mt-1.5" />
         </div>
 
         <ChevronDown
@@ -142,6 +138,16 @@ export default function CandidateCard({
             ))}
           </div>
 
+          {/* Reasoning context */}
+          <div className="rounded-lg p-4 bg-[var(--surface3)] border border-[var(--border)] mb-4">
+             <div className="text-[10px] font-bold tracking-widest uppercase mb-1.5 text-[var(--text2)]">
+                AI Reasoning
+             </div>
+             <p className="text-[12.5px] leading-relaxed text-[var(--text2)] italic">
+               "{reasoning}"
+             </p>
+          </div>
+
           {/* Strengths & Gaps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
             <div className="rounded-lg p-3.5 bg-[rgba(0,229,160,0.06)] border border-[rgba(0,229,160,0.15)]">
@@ -167,16 +173,16 @@ export default function CandidateCard({
             <span
               className={cn(
                 "rec-badge text-[12px] px-3.5 py-1.5 rounded-full font-medium border transition-all",
-                recommendation.toLowerCase().includes("strongly") ? "bg-[rgba(0,229,160,0.12)] text-[var(--green)] border-[rgba(0,229,160,0.25)]" :
-                recommendation.toLowerCase().includes("consider") ? "bg-[var(--amber-dim)] text-[var(--amber)] border-[rgba(255,181,71,0.25)]" :
+                finalRecommendation.toLowerCase().includes("strongly") ? "bg-[rgba(0,229,160,0.12)] text-[var(--green)] border-[rgba(0,229,160,0.25)]" :
+                finalRecommendation.toLowerCase().includes("consider") ? "bg-[var(--amber-dim)] text-[var(--amber)] border-[rgba(255,181,71,0.25)]" :
                 "bg-[var(--red-dim)] text-[var(--red)] border-[rgba(255,107,107,0.2)]"
               )}
             >
-              {recommendation}
+              {finalRecommendation}
             </span>
             <div className="ai-tag flex items-center gap-2 text-[11px] text-[var(--text3)]">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse-ai" />
-              Generated by Gemini AI
+              Generated by Gemini 1.5 Pro
             </div>
           </div>
         </div>

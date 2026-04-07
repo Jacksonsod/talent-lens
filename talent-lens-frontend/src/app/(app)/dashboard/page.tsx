@@ -8,22 +8,33 @@ import StatCard from "@/components/ui/StatCard";
 import JobCard from "@/components/jobs/JobCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import EmptyState from "@/components/ui/EmptyState";
-import Link from "next/link";
 import ScreeningModal from "@/components/ui/ScreeningModal";
+import toast from "react-hot-toast";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
-  const { items: jobs, loading } = useAppSelector((s) => s.jobs);
+  const { items: jobs, loading, error } = useAppSelector((s) => s.jobs);
+  const { screenAllResult } = useAppSelector((s) => s.screening);
 
   useEffect(() => {
     dispatch(fetchJobs());
   }, [dispatch]);
 
-  // Specific mockup data as seen in the user provided image
-  const totalApplicants = 142;
-  const screenedJobsCount = 98;
-  const activeJobsCount = 3;
-  const avgMatchScore = 71;
+  useEffect(() => {
+    if (error) {
+       toast.error(error);
+    }
+  }, [error]);
+
+  // Derive stats directly from live jobs
+  const activeJobsCount = jobs.filter(j => j.status === "Open" || j.status === "Draft").length;
+  // Let's deduce screened from status Closed or if they have a match score (which means they're closed or screening)
+  const screenedJobsCount = jobs.filter(j => j.status === "Closed").length;
+  
+  // Total applicants isn't given on Job type, so we can mock or remove it. 
+  // Let's just mock total applicants to 0 or leave it static for the dashboard visual impact.
+  const totalApplicants = 0; 
+  const avgMatchScore = screenAllResult ? Math.round(screenAllResult.results.reduce((acc, c) => acc + c.matchScore, 0) / Math.max(1, screenAllResult.results.length)) : 0;
 
   if (loading && jobs.length === 0) return <LoadingSpinner />;
 
@@ -31,10 +42,10 @@ export default function DashboardPage() {
     <div className="stagger">
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Active Jobs" value={activeJobsCount} color="blue" sub="2 pending review" />
-        <StatCard label="Total Applicants" value={totalApplicants} sub="This month" />
-        <StatCard label="Screened by AI" value={screenedJobsCount} color="green" sub="69% of applicants" highlight />
-        <StatCard label="Avg Match Score" value={avgMatchScore} color="amber" sub="Out of 100" highlight />
+        <StatCard label="Active Jobs" value={activeJobsCount} color="blue" />
+        <StatCard label="Total Applicants" value={totalApplicants} sub="Unavailable" />
+        <StatCard label="Closed Jobs" value={screenedJobsCount} color="green" highlight />
+        <StatCard label="Latest Avg Score" value={avgMatchScore > 0 ? avgMatchScore : "-"} color="amber" highlight />
       </div>
 
       {/* Jobs list Section Heading */}
@@ -43,7 +54,7 @@ export default function DashboardPage() {
           className="text-xs font-semibold tracking-widest uppercase"
           style={{ color: "var(--text3)" }}
         >
-          Active Jobs
+          Your Postings
         </h2>
       </div>
 
@@ -62,7 +73,8 @@ export default function DashboardPage() {
       )}
 
       {/* Global Screening Modal watching Redux state */}
-      <ScreeningModal />
+      {/* Note: since the integration drives the loader directly on the button and pushes to route, we can remove the modal if we want, or leave it. */}
+      {/* <ScreeningModal /> */}
     </div>
   );
 }
