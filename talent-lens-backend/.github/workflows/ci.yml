@@ -3,12 +3,19 @@ name: TalentLens API CI
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'talent-lens-backend/**'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'talent-lens-backend/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: talent-lens-backend
 
     steps:
       - name: Checkout repository
@@ -19,6 +26,7 @@ jobs:
         with:
           node-version: '24.x'
           cache: 'npm'
+          cache-dependency-path: talent-lens-backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
