@@ -144,7 +144,7 @@ export default function CandidateCard({
                 AI Reasoning
              </div>
              <p className="text-[12.5px] leading-relaxed text-[var(--text2)] italic">
-               "{reasoning}"
+               &quot;{reasoning}&quot;
              </p>
           </div>
 

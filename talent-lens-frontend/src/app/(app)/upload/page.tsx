@@ -203,8 +203,8 @@ export default function UploadPage() {
                    Education Qualification
                    <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-4 py-3 border rounded-xl bg-transparent border-[var(--border)] focus:border-[var(--accent)] text-[var(--text)] transition-all outline-none appearance-none">
                      <option value="Associate">Associate Degree</option>
-                     <option value="Bachelor">Bachelor's Degree</option>
-                     <option value="Master">Master's Degree</option>
+                     <option value="Bachelor">Bachelor&apos;s Degree</option>
+                     <option value="Master">Master&apos;s Degree</option>
                      <option value="PhD">PhD / Doctorate</option>
                      <option value="Other">Other Certificate</option>
                    </select>
