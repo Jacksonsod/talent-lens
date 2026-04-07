@@ -722,4 +722,5 @@ If startup fails with Atlas connection errors:
 - verify DB user credentials and read/write permissions
 
 If MongoDB is unreachable, server startup exits until connectivity is fixed.
+Backend will automatically connect and start accepting requests once MongoDB is available.
 
