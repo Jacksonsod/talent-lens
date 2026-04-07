@@ -1,9 +1,11 @@
 "use client";
 
 import { Job } from "@/lib/types";
-import { useAppDispatch } from "@/lib/hooks/redux";
-import { runScreening } from "@/lib/slices/screeningSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
+import { screenAll } from "@/lib/slices/screeningSlice";
+import { updateJobStatus } from "@/lib/slices/jobsSlice";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import {
   Code2,
   BrainCircuit,
@@ -16,16 +18,11 @@ import {
   Globe,
   Briefcase,
 } from "lucide-react";
+import { useState } from "react";
 
 interface JobCardProps {
   job: Job;
 }
-
-const workTypeLabel: Record<string, string> = {
-  remote: "Remote",
-  onsite: "On-site",
-  hybrid: "Hybrid",
-};
 
 // 6 vibrant color palettes — deterministic by skill name hash
 const CHIP_PALETTES = [
@@ -52,8 +49,8 @@ type IconConfig = {
   border: string;
 };
 
-function getJobIcon(title: string, department?: string): IconConfig {
-  const t = (title + " " + (department ?? "")).toLowerCase();
+function getJobIcon(title: string): IconConfig {
+  const t = title.toLowerCase();
 
   if (t.includes("ai") || t.includes("ml") || t.includes("machine learning") || t.includes("llm"))
     return { Icon: BrainCircuit, bg: "#7C3AED", color: "#ffffff", border: "#6D28D9" };
@@ -89,11 +86,34 @@ function getJobIcon(title: string, department?: string): IconConfig {
 export default function JobCard({ job }: JobCardProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { shortlists } = useAppSelector((state) => state.screening);
+  const hasShortlist = shortlists[job._id] && shortlists[job._id].length > 0;
+  
+  const [loading, setLoading] = useState(false);
 
   const handleRunScreening = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Dispatch simulation thunk. Modal in DashboardPage will open.
-    dispatch(runScreening(job._id));
+    setLoading(true);
+    
+    // First, update status to Screening if not already
+    if (job.status !== "Screening" && job.status !== "Closed") {
+      await dispatch(updateJobStatus({ id: job._id, status: "Screening" }));
+    }
+    
+    const result = await dispatch(screenAll(job._id));
+    
+    if (screenAll.fulfilled.match(result)) {
+      toast.success("AI screening completed successfully!");
+      router.push(`/jobs/${job._id}/shortlist`);
+    } else {
+      toast.error(result.payload as string || "AI screening failed. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  const handleViewResults = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/jobs/${job._id}/shortlist`);
   };
 
   return (
@@ -107,7 +127,7 @@ export default function JobCard({ job }: JobCardProps) {
     >
       {/* Icon */}
       {(() => {
-        const { Icon, bg, color, border } = getJobIcon(job.title, job.department);
+        const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
         return (
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
@@ -124,14 +144,18 @@ export default function JobCard({ job }: JobCardProps) {
           className="font-display font-bold text-[16px] tracking-tight"
           style={{ color: "var(--text)" }}
         >
-          {job.title}
+          {job.roleTitle}
+          {job.status && (
+            <span className="ml-3 text-[10px] uppercase font-bold px-2 py-0.5 rounded border border-[var(--border)]" style={{ color: "var(--text3)" }}>
+              {job.status}
+            </span>
+          )}
         </div>
         <div className="text-[12px] mt-0.5 mb-2" style={{ color: "var(--text3)" }}>
-          {job.location} · {workTypeLabel[job.workType] ?? job.workType} ·{" "}
-          {job.contractType} · Posted 3 days ago
+          {job.experienceLevel} · Target Shortlist: {job.shortlistSize}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {job.skills.slice(0, 5).map((skill) => (
+          {job.requiredSkills && job.requiredSkills.slice(0, 5).map((skill) => (
             <span
               key={skill}
               className="text-[11px] px-2.5 py-[3px] rounded-full font-medium"
@@ -140,12 +164,12 @@ export default function JobCard({ job }: JobCardProps) {
               {skill}
             </span>
           ))}
-          {job.skills.length > 5 && (
+          {job.requiredSkills && job.requiredSkills.length > 5 && (
             <span
               className="text-[11px] px-2.5 py-[3px] rounded-full font-medium"
               style={{ background: "var(--surface3)", color: "var(--text3)" }}
             >
-              +{job.skills.length - 5} more
+              +{job.requiredSkills.length - 5} more
             </span>
           )}
         </div>
@@ -156,13 +180,10 @@ export default function JobCard({ job }: JobCardProps) {
         className="flex items-center gap-4 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-[12px]" style={{ color: "var(--text3)" }}>
-          {job.applicantCount} applicants
-        </span>
-        {job.status === "screened" ? (
+        {hasShortlist || job.status === "Closed" ? (
           <button
             className="btn btn-ghost px-5 py-2.5 font-bold"
-            onClick={() => router.push(`/jobs/${job._id}/shortlist`)}
+            onClick={handleViewResults}
           >
             View Results
           </button>
@@ -170,8 +191,9 @@ export default function JobCard({ job }: JobCardProps) {
           <button
             className="btn btn-green px-5 py-2.5 font-bold shadow-sm animate-pulse-subtle"
             onClick={handleRunScreening}
+            disabled={loading}
           >
-            ▶ Run AI Screening
+            {loading ? "Screening..." : "▶ Run AI Screening"}
           </button>
         )}
       </div>

@@ -7,8 +7,8 @@ import Link from "next/link";
 import { ClipboardList } from "lucide-react";
 
 export default function ShortlistsPage() {
-  const { results } = useAppSelector((s) => s.screening);
-  const resultIds = Object.keys(results);
+  const { shortlists } = useAppSelector((s) => s.screening);
+  const resultIds = Object.keys(shortlists || {});
 
   return (
     <div className="stagger">
@@ -38,7 +38,7 @@ export default function ShortlistsPage() {
                     <ClipboardList size={19} color="#4F46E5" strokeWidth={1.8} />
                   </div>
                   <div className="text-[12px] text-[var(--text3)]">
-                    {results[id].shortlistCount} candidates
+                    {shortlists[id].length} candidates
                   </div>
                 </div>
                 <div className="font-display font-bold text-lg text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
