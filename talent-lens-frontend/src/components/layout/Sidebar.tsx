@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 
 /* ─── nav tree ────────────────────────────────────────────────── */
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
 /* ─── component ───────────────────────────────────────────────── */
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   // track which group is open (by href)
   const [openGroup, setOpenGroup] = useState<string | null>("/jobs");
@@ -57,6 +59,11 @@ export default function Sidebar() {
 
   const toggleGroup = (href: string) =>
     setOpenGroup((prev) => (prev === href ? null : href));
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
 
   /* ── sidebar width ── */
   const W = collapsed ? "72px" : "230px";
@@ -254,14 +261,18 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* ── Recruiter profile card ── */}
+      {/* ── Logout Button ── */}
       <div
         className="px-3 py-3"
         style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
       >
-        <div
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 cursor-pointer"
-          style={{ background: "rgba(255,255,255,0.10)" }}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150"
+          style={{
+            background: "rgba(255,255,255,0.10)",
+            color: "rgba(255,255,255,0.92)",
+          }}
           onMouseEnter={(e) =>
             ((e.currentTarget as HTMLElement).style.background =
               "rgba(255,255,255,0.16)")
@@ -271,48 +282,9 @@ export default function Sidebar() {
               "rgba(255,255,255,0.10)")
           }
         >
-          {/* Avatar */}
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0"
-            style={{
-              background: "rgba(255,255,255,0.22)",
-              border: "1.5px solid rgba(255,255,255,0.35)",
-              color: "#fff",
-            }}
-          >
-            HR
-          </div>
-
-          {/* Name + role */}
-          {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <div
-                className="text-[13px] font-semibold truncate leading-tight"
-                style={{ color: "#FFFFFF" }}
-              >
-                Hope Rukundo
-              </div>
-              <div
-                className="text-[11px] truncate leading-tight mt-0.5"
-                style={{ color: "rgba(255,255,255,0.60)" }}
-              >
-                Recruiter
-              </div>
-            </div>
-          )}
-
-          {/* Dots menu */}
-          {!collapsed && (
-            <div
-              className="flex flex-col gap-[3px] shrink-0"
-              style={{ opacity: 0.55 }}
-            >
-              <span className="w-1 h-1 rounded-full bg-white block" />
-              <span className="w-1 h-1 rounded-full bg-white block" />
-              <span className="w-1 h-1 rounded-full bg-white block" />
-            </div>
-          )}
-        </div>
+          <LogOut size={16} />
+          {!collapsed && <span className="truncate">Logout</span>}
+        </button>
       </div>
     </aside>
   );
