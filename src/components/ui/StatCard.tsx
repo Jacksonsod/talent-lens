@@ -9,6 +9,7 @@ interface StatCardProps {
   value: number | string;
   color?: "green" | "amber" | "blue" | "red" | "default";
   sub?: string;
+  highlight?: boolean;
 }
 
 const colorMap = {
@@ -19,11 +20,15 @@ const colorMap = {
   default: "var(--text)",
 };
 
-export function StatCard({ label, value, color = "default", sub }: StatCardProps) {
+export function StatCard({ label, value, color = "default", sub, highlight }: StatCardProps) {
   return (
     <div
-      className="rounded-xl px-5 py-4"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      className={cn("rounded-xl px-5 py-4 transition-all duration-300", highlight && "shadow-sm")}
+      style={{
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        ...(highlight && { borderLeft: `4px solid ${colorMap[color]}` })
+      }}
     >
       <div
         className="text-[11px] font-semibold tracking-widest uppercase mb-2"
@@ -32,7 +37,7 @@ export function StatCard({ label, value, color = "default", sub }: StatCardProps
         {label}
       </div>
       <div
-        className="font-display font-bold text-3xl tracking-tight"
+        className={cn("font-display font-bold tracking-tight", highlight ? "text-4xl" : "text-3xl")}
         style={{ color: colorMap[color] }}
       >
         {value}

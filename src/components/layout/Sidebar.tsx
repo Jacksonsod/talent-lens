@@ -207,16 +207,16 @@ export default function Sidebar() {
 
               {/* ── children (sub-items) ── */}
               {hasChildren && isOpen && !collapsed && (
-                <div className="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5 border-l border-white/20 pl-3">
+                <div className="mt-1 mb-2 ml-4 flex flex-col gap-1 border-l border-white/20 pl-4">
                   {item.children!.map((child) => {
                     const childActive = isActive(child.href);
                     return (
                       <Link
                         key={child.href}
                         href={child.href}
-                        className="flex items-center gap-2 rounded-lg text-[12.5px] font-medium transition-all duration-150"
+                        className="flex items-center gap-2 rounded-lg text-[13px] font-medium transition-all duration-150"
                         style={{
-                          padding: "7px 10px",
+                          padding: "9px 12px",
                           background: childActive
                             ? "rgba(255,255,255,0.18)"
                             : "transparent",
