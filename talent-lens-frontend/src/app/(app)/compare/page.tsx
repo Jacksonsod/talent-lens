@@ -111,7 +111,7 @@ export default function ComparePage() {
 
               <div className="text-center">
                  <div className="text-[10px] font-bold tracking-widest uppercase mb-1.5 text-[var(--green)]">Strengths Summary</div>
-                 <p className="text-xs text-[var(--text2)] line-clamp-3 mb-4 italic">"{c.strengths}"</p>
+                 <p className="text-xs text-[var(--text2)] line-clamp-3 mb-4 italic">&quot;{c.strengths}&quot;</p>
 
                  <div className="text-[10px] font-bold tracking-widest uppercase mb-1.5 text-[var(--text3)]">Final AI Recommendation</div>
                  <div className={cn(
