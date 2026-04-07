@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import api from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,9 +22,17 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    router.push("/dashboard");
+    try {
+      const response = await api.post("/api/auth/login", { email, password });
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An error occurred during login.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
