@@ -44,6 +44,7 @@ Suggested request body modes in Postman:
 - `POST /api/jobs` and `PUT /api/jobs/:id` → `raw` JSON
 - `POST /api/applicants/umurava` → `raw` JSON
 - `POST /api/applicants/external` → `form-data`
+- `POST /api/applicants/bulk-upload` → `form-data`
 - Screening routes → no body required unless noted
 
 ## Available scripts
@@ -156,6 +157,7 @@ Postman sample:
 
 - `POST /umurava` - add Umurava applicant to a job you own
 - `POST /external` - add external applicant to a job you own (supports PDF upload)
+- `POST /bulk-upload` - bulk upload PDF resumes and auto-extract applicant data with Gemini
 - `GET /job/:jobId` - list all applicants for one owned job
 - `GET /:id` - get one applicant by ID (owner only via populated job)
 
@@ -182,6 +184,7 @@ Postman sample:
 
 - `POST {{baseUrl}}/api/applicants/umurava`
 - `POST {{baseUrl}}/api/applicants/external`
+- `POST {{baseUrl}}/api/applicants/bulk-upload`
 - `GET {{baseUrl}}/api/applicants/job/{{jobId}}`
 - `GET {{baseUrl}}/api/applicants/{{applicantId}}`
 
@@ -225,6 +228,36 @@ Common applicant errors:
 - `403` recruiter does not own the target job/applicant
 - `404` job/applicant not found
 - `409` duplicate applicant for same job/email (`jobId + email`)
+
+Bulk upload (`POST /api/applicants/bulk-upload`) request uses `multipart/form-data`.
+
+- Text field: `jobId` (required)
+- File field: `resumes` (required, repeat this key for multiple PDF files)
+- Allowed type per file: `application/pdf`
+- Max size per file: `5MB`
+- Files are processed sequentially; for batches larger than 5 files, the API waits 4 seconds between files to reduce Gemini free-tier rate-limit failures.
+
+Gemini extraction output per file is normalized to Applicant fields:
+
+- `firstName` (default: `Unknown`)
+- `lastName` (default: `Candidate`)
+- `email` (fallback generated if missing)
+- `skills` (string array)
+- `yearsOfExperience` (number)
+- `educationLevel`
+- `currentRole`
+
+Bulk upload success response shape (`200`):
+
+```json
+{
+  "message": "Bulk upload and extraction completed.",
+  "successfulUploads": 2,
+  "failedUploads": 1,
+  "results": [{ "_id": "<applicant_id>", "status": "pending" }],
+  "errors": [{ "fileName": "bad_resume.pdf", "error": "Failed to process file." }]
+}
+```
 
 ### Screening (`/api/screening`)
 
@@ -509,6 +542,52 @@ Sample success response (`201`):
 }
 ```
 
+`POST {{baseUrl}}/api/applicants/bulk-upload` (form-data)
+
+Text fields:
+
+- `jobId`: `{{jobId}}`
+
+File fields:
+
+- `resumes`: attach one or more PDF files (repeat the same key)
+
+Sample success response (`200`):
+
+```json
+{
+  "message": "Bulk upload and extraction completed.",
+  "successfulUploads": 2,
+  "failedUploads": 1,
+  "results": [
+    {
+      "_id": "<applicant_id_1>",
+      "jobId": "{{jobId}}",
+      "source": "External",
+      "firstName": "Aline",
+      "lastName": "Mukamana",
+      "email": "aline@example.com",
+      "status": "pending"
+    },
+    {
+      "_id": "<applicant_id_2>",
+      "jobId": "{{jobId}}",
+      "source": "External",
+      "firstName": "Eric",
+      "lastName": "Niyonzima",
+      "email": "eric@example.com",
+      "status": "pending"
+    }
+  ],
+  "errors": [
+    {
+      "fileName": "corrupted.pdf",
+      "error": "Failed to process file."
+    }
+  ]
+}
+```
+
 `GET {{baseUrl}}/api/applicants/job/{{jobId}}`
 
 Sample success response (`200`):
@@ -685,6 +764,17 @@ curl -X POST http://localhost:5000/api/applicants/external \
   -F "resume=@/absolute/path/to/resume.pdf;type=application/pdf"
 ```
 
+Bulk upload and AI extract example:
+
+```bash
+curl -X POST http://localhost:5000/api/applicants/bulk-upload \
+  -H 'Authorization: Bearer <jwt_token>' \
+  -F "jobId=<job_id>" \
+  -F "resumes=@/absolute/path/to/resume1.pdf;type=application/pdf" \
+  -F "resumes=@/absolute/path/to/resume2.pdf;type=application/pdf" \
+  -F "resumes=@/absolute/path/to/resume3.pdf;type=application/pdf"
+```
+
 Run AI screening for one applicant:
 
 ```bash
@@ -722,4 +812,5 @@ If startup fails with Atlas connection errors:
 - verify DB user credentials and read/write permissions
 
 If MongoDB is unreachable, server startup exits until connectivity is fixed.
+Backennd workflows added
 

@@ -67,7 +67,7 @@ export default function IngestionPage() {
                 </div>
                 <h2 className="font-display font-bold text-xl mb-2">Scenario 1: Internal Umurava Talent</h2>
                 <p className="text-sm max-w-sm mx-auto mb-8 text-[var(--text3)]">
-                  Securely pull verified talent profiles directly from Umurava's internal database based on your job requirements.
+                  Securely pull verified talent profiles directly from Umurava&apos;s internal database based on your job requirements.
                 </p>
                 <button 
                   className="btn btn-primary h-14 px-12 text-base font-bold animate-pulse-ai"
