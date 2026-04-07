@@ -1,115 +1,106 @@
 // ─────────────────────────────────────────────
-// Core domain types for TalentAI
+// Core domain types for TalentAI - Backend Integrated version
 // ─────────────────────────────────────────────
 
-export type JobStatus = "draft" | "active" | "closed" | "screened";
-export type WorkType = "remote" | "onsite" | "hybrid";
-export type ContractType = "full-time" | "part-time" | "contract";
+// ─── AUTH ────────────────────────────────────
+export interface AuthUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+}
+
+// ─── JOBS ────────────────────────────────────
+export type JobStatus = "Draft" | "Open" | "Screening" | "Closed";
 
 export interface Job {
   _id: string;
-  title: string;
-  department: string;
-  location: string;
-  workType: WorkType;
-  contractType: ContractType;
-  experienceRequired: string;
-  skills: string[];
+  roleTitle: string;           
   description: string;
+  requirements: string[];      
+  requiredSkills: string[];    
+  experienceLevel: string;     
+  shortlistSize: number;       
   status: JobStatus;
-  applicantCount: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateJobInput {
-  title: string;
-  department: string;
-  location: string;
-  workType: WorkType;
-  contractType: ContractType;
-  experienceRequired: string;
-  skills: string[];
+  roleTitle: string;
   description: string;
+  requirements: string[];
+  requiredSkills: string[];
+  experienceLevel: string;
+  shortlistSize: number;
+  status: JobStatus;
 }
 
-// ─── Applicant ────────────────────────────────
-
-export type ApplicantSource = "umurava" | "csv" | "pdf" | "manual";
+// ─── APPLICANTS ──────────────────────────────
+export type EducationLevel = "High School" | "Associate" | "Bachelor" | "Master" | "PhD" | "Other";
 
 export interface Applicant {
   _id: string;
   jobId: string;
-  name: string;
+  firstName: string;           
+  lastName: string;
   email: string;
   phone?: string;
-  currentRole: string;
-  yearsOfExperience: number;
   skills: string[];
-  education: string;
+  yearsOfExperience: number;
+  educationLevel: EducationLevel;
+  currentRole?: string;
   resumeUrl?: string;
-  linkedinUrl?: string;
-  source: ApplicantSource;
-  rawData?: Record<string, unknown>;
+  profileData?: {
+    umuravaId?: string;
+    rawResumeText?: string;
+  };
+  source: "umurava" | "external";
   createdAt: string;
 }
 
-// ─── Screening / AI Results ───────────────────
-
-export type Recommendation = "Strongly recommend" | "Recommend" | "Consider" | "Low match";
+// ─── SCREENING ───────────────────────────────
+export type ScreeningStatus = "Pending" | "Completed" | "Failed";
 
 export interface ScoreBreakdown {
-  skills: number;       // 0–100
-  experience: number;   // 0–100
-  education: number;    // 0–100
-  relevance: number;    // 0–100
-}
-
-export interface SkillTag {
-  skill: string;
-  type: "match" | "gap" | "neutral";
+  skills: number;
+  experience: number;
+  education: number;
+  relevance: number;
 }
 
 export interface ScreeningResult {
   _id: string;
   jobId: string;
-  applicantId: string;
-  applicant: Applicant;
-  rank: number;
-  totalScore: number;             // weighted 0–100
+  applicantId: string | Applicant;
+  matchScore: number;          
   scoreBreakdown: ScoreBreakdown;
-  skillTags: SkillTag[];
   strengths: string;
   gaps: string;
-  recommendation: Recommendation;
-  aiModel: string;
+  reasoning: string;
+  finalRecommendation: string; 
+  status: ScreeningStatus;
   createdAt: string;
 }
 
-export interface ShortlistResponse {
+export interface ScreenAllResponse {
   jobId: string;
-  job: Job;
-  results: ScreeningResult[];
   totalScreened: number;
-  shortlistCount: number;
-  averageScore: number;
-  topScore: number;
-  screenedAt: string;
+  totalFailed: number;
+  results: ScreeningResult[];
 }
 
-// ─── Upload ───────────────────────────────────
+// ─── REDUX STATES ────────────────────────────
 
 export interface ParsedApplicantRow {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   currentRole: string;
   yearsOfExperience: number | string;
   skills: string;
-  education?: string;
-  linkedinUrl?: string;
+  educationLevel: string;
 }
-
-// ─── Redux State ──────────────────────────────
 
 export interface JobsState {
   items: Job[];
@@ -122,16 +113,16 @@ export interface ApplicantsState {
   items: Applicant[];
   loading: boolean;
   error: string | null;
-  uploadProgress: number;
   parsedPreview: ParsedApplicantRow[];
 }
 
 export interface ScreeningState {
-  results: Record<string, ShortlistResponse>;  // keyed by jobId
+  shortlists: Record<string, ScreeningResult[]>;
   isScreening: boolean;
   screeningJobId: string | null;
   progress: number;
   log: string[];
+  screenAllResult: ScreenAllResponse | null;
   error: string | null;
 }
 

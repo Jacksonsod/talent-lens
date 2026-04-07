@@ -1,96 +1,60 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Applicant, ApplicantsState, ParsedApplicantRow } from "@/lib/types";
-import api from "@/lib/utils/api";
-
-const mockApplicants: Applicant[] = [
-  {
-    _id: "app-001",
-    jobId: "job-001",
-    name: "Alice Mutoni",
-    email: "alice@example.com",
-    currentRole: "Full Stack Developer",
-    yearsOfExperience: 6,
-    skills: ["React", "Node.js", "TypeScript", "AWS"],
-    education: "BS Computer Science",
-    source: "csv",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "app-002",
-    jobId: "job-001",
-    name: "Brian Otieno",
-    email: "brian@example.com",
-    currentRole: "Backend Engineer",
-    yearsOfExperience: 5,
-    skills: ["Node.js", "MongoDB", "Python"],
-    education: "MS Software Engineering",
-    source: "pdf",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "app-003",
-    jobId: "job-001",
-    name: "Chloe Nkusi",
-    email: "chloe@example.com",
-    currentRole: "Frontend Engineer",
-    yearsOfExperience: 4,
-    skills: ["Next.js", "Tailwind CSS", "Redux"],
-    education: "BA Interactive Media",
-    source: "csv",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "app-004",
-    jobId: "job-001",
-    name: "David Mugisha",
-    email: "david@example.com",
-    currentRole: "Software Engineer",
-    yearsOfExperience: 3,
-    skills: ["React", "Python", "SQL"],
-    education: "BS Computer Science",
-    source: "manual",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    _id: "app-005",
-    jobId: "job-001",
-    name: "Eva Habimana",
-    email: "eva@example.com",
-    currentRole: "Full Stack Developer",
-    yearsOfExperience: 5,
-    skills: ["Vue.js", "Node.js", "AWS"],
-    education: "BS Information Systems",
-    source: "pdf",
-    createdAt: new Date().toISOString(),
-  }
-];
+import api from "@/lib/api";
 
 const initialState: ApplicantsState = {
-  items: mockApplicants,
+  items: [],
   loading: false,
   error: null,
-  uploadProgress: 0,
   parsedPreview: [],
 };
 
 // ─── Async Thunks ─────────────────────────────
 
-export const fetchApplicants = createAsyncThunk(
-  "applicants/fetchAll",
-  async (jobId: string) => {
-    if (jobId === "job-001") return mockApplicants;
-    const res = await api.get<Applicant[]>(`/applicants/job/${jobId}`);
-    return res.data;
+export const fetchApplicantsByJob = createAsyncThunk(
+  "applicants/fetchByJob",
+  async (jobId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get<Applicant[]>(`/api/applicants/job/${jobId}`);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to fetch applicants");
+    }
   }
 );
 
-export const uploadCandidates = createAsyncThunk(
-  "applicants/upload",
-  async ({ jobId, files }: { jobId: string; files: File[] }) => {
-    const formData = new FormData();
-    files.forEach((f) => formData.append("files", f));
-    const res = await api.post<Applicant[]>(`/applicants/upload/${jobId}`, formData);
-    return res.data;
+export const addUmuravaApplicant = createAsyncThunk(
+  "applicants/addUmurava",
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await api.post<Applicant>("/api/applicants/umurava", data);
+      return response.data;
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+         return rejectWithValue("This applicant has already been added to this job");
+      }
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to add applicant");
+    }
+  }
+);
+
+// We need to use formData directly for external applicant due to the file
+export const addExternalApplicant = createAsyncThunk(
+  "applicants/addExternal",
+  async (formData: FormData, { rejectWithValue }) => {
+    try {
+      const response = await api.post<Applicant>("/api/applicants/external", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (err: any) {
+      if (err.response?.status === 409) {
+         return rejectWithValue("This applicant has already been added to this job");
+      }
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to upload applicant");
+    }
   }
 );
 
@@ -103,28 +67,58 @@ const applicantsSlice = createSlice({
     setParsedPreview(state, action: PayloadAction<ParsedApplicantRow[]>) {
       state.parsedPreview = action.payload;
     },
-    clearApplicants(state) {
-      state.items = [];
+    clearParsedPreview(state) {
+      state.parsedPreview = [];
+    },
+    clearError(state) {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchApplicants.pending, (state) => { state.loading = true; })
-      .addCase(fetchApplicants.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload;
+      // fetchApplicantsByJob
+      .addCase(fetchApplicantsByJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      .addCase(fetchApplicants.rejected, (state, action) => {
+      .addCase(fetchApplicantsByJob.fulfilled, (state, action) => {
         state.loading = false;
-        state.error = action.error.message ?? "Failed to fetch applicants";
-      });
+        state.items = action.payload; // Usually returns all for job
+      })
+      .addCase(fetchApplicantsByJob.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
 
-    builder
-      .addCase(uploadCandidates.fulfilled, (state, action) => {
-        state.items = [...state.items, ...action.payload];
+      // addUmuravaApplicant
+      .addCase(addUmuravaApplicant.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addUmuravaApplicant.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.unshift(action.payload);
+      })
+      .addCase(addUmuravaApplicant.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // addExternalApplicant
+      .addCase(addExternalApplicant.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addExternalApplicant.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.unshift(action.payload);
+      })
+      .addCase(addExternalApplicant.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { setParsedPreview, clearApplicants } = applicantsSlice.actions;
+export const { setParsedPreview, clearParsedPreview, clearError } = applicantsSlice.actions;
 export default applicantsSlice.reducer;
