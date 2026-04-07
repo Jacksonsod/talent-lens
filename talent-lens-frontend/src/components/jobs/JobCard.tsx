@@ -103,6 +103,7 @@ export default function JobCard({ job }: JobCardProps) {
     const result = await dispatch(screenAll(job._id));
     
     if (screenAll.fulfilled.match(result)) {
+      await dispatch(updateJobStatus({ id: job._id, status: "Closed" }));
       toast.success("AI screening completed successfully!");
       router.push(`/jobs/${job._id}/shortlist`);
     } else {
