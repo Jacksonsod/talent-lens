@@ -58,6 +58,30 @@ export const addExternalApplicant = createAsyncThunk(
   }
 );
 
+interface BulkUploadResponse {
+  message: string;
+  successfulUploads: number;
+  failedUploads: number;
+  results: Applicant[];
+  errors: any[];
+}
+
+export const bulkUploadExternalApplicants = createAsyncThunk(
+  "applicants/bulkExternal",
+  async (formData: FormData, { rejectWithValue }) => {
+    try {
+      const response = await api.post<BulkUploadResponse>("/api/applicants/bulk-upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to bulk upload applicants");
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────
 
 const applicantsSlice = createSlice({
@@ -114,6 +138,22 @@ const applicantsSlice = createSlice({
         state.items.unshift(action.payload);
       })
       .addCase(addExternalApplicant.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      
+      // bulkUploadExternalApplicants
+      .addCase(bulkUploadExternalApplicants.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(bulkUploadExternalApplicants.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.results) {
+          state.items.push(...action.payload.results);
+        }
+      })
+      .addCase(bulkUploadExternalApplicants.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

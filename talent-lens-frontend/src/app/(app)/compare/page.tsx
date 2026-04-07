@@ -2,18 +2,21 @@
 
 import React, { useEffect } from "react";
 import EmptyState from "@/components/ui/EmptyState";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
-import { fetchJobById } from "@/lib/slices/jobsSlice";
+import { fetchJobById, fetchJobs } from "@/lib/slices/jobsSlice";
 import { fetchShortlist } from "@/lib/slices/screeningSlice";
 import { ScoreBar } from "@/components/ui/StatCard";
+import JobCard from "@/components/jobs/JobCard";
 import { Applicant } from "@/lib/types";
 
 export default function ComparePage() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const jobId = searchParams.get("jobId");
   
+  const { items: jobs, loading: jobsLoading } = useAppSelector(s => s.jobs);
   const shortlist = useAppSelector((s) => jobId ? s.screening.shortlists[jobId] : null);
   const job = useAppSelector((s) => s.jobs.selected);
   const loading = useAppSelector(s => s.screening.isScreening || s.jobs.loading);
@@ -22,17 +25,35 @@ export default function ComparePage() {
     if (jobId) {
        dispatch(fetchJobById(jobId));
        if (!shortlist) dispatch(fetchShortlist(jobId));
+    } else {
+       dispatch(fetchJobs());
     }
   }, [jobId, dispatch, shortlist]);
   
-  if (!jobId || (!shortlist && !loading)) {
+  if (!jobId) {
+    if (jobsLoading) return <div className="text-center py-20 text-[var(--text3)] font-bold">Loading Screening Data...</div>;
+    const screenedJobs = jobs.filter(j => j.status === "Closed" || j.status === "Screening" || (j as any).status === "screened");
+    
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <EmptyState
-          title="Compare Candidates"
-          description="Select a job from the dashboard to see a side-by-side AI comparison of top candidates."
-          action={{ label: "Go to Dashboard", href: "/dashboard" }}
-        />
+      <div className="stagger pb-20 max-w-5xl mx-auto">
+        <div className="mb-8">
+           <h1 className="font-display font-bold text-3xl tracking-tight mb-2 text-[var(--text)]">Select a Job to Compare</h1>
+           <p className="text-[var(--text3)] text-sm">Choose a successfully compiled screening pipeline below to launch the side-by-side AI Comparison Matrix.</p>
+        </div>
+        
+        {screenedJobs.length === 0 ? (
+          <EmptyState
+            title="No Screened Jobs Available"
+            description="You do not have any candidate pipelines that have finished the AI Screening phase. Head over to the Shortlists or Jobs panel to start a screening process."
+            action={{ label: "Go to Dashboard", href: "/dashboard" }}
+          />
+        ) : (
+          <div className="flex flex-col gap-3">
+            {screenedJobs.map(job => (
+               <JobCard key={job._id} job={job} mode="compare" />
+            ))}
+          </div>
+        )}
       </div>
     );
   }

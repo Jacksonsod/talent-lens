@@ -22,6 +22,7 @@ import { useState } from "react";
 
 interface JobCardProps {
   job: Job;
+  mode?: "default" | "compare";
 }
 
 // 6 vibrant color palettes — deterministic by skill name hash
@@ -83,7 +84,7 @@ function getJobIcon(title: string): IconConfig {
   return { Icon: Briefcase,  bg: "#475569", color: "#ffffff", border: "#334155" };
 }
 
-export default function JobCard({ job }: JobCardProps) {
+export default function JobCard({ job, mode = "default" }: JobCardProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { shortlists } = useAppSelector((state) => state.screening);
@@ -95,7 +96,6 @@ export default function JobCard({ job }: JobCardProps) {
     e.stopPropagation();
     setLoading(true);
     
-    // First, update status to Screening if not already
     if (job.status !== "Screening" && job.status !== "Closed") {
       await dispatch(updateJobStatus({ id: job._id, status: "Screening" }));
     }
@@ -117,14 +117,25 @@ export default function JobCard({ job }: JobCardProps) {
     router.push(`/jobs/${job._id}/shortlist`);
   };
 
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/compare?jobId=${job._id}`);
+  };
+
   return (
     <div
-      className="job-header flex items-center gap-4 px-5 py-4 rounded-xl cursor-pointer transition-all duration-200"
+      className="job-header flex items-center gap-4 px-5 py-4 rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)]"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
       }}
-      onClick={() => router.push(`/jobs/${job._id}/applicants`)}
+      onClick={() => {
+        if (mode === "compare") {
+          router.push(`/compare?jobId=${job._id}`);
+        } else {
+          router.push(`/jobs/${job._id}/applicants`);
+        }
+      }}
     >
       {/* Icon */}
       {(() => {
@@ -181,7 +192,14 @@ export default function JobCard({ job }: JobCardProps) {
         className="flex items-center gap-4 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
-        {hasShortlist || job.status === "Closed" ? (
+        {mode === "compare" ? (
+          <button
+            className="btn px-5 py-2.5 font-bold text-sm bg-[rgba(124,111,255,0.1)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white transition-colors rounded-lg shadow-sm"
+            onClick={handleCompareClick}
+          >
+            Compare Candidates
+          </button>
+        ) : hasShortlist || job.status === "Closed" ? (
           <button
             className="btn btn-ghost px-5 py-2.5 font-bold"
             onClick={handleViewResults}

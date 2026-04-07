@@ -13,7 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>TalentAI — Umurava Screening</title>
+        <title>Talent-lens</title>
         <meta name="description" content="AI-powered talent screening by Umurava" />
         <link rel="icon" href="/favicon.ico" />
       </head>
