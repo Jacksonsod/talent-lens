@@ -148,6 +148,15 @@ h1, h2, h3, .font-display {
   background: var(--green-mid);
 }
 
+@keyframes pulse-subtle {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite;
+}
+
 /* ════════════════════════════════════════════════════
    LOGIN PAGE
    ════════════════════════════════════════════════════ */

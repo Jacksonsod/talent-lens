@@ -33,8 +33,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard label="Active Jobs" value={activeJobsCount} color="blue" sub="2 pending review" />
         <StatCard label="Total Applicants" value={totalApplicants} sub="This month" />
-        <StatCard label="Screened by AI" value={screenedJobsCount} color="green" sub="69% of applicants" />
-        <StatCard label="Avg Match Score" value={avgMatchScore} color="amber" sub="Out of 100" />
+        <StatCard label="Screened by AI" value={screenedJobsCount} color="green" sub="69% of applicants" highlight />
+        <StatCard label="Avg Match Score" value={avgMatchScore} color="amber" sub="Out of 100" highlight />
       </div>
 
       {/* Jobs list Section Heading */}
