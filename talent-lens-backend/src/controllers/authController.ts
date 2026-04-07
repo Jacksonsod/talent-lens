@@ -41,7 +41,7 @@ const createToken = (payload: TokenPayload): string | null => {
     return null;
   }
 
-  return jwt.sign(payload, secret, { expiresIn: '7d' });
+  return jwt.sign(payload, secret, { expiresIn: '1d' });
 };
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
