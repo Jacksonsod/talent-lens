@@ -1,14 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import EmptyState from "@/components/ui/EmptyState";
-import { useAppSelector } from "@/lib/hooks/redux";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
 import Link from "next/link";
 import { ClipboardList } from "lucide-react";
+import { fetchJobs } from "@/lib/slices/jobsSlice";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function ShortlistsPage() {
-  const { shortlists } = useAppSelector((s) => s.screening);
-  const resultIds = Object.keys(shortlists || {});
+  const dispatch = useAppDispatch();
+  const { items: jobs, loading } = useAppSelector((s) => s.jobs);
+  
+  // A shortlist exists for any job that has completed screening
+  const screenedJobs = jobs.filter(j => j.status === "Closed" || j.status === "screened" as any);
+
+  useEffect(() => {
+    dispatch(fetchJobs());
+  }, [dispatch]);
+
+  if (loading && jobs.length === 0) return <LoadingSpinner />;
 
   return (
     <div className="stagger">
@@ -16,7 +27,7 @@ export default function ShortlistsPage() {
         <h2 className="text-xs font-semibold tracking-widest uppercase mb-4 text-[var(--text3)]">
           Recent Shortlists
         </h2>
-        {resultIds.length === 0 ? (
+        {screenedJobs.length === 0 ? (
           <EmptyState
             title="Your Shortlists"
             description="Run AI screening on any job posting to generate your first candidate shortlist."
@@ -24,10 +35,10 @@ export default function ShortlistsPage() {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {resultIds.map((id) => (
+            {screenedJobs.map((job) => (
               <Link
-                key={id}
-                href={`/jobs/${id}/shortlist`}
+                key={job._id}
+                href={`/jobs/${job._id}/shortlist`}
                 className="p-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] transition-all group"
               >
                 <div className="flex items-center justify-between mb-2">
@@ -38,11 +49,11 @@ export default function ShortlistsPage() {
                     <ClipboardList size={19} color="#4F46E5" strokeWidth={1.8} />
                   </div>
                   <div className="text-[12px] text-[var(--text3)]">
-                    {shortlists[id].length} candidates
+                    Target: {job.shortlistSize || 10} candidates
                   </div>
                 </div>
                 <div className="font-display font-bold text-lg text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
-                  Shortlist for Job {id.slice(-4)}
+                  {job.roleTitle} Shortlist
                 </div>
                 <div className="text-[12px] text-[var(--text3)] mt-1">
                   AI Screening completed · Gemini 1.5 Pro

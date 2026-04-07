@@ -36,10 +36,13 @@ export default function JobApplicantsPage() {
     }
     const result = await dispatch(screenAll(id));
     if (screenAll.fulfilled.match(result)) {
+      await dispatch(updateJobStatus({ id, status: "Closed" }));
       toast.success("Batch screening completed!");
       router.push(`/jobs/${id}/shortlist`);
     } else {
       toast.error(result.payload as string || "Failed to screen applicants.");
+      // Rollback to open if failed
+      if (job?.status === "Open") await dispatch(updateJobStatus({ id, status: "Open" }));
       setScreening(false);
     }
   };
@@ -63,7 +66,13 @@ export default function JobApplicantsPage() {
           onClick={handleScreenAll}
           disabled={screening || applicants.length === 0}
         >
-          {screening ? <LoadingSpinner size="sm" /> : <><Zap size={18} className="mr-2" /> Screen All Applicants</>}
+          {screening ? (
+            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : <Zap size={18} className="mr-2" />}
+          {screening ? "Screening..." : "Screen All Applicants"}
         </button>
       </div>
 
@@ -166,16 +175,16 @@ function UmuravaForm({ jobId }: { jobId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 fade-in">
       <div className="grid grid-cols-2 gap-4">
-        <Input label="First Name" value={form.firstName} onChange={v => setForm({...form, firstName: v})} required />
-        <Input label="Last Name" value={form.lastName} onChange={v => setForm({...form, lastName: v})} required />
-        <Input label="Email" type="email" value={form.email} onChange={v => setForm({...form, email: v})} required />
-        <Input label="Phone (optional)" value={form.phone} onChange={v => setForm({...form, phone: v})} />
+        <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required />
+        <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required />
+        <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required />
+        <Input label="Phone (optional)" value={form.phone} onChange={(v: string) => setForm({...form, phone: v})} />
       </div>
       <div className="grid grid-cols-2 gap-4">
-         <Input label="Current Role" value={form.currentRole} onChange={v => setForm({...form, currentRole: v})} />
-         <Input label="Umurava Profile ID" value={form.umuravaId} onChange={v => setForm({...form, umuravaId: v})} />
+         <Input label="Current Role" value={form.currentRole} onChange={(v: string) => setForm({...form, currentRole: v})} />
+         <Input label="Umurava Profile ID" value={form.umuravaId} onChange={(v: string) => setForm({...form, umuravaId: v})} />
       </div>
-      <Input label="Skills (comma separated)" placeholder="React, Node, UX" value={form.skillsStr} onChange={v => setForm({...form, skillsStr: v})} required />
+      <Input label="Skills (comma separated)" placeholder="React, Node, UX" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} required />
       
       <div className="grid grid-cols-2 gap-4">
         <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
@@ -333,9 +342,9 @@ function ExternalForm({ jobId }: { jobId: string }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Input label="First Name" value={form.firstName} onChange={v => setForm({...form, firstName: v})} required={!file || !file.name.endsWith('.csv')} />
-        <Input label="Last Name" value={form.lastName} onChange={v => setForm({...form, lastName: v})} required={!file || !file.name.endsWith('.csv')} />
-        <Input label="Email" type="email" value={form.email} onChange={v => setForm({...form, email: v})} required={!file || !file.name.endsWith('.csv')} />
+        <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={!file || !file.name.endsWith('.csv')} />
+        <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={!file || !file.name.endsWith('.csv')} />
+        <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={!file || !file.name.endsWith('.csv')} />
         <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
            Years of Exp
            <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]" required />
@@ -343,7 +352,7 @@ function ExternalForm({ jobId }: { jobId: string }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Input label="Skills (comma separated)" placeholder="React, APIs" value={form.skillsStr} onChange={v => setForm({...form, skillsStr: v})} />
+        <Input label="Skills (comma separated)" placeholder="React, APIs" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
          <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
            Education
            <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]">
