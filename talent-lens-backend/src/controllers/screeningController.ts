@@ -92,13 +92,12 @@ const getGeminiModelNames = (): string[] => {
     .filter((model) => model.length > 0) ?? [];
 
   return Array.from(
-    new Set([
-      ...configuredModels,
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash-002',
-      'gemini-1.5-flash',
-    ]),
+      new Set([
+        ...configuredModels,
+        'gemini-3.1-flash-lite-preview',
+        'gemini-1.5-flash',
+        'gemini-pro',
+      ]),
   );
 };
 
