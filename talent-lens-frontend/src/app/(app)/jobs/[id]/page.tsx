@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { fetchJobById } from "@/lib/slices/jobsSlice";
 import { fetchShortlist, screenAll, resetScreeningState } from "@/lib/slices/screeningSlice";
-import { StatCard } from "@/components/ui/StatCard";
+import StatCard from "@/components/ui/StatCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Briefcase, Users, Zap, Upload, ExternalLink } from "lucide-react";
 import ScreeningModal from "@/components/ui/ScreeningModal";
