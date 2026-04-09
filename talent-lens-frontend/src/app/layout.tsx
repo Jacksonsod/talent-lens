@@ -1,6 +1,6 @@
 "use client";
 
-import "@/styles/globals.css";
+import "./globals.css";
 import { store } from "@/lib/store";
 import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
