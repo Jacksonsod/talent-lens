@@ -1,16 +1,23 @@
 name: Next.js Frontend CI
 
 on:
-  # Runs this pipeline every time someone pushes to main
   push:
-    branches: [ "main" ]
-  # Runs this pipeline on every Pull Request targeting main
+    branches: [ "main", "feat/**", "fix/**" ]
+    paths:
+      - 'talent-lens-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "feat/**", "fix/**" ]
+    paths:
+      - 'talent-lens-frontend/**'
+      - '.github/workflows/frontend-ci.yml'
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: talent-lens-frontend
 
     steps:
       # 1. Grab the code from the repository
@@ -23,6 +30,7 @@ jobs:
         with:
           node-version: '20' # Standard for modern Next.js
           cache: 'npm'
+          cache-dependency-path: talent-lens-frontend/package-lock.json
 
       # 3. Install dependencies cleanly
       - name: Install Dependencies
