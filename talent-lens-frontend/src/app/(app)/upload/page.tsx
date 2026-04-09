@@ -9,8 +9,9 @@ import { ParsedApplicantRow, EducationLevel } from "@/lib/types";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { UploadCloud, FileText, Briefcase, FileSignature, X } from "lucide-react";
+import { UploadCloud, FileText, Briefcase, FileSignature, X, Database, Wand2, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function UploadPage() {
@@ -21,6 +22,7 @@ export default function UploadPage() {
   const { parsedPreview } = useAppSelector(s => s.applicants);
 
   const [selectedJobId, setSelectedJobId] = useState("");
+  const [importMode, setImportMode] = useState<"pdf" | "data">("pdf");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   
@@ -38,33 +40,78 @@ export default function UploadPage() {
     dispatch(fetchJobs());
   }, [dispatch]);
 
+  const parseExcel = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result;
+      const workbook = XLSX.read(data, { type: "binary" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet) as any[];
+      
+      const mappedData: ParsedApplicantRow[] = json.map(row => ({
+        firstName: row.firstName || row.FirstName || "",
+        lastName: row.lastName || row.LastName || "",
+        email: row.email || row.Email || "",
+        currentRole: row.currentRole || row.Role || "",
+        yearsOfExperience: row.yearsOfExperience || row.Experience || 0,
+        skills: row.skills || row.Skills || "",
+        educationLevel: row.educationLevel || row.Education || "Bachelor"
+      }));
+
+      dispatch(setParsedPreview(mappedData));
+      toast.success(`Successfully parsed ${mappedData.length} records from Excel.`);
+      setFiles([]);
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!selectedJobId) {
        toast.error("Please select a job first.");
        return;
     }
 
-    const newPdfs = acceptedFiles.filter(f => f.name.endsWith('.pdf'));
-    const csvs = acceptedFiles.filter(f => f.name.endsWith('.csv'));
+    if (importMode === "data") {
+      const dataFile = acceptedFiles.find(f => f.name.endsWith('.csv') || f.name.endsWith('.xlsx') || f.name.endsWith('.xls'));
+      if (!dataFile) return toast.error("Only CSV or Excel formats allowed in this mode.");
 
-    if (csvs.length > 0) {
-       if (newPdfs.length > 0) toast.error("Mixing CSV and PDF is not allowed. Selected CSV only.");
-       Papa.parse(csvs[0], {
-         header: true,
-         complete: (results) => {
-           dispatch(setParsedPreview(results.data as ParsedApplicantRow[]));
-           toast.success(`Parsed ${results.data.length} rows`);
-           setFiles([]);
-         }
-       });
-    } else if (newPdfs.length > 0) {
-       setFiles(prev => [...prev, ...newPdfs]);
+      if (dataFile.name.endsWith('.csv')) {
+        Papa.parse(dataFile, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            dispatch(setParsedPreview(results.data as ParsedApplicantRow[]));
+            toast.success(`Parsed ${results.data.length} rows from CSV`);
+            setFiles([]);
+          }
+        });
+      } else {
+        parseExcel(dataFile);
+      }
     } else {
-       toast.error("Only PDF or CSV formats allowed.");
+      const newPdfs = acceptedFiles.filter(f => f.name.endsWith('.pdf'));
+      if (newPdfs.length === 0) return toast.error("Only PDF resumes allowed in AI Extraction mode.");
+      setFiles(prev => [...prev, ...newPdfs]);
     }
-  }, [dispatch, selectedJobId]);
+  }, [dispatch, selectedJobId, importMode]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'application/pdf': ['.pdf'], 'text/csv': ['.csv']} });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop, 
+    accept: importMode === "pdf" 
+      ? { 'application/pdf': ['.pdf'] } 
+      : { 'text/csv': ['.csv'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'], 'application/vnd.ms-excel': ['.xls'] }
+  });
+
+  const downloadTemplate = () => {
+    const headers = "firstName,lastName,email,currentRole,yearsOfExperience,skills,educationLevel\nJohn,Doe,john@example.com,Developer,5,\"React, Node, SQL\",Bachelor";
+    const blob = new Blob([headers], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "talentai_import_template.csv";
+    a.click();
+  };
 
   const handleSingleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,13 +159,8 @@ export default function UploadPage() {
 
       const res = await dispatch(bulkUploadExternalApplicants(formData));
       if (bulkUploadExternalApplicants.fulfilled.match(res)) {
-        toast.success(`Ingested ${res.payload.successfulUploads} candidates! Initializing auto-screening...`, { id: toastId });
+        toast.success(`Ingested ${res.payload.successfulUploads} candidates successfully!`, { id: toastId });
         
-        if (res.payload.successfulUploads > 0) {
-           await dispatch(screenAll(selectedJobId));
-           toast.success("AI Screening completed successfully.");
-        }
-
         setFiles([]);
         router.push(`/jobs/${selectedJobId}/applicants`);
       } else {
@@ -197,40 +239,89 @@ export default function UploadPage() {
                <Briefcase className="opacity-20 mx-auto mb-4" size={48} />
                Select a target job requisition above to enable dropzone capabilities.
             </div>
-         ) : parsedPreview && parsedPreview.length > 0 ? (
-            <div className="space-y-4 fade-in pt-6 border-t border-[var(--border)]">
-               <h3 className="font-bold text-lg text-[var(--text)] flex items-center justify-between">
-                  CSV Extraction Preview ({parsedPreview.length} rows detected)
-                  <button className="text-[var(--red)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[rgba(255,107,107,0.1)] transition-colors" onClick={() => dispatch(clearParsedPreview())}>
-                    Cancel Batch
-                  </button>
-               </h3>
-               <div className="max-h-64 overflow-y-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
-                 {parsedPreview.map((r, i) => (
-                    <div key={i} className="text-sm p-3 border-b border-[var(--border)] last:border-0 truncate flex gap-4">
-                      <div className="font-bold text-[var(--text)] w-1/4 truncate">{r.firstName} {r.lastName}</div>
-                      <div className="text-[var(--text2)] w-1/4 truncate">{r.email}</div>
-                      <div className="text-[var(--text3)] w-1/2 min-w-0 truncate">Skills: {r.skills}</div>
-                    </div>
-                 ))}
-               </div>
-               <button onClick={handleBulkUploadCSV} disabled={loading} className="btn btn-green w-full h-14 text-base font-bold shadow-sm flex items-center justify-center gap-2 mt-2">
-                 {loading ? <LoadingSpinner size={20} /> : <FileText size={20} />}
-                 {loading ? "Transmitting payload..." : "Confirm & Import Mapping into Selected Job"}
+         ) : (
+          <>
+            {/* Mode Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+               <button 
+                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
+                onClick={() => {
+                  setImportMode("pdf");
+                  dispatch(clearParsedPreview());
+                }}
+               >
+                 <div className={`p-2.5 rounded-lg ${importMode === "pdf" ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface3)] text-[var(--text2)]'}`}>
+                    <Wand2 size={20} />
+                 </div>
+                 <div>
+                    <div className="font-bold text-sm text-[var(--text)]">AI Resume Extraction</div>
+                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Bulk OCR & Data Mining</div>
+                 </div>
+               </button>
+               <button 
+                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "data" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
+                onClick={() => {
+                  setImportMode("data");
+                  setFiles([]);
+                }}
+               >
+                 <div className={`p-2.5 rounded-lg ${importMode === "data" ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface3)] text-[var(--text2)]'}`}>
+                    <Database size={20} />
+                 </div>
+                 <div>
+                    <div className="font-bold text-sm text-[var(--text)]">Direct Spreadsheet</div>
+                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Import from CSV or Excel</div>
+                 </div>
                </button>
             </div>
-         ) : (
-            <div className="space-y-6 fade-in pt-6 border-t border-[var(--border)]">
-              <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--surface2)]'}`}>
-                <input {...getInputProps()} />
-                <UploadCloud size={40} className={`mb-4 ${isDragActive ? 'text-[var(--accent)]' : 'text-[var(--text3)]'}`} strokeWidth={1.5} />
-                <div className="font-bold text-lg text-[var(--text)] text-center">
-                  Drag & drop multiple PDF resumes here
+
+            {parsedPreview && parsedPreview.length > 0 ? (
+                <div className="space-y-4 fade-in pt-6 border-t border-[var(--border)]">
+                  <h3 className="font-bold text-lg text-[var(--text)] flex items-center justify-between">
+                      Import Preview ({parsedPreview.length} rows detected)
+                      <button className="text-[var(--red)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[rgba(255,107,107,0.1)] transition-colors" onClick={() => dispatch(clearParsedPreview())}>
+                        Cancel Batch
+                      </button>
+                  </h3>
+                  <div className="max-h-64 overflow-y-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
+                    {parsedPreview.map((r, i) => (
+                        <div key={i} className="text-sm p-3 border-b border-[var(--border)] last:border-0 truncate flex flex-col sm:flex-row gap-1 sm:gap-4">
+                          <div className="font-bold text-[var(--text)] sm:w-1/4 truncate">{r.firstName} {r.lastName}</div>
+                          <div className="text-[var(--text2)] sm:w-1/4 truncate">{r.email}</div>
+                          <div className="text-[var(--text3)] sm:w-1/2 min-w-0 truncate italic sm:not-italic">Skills: {r.skills}</div>
+                        </div>
+                    ))}
+                  </div>
+                  <button onClick={handleBulkUploadCSV} disabled={loading} className="btn btn-green w-full h-14 text-base font-bold shadow-sm flex items-center justify-center gap-2 mt-2">
+                    {loading ? <LoadingSpinner size={20} /> : <FileText size={20} />}
+                    {loading ? "Transmitting payload..." : "Confirm & Import Mapping into Selected Job"}
+                  </button>
                 </div>
-                <div className="text-sm text-[var(--text3)] mt-2 text-center max-w-md">
-                  Upload multiple PDFs for AI batch extraction. Upload a single CSV to jump into manual batch mode.
-                </div>
-              </div>
+            ) : (
+                <div className="space-y-6 fade-in pt-6 border-t border-[var(--border)]">
+                  <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--surface2)]'}`}>
+                    <input {...getInputProps()} />
+                    <UploadCloud size={40} className={`mb-4 ${isDragActive ? 'text-[var(--accent)]' : 'text-[var(--text3)]'}`} strokeWidth={1.5} />
+                    <div className="font-bold text-lg text-[var(--text)] text-center">
+                      {importMode === "pdf" ? "Drag & drop multiple PDF resumes here" : "Drag & drop CSV or Excel data file here"}
+                    </div>
+                    <div className="text-sm text-[var(--text3)] mt-2 text-center max-w-md">
+                      {importMode === "pdf" 
+                        ? "Upload multiple PDFs for AI batch extraction. Our Gemini model will automatically map candidate details." 
+                        : "Upload a single CSV or Excel (.xlsx/.xls) file to directly import candidate rows."}
+                    </div>
+                  </div>
+
+                  {importMode === "data" && (
+                    <div className="flex justify-center">
+                      <button 
+                        onClick={downloadTemplate}
+                        className="flex items-center gap-2 text-xs font-bold text-[var(--accent)] hover:underline opacity-80"
+                      >
+                        <Download size={14} /> Download Import Template (.csv)
+                      </button>
+                    </div>
+                  )}
 
               {files.length > 0 && (
                  <div className="fade-in">
@@ -261,7 +352,7 @@ export default function UploadPage() {
                            </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={true} />
                           <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={true} />
                           <Input label="Email Address" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={true} />
@@ -271,7 +362,7 @@ export default function UploadPage() {
                           </label>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input label="Skill Tags (comma separated)" placeholder="React, APIs, Sales" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
                            <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase tracking-widest pl-1">
                              Education Qualification
@@ -295,10 +386,12 @@ export default function UploadPage() {
                          {loading ? "Analyzing Context Matrix via Gemini..." : `Extract & Ingest ${files.length} Candidates`}
                       </button>
                     )}
-                 </div>
-              )}
+                  </div>
+               )}
             </div>
-         )}
+          )}
+        </>
+      )}
       </div>
     </div>
   );

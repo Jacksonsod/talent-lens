@@ -63,51 +63,60 @@ export default function CandidateCard({
     >
       {/* Card Top */}
       <div
-        className="flex items-center gap-3.5 px-5 py-3.5 cursor-pointer"
+        className="flex items-center gap-3 px-4 sm:px-5 py-3.5 cursor-pointer select-none"
         onClick={() => setOpen(!open)}
       >
-        {/* Rank */}
-        <div
-          className={cn("font-display font-bold text-[13px] min-w-[24px]", rankColorClass(rank))}
-        >
-          #{rank}
-        </div>
+        {/* Rank & Avatar Group */}
+        <div className="flex items-center gap-3">
+          <div
+            className={cn("font-display font-bold text-[13px] min-w-[24px]", rankColorClass(rank))}
+          >
+            #{rank}
+          </div>
 
-        {/* Avatar */}
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0"
-          style={{ background: avatarColor.bg, color: avatarColor.text }}
-        >
-          {app.firstName.charAt(0)}{app.lastName.charAt(0)}
+          <div
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[12px] sm:text-[13px] font-semibold shrink-0"
+            style={{ background: avatarColor.bg, color: avatarColor.text }}
+          >
+            {app.firstName.charAt(0)}{app.lastName.charAt(0)}
+          </div>
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-[14px]" style={{ color: "var(--text)" }}>
+          <div className="font-medium text-[13.5px] sm:text-[14px] truncate" style={{ color: "var(--text)" }}>
             {fullName}
           </div>
-          <div className="text-[12px] truncate" style={{ color: "var(--text3)" }}>
-            {app.currentRole || "Candidate"} · {app.yearsOfExperience}yr exp · {app.educationLevel}
+          <div className="text-[11px] sm:text-[12px] truncate" style={{ color: "var(--text3)" }}>
+            {app.currentRole || "Candidate"} <span className="hidden sm:inline">· {app.yearsOfExperience}yr exp · {app.educationLevel}</span>
           </div>
         </div>
 
         {/* Score */}
-        <div className="text-right shrink-0">
-          <div
-            className={cn(
-              "font-display font-extrabold text-[22px] tracking-tight",
-              matchScore >= 80 ? "text-[var(--green)]" : matchScore >= 65 ? "text-[var(--amber)]" : "text-[var(--red)]"
-            )}
-          >
-            {matchScore}
+        <div className="text-right shrink-0 flex items-center gap-3">
+          <div className="hidden sm:block">
+            <div
+              className={cn(
+                "font-display font-extrabold text-[22px] tracking-tight",
+                matchScore >= 80 ? "text-[var(--green)]" : matchScore >= 65 ? "text-[var(--amber)]" : "text-[var(--red)]"
+              )}
+            >
+              {matchScore}
+            </div>
+            <ScoreBar value={matchScore} className="w-[72px] mt-1" />
           </div>
-          <ScoreBar value={matchScore} className="w-[72px] mt-1.5" />
-        </div>
+          <div className={cn(
+            "sm:hidden font-display font-extrabold text-xl",
+            matchScore >= 80 ? "text-[var(--green)]" : matchScore >= 65 ? "text-[var(--amber)]" : "text-[var(--red)]"
+          )}>
+            {matchScore}%
+          </div>
 
-        <ChevronDown
-          size={16}
-          className={cn("transition-transform duration-200 ml-2 text-[var(--text3)]", open && "rotate-180")}
-        />
+          <ChevronDown
+            size={16}
+            className={cn("transition-transform duration-200 text-[var(--text3)]", open && "rotate-180")}
+          />
+        </div>
       </div>
 
       {/* Expandable Reasoning */}
@@ -169,10 +178,10 @@ export default function CandidateCard({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <span
               className={cn(
-                "rec-badge text-[12px] px-3.5 py-1.5 rounded-full font-medium border transition-all",
+                "rec-badge text-[11px] sm:text-[12px] px-3.5 py-1.5 rounded-full font-medium border transition-all",
                 finalRecommendation.toLowerCase().includes("strongly") ? "bg-[rgba(0,229,160,0.12)] text-[var(--green)] border-[rgba(0,229,160,0.25)]" :
                 finalRecommendation.toLowerCase().includes("consider") ? "bg-[var(--amber-dim)] text-[var(--amber)] border-[rgba(255,181,71,0.25)]" :
                 "bg-[var(--red-dim)] text-[var(--red)] border-[rgba(255,107,107,0.2)]"
@@ -180,7 +189,7 @@ export default function CandidateCard({
             >
               {finalRecommendation}
             </span>
-            <div className="ai-tag flex items-center gap-2 text-[11px] text-[var(--text3)]">
+            <div className="ai-tag flex items-center gap-2 text-[10px] sm:text-[11px] text-[var(--text3)]">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse-ai" />
               Generated by Gemini 1.5 Pro
             </div>

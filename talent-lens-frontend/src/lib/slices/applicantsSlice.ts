@@ -43,11 +43,8 @@ export const addExternalApplicant = createAsyncThunk(
   "applicants/addExternal",
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      const response = await api.post<Applicant>("/api/applicants/external", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // Omit explicit Content-Type so Axios can auto-set the boundary for FormData
+      const response = await api.post<Applicant>("/api/applicants/external", formData);
       return response.data;
     } catch (err: any) {
       if (err.response?.status === 409) {
@@ -70,11 +67,8 @@ export const bulkUploadExternalApplicants = createAsyncThunk(
   "applicants/bulkExternal",
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      const response = await api.post<BulkUploadResponse>("/api/applicants/bulk-upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // Omit explicit Content-Type so Axios can auto-set the boundary for FormData
+      const response = await api.post<BulkUploadResponse>("/api/applicants/bulk-upload", formData);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || "Failed to bulk upload applicants");

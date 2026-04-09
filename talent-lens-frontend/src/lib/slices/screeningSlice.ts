@@ -31,7 +31,7 @@ export const fetchShortlist = createAsyncThunk(
   async (jobId: string, { rejectWithValue }) => {
     try {
       // Returns a wrapper object containing the results array
-      const response = await api.get<{ jobId: string, shortlistSize: number, count: number, results: ScreeningResult[] }>(`/api/screening/job/${jobId}/shortlist`);
+      const response = await api.get<{ jobId: string, results: ScreeningResult[] }>(`/api/screening/job/${jobId}/shortlist`);
       return { jobId, results: response.data.results };
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message || "Failed to fetch shortlist");
@@ -89,6 +89,9 @@ const screeningSlice = createSlice({
         state.screenAllResult = action.payload;
         state.progress = 100;
         state.log.push(`Screening completed. Processed ${action.payload.totalScreened} applicants.`);
+        if (action.payload.results?.length) {
+          state.shortlists[action.payload.jobId] = action.payload.results;
+        }
       })
       .addCase(screenAll.rejected, (state, action) => {
         state.isScreening = false;

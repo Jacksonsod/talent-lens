@@ -27,13 +27,10 @@ export default function DashboardPage() {
   }, [error]);
 
   // Derive stats directly from live jobs
-  const activeJobsCount = jobs.filter(j => j.status === "Open" || j.status === "Draft").length;
-  // Let's deduce screened from status Closed or if they have a match score (which means they're closed or screening)
-  const screenedJobsCount = jobs.filter(j => j.status === "Closed").length;
+  const activeJobsCount = jobs.filter(j => j.status === "Open").length;
+  const totalJobsCount = jobs.length;
+  const screenedJobsCount = jobs.filter(j => j.status === "Screening" || j.status === "Closed").length;
   
-  // Total applicants isn't given on Job type, so we can mock or remove it. 
-  // Let's just mock total applicants to 0 or leave it static for the dashboard visual impact.
-  const totalApplicants = 0; 
   const avgMatchScore = screenAllResult ? Math.round(screenAllResult.results.reduce((acc, c) => acc + c.matchScore, 0) / Math.max(1, screenAllResult.results.length)) : 0;
 
   if (loading && jobs.length === 0) return <LoadingSpinner />;
@@ -41,10 +38,10 @@ export default function DashboardPage() {
   return (
     <div className="stagger">
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Active Jobs" value={activeJobsCount} color="blue" />
-        <StatCard label="Total Applicants" value={totalApplicants} sub="Unavailable" />
-        <StatCard label="Closed Jobs" value={screenedJobsCount} color="green" highlight />
+        <StatCard label="Total Jobs" value={totalJobsCount} color="purple" />
+        <StatCard label="Screened Jobs" value={screenedJobsCount} color="green" />
         <StatCard label="Latest Avg Score" value={avgMatchScore > 0 ? avgMatchScore : "-"} color="amber" highlight />
       </div>
 
