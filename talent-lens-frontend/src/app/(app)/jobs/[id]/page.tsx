@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { fetchJobById } from "@/lib/slices/jobsSlice";
-import { fetchShortlist, runScreening } from "@/lib/slices/screeningSlice";
+import { fetchShortlist, screenAll, resetScreeningState } from "@/lib/slices/screeningSlice";
 import { StatCard } from "@/components/ui/StatCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Briefcase, Users, Zap, Upload, ExternalLink } from "lucide-react";
@@ -16,9 +16,8 @@ export default function JobDetailsPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const job = useAppSelector((s) => s.items.find(j => j._id === id) || s.selected);
-  const loading = useAppSelector((s) => s.loading);
-  const shortlist = useAppSelector((s) => s.screening.results[id]);
+  const job = useAppSelector((s) => s.jobs.items.find(j => j._id === id) || s.jobs.selected);
+  const loading = useAppSelector((s) => s.jobs.loading);
 
   useEffect(() => {
     dispatch(fetchJobById(id));
@@ -40,11 +39,11 @@ export default function JobDetailsPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="font-display font-bold text-3xl tracking-tight mb-2" style={{ color: "var(--text)" }}>
-              {job.title}
+              {job.roleTitle}
             </h1>
             <div className="flex items-center gap-4 text-sm" style={{ color: "var(--text3)" }}>
-              <span className="flex items-center gap-1.5"><Briefcase size={14}/> {job.department}</span>
-              <span className="flex items-center gap-1.5"><Users size={14}/> {job.applicantCount} Applicants</span>
+              <span className="flex items-center gap-1.5"><Briefcase size={14}/> Engineering</span>
+              <span className="flex items-center gap-1.5"><Users size={14}/> Active Requisition</span>
               <span className="px-2 py-0.5 rounded bg-[var(--surface3)] text-[10px] font-bold uppercase tracking-wider">
                 {job.status}
               </span>
@@ -58,7 +57,7 @@ export default function JobDetailsPage() {
                 <Upload size={14} className="mr-2" />
                 Upload Candidates
              </button>
-             {job.status === "screened" ? (
+             {(job.status === "Screening" || job.status === "Closed") ? (
                 <button 
                   className="btn btn-primary"
                   onClick={() => router.push(`/jobs/${id}/shortlist`)}
@@ -69,7 +68,7 @@ export default function JobDetailsPage() {
              ) : (
                 <button 
                   className="btn btn-primary animate-pulse-ai"
-                  onClick={() => dispatch(runScreening(id))}
+                  onClick={() => dispatch(screenAll(id))}
                 >
                   <Zap size={14} className="mr-2 fill-current" />
                   Run AI Screening
@@ -82,8 +81,8 @@ export default function JobDetailsPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard label="Phase" value="Phase 3" color="blue" sub="Candidate Ingestion" />
-        <StatCard label="Applicants" value={job.applicantCount} sub="Successfully loaded" />
-        <StatCard label="AI Readiness" value={job.skills.length > 0 ? "High" : "Needs Skills"} color={job.skills.length > 0 ? "green" : "amber"} sub={`${job.skills.length} matching criteria`} />
+        <StatCard label="Status" value={job.status} sub="Current Workflow Stage" />
+        <StatCard label="AI Readiness" value={job.requiredSkills.length > 0 ? "High" : "Needs Skills"} color={job.requiredSkills.length > 0 ? "green" : "amber"} sub={`${job.requiredSkills.length} matching criteria`} />
       </div>
 
       {/* Main Content Sections */}
@@ -134,7 +133,7 @@ export default function JobDetailsPage() {
               </p>
               <button 
                 className="btn btn-primary w-full py-4 text-base font-bold"
-                onClick={() => dispatch(runScreening(id))}
+                onClick={() => dispatch(screenAll(id))}
               >
                 Launch AI Matchmaking
               </button>
@@ -146,7 +145,7 @@ export default function JobDetailsPage() {
            <div className="rounded-2xl p-6 border border-[var(--border)] bg-[var(--surface)]">
               <h3 className="text-[11px] font-bold tracking-widest uppercase mb-4" style={{ color: "var(--text3)" }}>Job Criteria</h3>
               <div className="flex flex-wrap gap-2">
-                {job.skills.map(s => (
+                {job.requiredSkills.map(s => (
                   <span key={s} className="px-2.5 py-1 rounded-md text-[11px] bg-[var(--surface3)] text-[var(--text2)] border border-[var(--border)]">
                     {s}
                   </span>
@@ -154,7 +153,7 @@ export default function JobDetailsPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-[var(--border)]">
                  <div className="text-[10px] uppercase font-bold text-[var(--text3)] mb-2">Experience</div>
-                 <div className="text-sm font-medium">{job.experienceRequired}</div>
+                 <div className="text-sm font-medium">{job.experienceLevel}</div>
               </div>
            </div>
         </div>

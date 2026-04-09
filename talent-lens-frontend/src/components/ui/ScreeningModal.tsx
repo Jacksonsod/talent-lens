@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
-import { clearScreening } from "@/lib/slices/screeningSlice";
+import { resetScreeningState } from "@/lib/slices/screeningSlice";
 import { cn } from "@/lib/utils/helpers";
 import { useRouter } from "next/navigation";
 
@@ -28,7 +28,7 @@ export default function ScreeningModal({ onComplete }: ScreeningModalProps) {
     if (screeningJobId) {
       router.push(`/jobs/${screeningJobId}/shortlist`);
     }
-    dispatch(clearScreening());
+    dispatch(resetScreeningState());
     onComplete?.();
   };
 
@@ -72,7 +72,7 @@ export default function ScreeningModal({ onComplete }: ScreeningModalProps) {
           {progress < 100 ? (
             <button
               className="btn btn-ghost"
-              onClick={() => dispatch(clearScreening())}
+              onClick={() => dispatch(resetScreeningState())}
             >
               Cancel
             </button>

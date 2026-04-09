@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Applicant, ScreeningResult } from "@/lib/types";
 import { cn } from "@/lib/utils/helpers";
 import { ScoreBar } from "@/components/ui/StatCard";
-import { ChevronDown, ReasoningIcon } from "lucide-react"; // Assume basic lucide icons
+import { ChevronDown } from "lucide-react"; // Assume basic lucide icons
 
 const AVATAR_COLORS = [
   { bg: "rgba(0,229,160,0.12)", text: "#00e5a0" },
