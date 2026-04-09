@@ -308,6 +308,7 @@ function ExternalForm({ jobId }: { jobId: string }) {
      }
      toast.success(`Imported ${success} candidates. ${failed ? failed + ' failed.' : ''}`);
      dispatch(clearParsedPreview());
+     await dispatch(fetchApplicantsByJob(jobId));
      setLoading(false);
   };
 

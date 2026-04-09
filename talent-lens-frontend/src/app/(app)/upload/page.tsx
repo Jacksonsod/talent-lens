@@ -159,13 +159,8 @@ export default function UploadPage() {
 
       const res = await dispatch(bulkUploadExternalApplicants(formData));
       if (bulkUploadExternalApplicants.fulfilled.match(res)) {
-        toast.success(`Ingested ${res.payload.successfulUploads} candidates! Initializing auto-screening...`, { id: toastId });
+        toast.success(`Ingested ${res.payload.successfulUploads} candidates successfully!`, { id: toastId });
         
-        if (res.payload.successfulUploads > 0) {
-           await dispatch(screenAll(selectedJobId));
-           toast.success("AI Screening completed successfully.");
-        }
-
         setFiles([]);
         router.push(`/jobs/${selectedJobId}/applicants`);
       } else {
