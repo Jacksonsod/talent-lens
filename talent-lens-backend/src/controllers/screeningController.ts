@@ -679,6 +679,7 @@ export const screenAllApplicants = async (req: Request, res: Response): Promise<
           },
         },
       ]);
+      await Job.findByIdAndUpdate(currentJobObjectId, { status: 'screened' });
     }
 
     const completedDocs = await ScreeningResult.find({
