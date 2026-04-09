@@ -16,6 +16,11 @@ type ExtractedApplicantPayload = {
 
 const sanitizeJson = (text: string): string => text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
+const getEnvNumber = (key: string, fallback: number): number => {
+  const value = Number(process.env[key]);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+};
+
 type OwnershipCheckResult =
   | { allowed: true }
   | { allowed: false; status: 403 | 404; message: string };
@@ -38,6 +43,13 @@ const getUserId = (req: Request): string | null => req.user?.userId ?? null;
 
 const isDuplicateKeyError = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000;
+
+const GEMINI_RESUME_TEXT_LIMIT = getEnvNumber('GEMINI_RESUME_TEXT_LIMIT', 15000);
+const GEMINI_RATE_LIMIT_MAX_RETRIES = getEnvNumber('GEMINI_RATE_LIMIT_MAX_RETRIES', 3);
+const GEMINI_RATE_LIMIT_BASE_BACKOFF_MS = getEnvNumber('GEMINI_RATE_LIMIT_BASE_BACKOFF_MS', 15000);
+const GEMINI_RATE_LIMIT_MIN_BACKOFF_MS = getEnvNumber('GEMINI_RATE_LIMIT_MIN_BACKOFF_MS', 5000);
+const BULK_UPLOAD_THROTTLE_THRESHOLD = getEnvNumber('BULK_UPLOAD_THROTTLE_THRESHOLD', 5);
+const BULK_UPLOAD_THROTTLE_DELAY_MS = getEnvNumber('BULK_UPLOAD_THROTTLE_DELAY_MS', 4000);
 
 export const addUmuravaApplicant = async (req: Request, res: Response): Promise<void> => {
   const userId = getUserId(req);
@@ -296,16 +308,12 @@ export const bulkUploadAndExtract = async (req: Request, res: Response): Promise
     const results: unknown[] = [];
     const errors: { fileName: string; error: string; retryAfter?: number }[] = [];
 
-    const MAX_RETRIES = 3;
-    const BASE_DELAY_MS = 2000; // 2 seconds base delay between files
-    const EXPONENTIAL_BASE_MS = 15000; // 15 seconds base for exponential backoff (instead of 5)
-
     for (let i = 0; i < files.length; i += 1) {
       const file = files[i];
       let processed = false;
       let retryCount = 0;
 
-      while (!processed && retryCount < MAX_RETRIES) {
+      while (!processed && retryCount < GEMINI_RATE_LIMIT_MAX_RETRIES) {
         try {
           const parser = new PDFParse({ data: file.buffer });
           const parsedPdf = await parser.getText();
@@ -323,7 +331,7 @@ export const bulkUploadAndExtract = async (req: Request, res: Response): Promise
   "currentRole": "string"
 }
 Resume text:
-${pdfText.slice(0, 15000)}`;
+${pdfText.slice(0, GEMINI_RESUME_TEXT_LIMIT)}`;
 
           const aiResponse = await model.generateContent(prompt);
           const responseText = aiResponse.response.text();
@@ -348,11 +356,11 @@ ${pdfText.slice(0, 15000)}`;
         } catch (error) {
           if (isRateLimitError(error)) {
             const apiRetryAfterMs = extractRetryAfterSeconds(error);
-            const exponentialBackoffMs = Math.pow(2, retryCount) * EXPONENTIAL_BASE_MS; // 15s, 30s, 60s
-            const backoffDelay = Math.max(apiRetryAfterMs ?? exponentialBackoffMs, 5000); // Minimum 5 seconds
+            const exponentialBackoffMs = Math.pow(2, retryCount) * GEMINI_RATE_LIMIT_BASE_BACKOFF_MS;
+            const backoffDelay = Math.max(apiRetryAfterMs ?? exponentialBackoffMs, GEMINI_RATE_LIMIT_MIN_BACKOFF_MS);
             retryCount += 1;
 
-            if (retryCount >= MAX_RETRIES) {
+            if (retryCount >= GEMINI_RATE_LIMIT_MAX_RETRIES) {
               errors.push({
                 fileName: file.originalname,
                 error: error instanceof Error ? error.message : 'Rate limit exceeded after retries.',
@@ -362,7 +370,7 @@ ${pdfText.slice(0, 15000)}`;
             } else {
               const delaySeconds = (backoffDelay / 1000).toFixed(1);
               console.warn(
-                `Rate limit hit for ${file.originalname}. Retrying in ${delaySeconds}s (attempt ${retryCount}/${MAX_RETRIES})`,
+                `Rate limit hit for ${file.originalname}. Retrying in ${delaySeconds}s (attempt ${retryCount}/${GEMINI_RATE_LIMIT_MAX_RETRIES})`,
               );
               await new Promise((resolve) => setTimeout(resolve, backoffDelay));
             }
@@ -376,10 +384,8 @@ ${pdfText.slice(0, 15000)}`;
         }
       }
 
-      // Add spacing between files to reduce rate-limit issues
-      if (i < files.length - 1) {
-        const delayMs = files.length > 5 ? 6000 : BASE_DELAY_MS; // 6s for large batches, 2s otherwise
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      if (files.length > BULK_UPLOAD_THROTTLE_THRESHOLD && i < files.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, BULK_UPLOAD_THROTTLE_DELAY_MS));
       }
     }
 
