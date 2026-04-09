@@ -2,11 +2,11 @@ name: TalentLens API CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feat/**", "fix/**" ]
     paths:
       - 'talent-lens-backend/**'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "feat/**", "fix/**" ]
     paths:
       - 'talent-lens-backend/**'
 
