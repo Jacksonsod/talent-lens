@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Recommendation, ScreeningResult } from "@/lib/types";
+import { ScreeningResult } from "@/lib/types";
 
 // Merge Tailwind classes safely
 export function cn(...inputs: ClassValue[]) {
@@ -9,33 +9,29 @@ export function cn(...inputs: ClassValue[]) {
 
 // Score helpers
 export function scoreColor(score: number): string {
-  if (score >= 80) return "text-brand-green";
-  if (score >= 65) return "text-brand-amber";
-  return "text-brand-red";
+  if (score >= 80) return "text-[var(--green)]";
+  if (score >= 65) return "text-[var(--amber)]";
+  return "text-[var(--red)]";
 }
 
 export function scoreBgColor(score: number): string {
-  if (score >= 80) return "bg-brand-green-dim text-brand-green";
-  if (score >= 65) return "bg-brand-amber-dim text-brand-amber";
-  return "bg-brand-red-dim text-brand-red";
+  if (score >= 80) return "bg-[var(--green-dim)] text-[var(--green)]";
+  if (score >= 65) return "bg-[var(--amber-dim)] text-[var(--amber)]";
+  return "bg-[var(--red-dim)] text-[var(--red)]";
 }
 
 export function scoreBarColor(score: number): string {
-  if (score >= 80) return "bg-brand-green";
-  if (score >= 65) return "bg-brand-amber";
-  return "bg-brand-red";
+  if (score >= 80) return "bg-[var(--green)]";
+  if (score >= 65) return "bg-[var(--amber)]";
+  return "bg-[var(--red)]";
 }
 
-export function recBadgeStyle(rec: Recommendation) {
-  switch (rec) {
-    case "Strongly recommend":
-    case "Recommend":
-      return "bg-brand-green-dim text-brand-green border border-brand-green/20";
-    case "Consider":
-      return "bg-brand-amber-dim text-brand-amber border border-brand-amber/20";
-    case "Low match":
-      return "bg-brand-red-dim text-brand-red border border-brand-red/20";
-  }
+export function recBadgeStyle(rec: string) {
+  const r = rec.toLowerCase();
+  if (r.includes("strong")) return "bg-[var(--green-dim)] text-[var(--green)] border-[var(--green)]/20";
+  if (r.includes("hire")) return "bg-[var(--green-dim)] text-[var(--green)] border-[var(--green)]/20";
+  if (r.includes("maybe")) return "bg-[var(--amber-dim)] text-[var(--amber)] border-[var(--amber)]/20";
+  return "bg-[var(--red-dim)] text-[var(--red)] border-[var(--red)]/20";
 }
 
 // Initials from name
@@ -52,7 +48,7 @@ export function getInitials(name: string): string {
 export function calcAverageScore(results: ScreeningResult[]): number {
   if (!results.length) return 0;
   return Math.round(
-    results.reduce((sum, r) => sum + r.totalScore, 0) / results.length
+    results.reduce((sum, r) => sum + r.matchScore, 0) / results.length
   );
 }
 

@@ -40,7 +40,7 @@ export default function UploadPage() {
     dispatch(fetchJobs());
   }, [dispatch]);
 
-  const parseExcel = (file: File) => {
+  const parseExcel = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = e.target?.result;
@@ -64,7 +64,7 @@ export default function UploadPage() {
       setFiles([]);
     };
     reader.readAsBinaryString(file);
-  };
+  }, [dispatch]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!selectedJobId) {
@@ -94,7 +94,7 @@ export default function UploadPage() {
       if (newPdfs.length === 0) return toast.error("Only PDF resumes allowed in AI Extraction mode.");
       setFiles(prev => [...prev, ...newPdfs]);
     }
-  }, [dispatch, selectedJobId, importMode]);
+  }, [dispatch, selectedJobId, importMode, parseExcel]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop, 
@@ -368,8 +368,8 @@ export default function UploadPage() {
                              Education Qualification
                              <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-4 py-3 border rounded-xl bg-[var(--surface)] border-[var(--border)] focus:border-[var(--accent)] text-[var(--text)] transition-all outline-none appearance-none">
                                <option value="Associate">Associate Degree</option>
-                               <option value="Bachelor">Bachelor's Degree</option>
-                               <option value="Master">Master's Degree</option>
+                               <option value="Bachelor">Bachelor&apos;s Degree</option>
+                               <option value="Master">Master&apos;s Degree</option>
                                <option value="PhD">PhD / Doctorate</option>
                                <option value="Other">Other Certificate</option>
                              </select>

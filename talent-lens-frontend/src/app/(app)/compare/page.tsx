@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import EmptyState from "@/components/ui/EmptyState";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
@@ -9,8 +9,9 @@ import { fetchShortlist } from "@/lib/slices/screeningSlice";
 import { ScoreBar } from "@/components/ui/StatCard";
 import JobCard from "@/components/jobs/JobCard";
 import { Applicant } from "@/lib/types";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export default function ComparePage() {
+function CompareContent() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -149,6 +150,14 @@ export default function ComparePage() {
         })}
       </div>
     </div>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <CompareContent />
+    </Suspense>
   );
 }
 

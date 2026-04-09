@@ -40,7 +40,7 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Active Jobs" value={activeJobsCount} color="blue" />
-        <StatCard label="Total Jobs" value={totalJobsCount} color="purple" />
+        <StatCard label="Total Jobs" value={totalJobsCount} color="default" />
         <StatCard label="Screened Jobs" value={screenedJobsCount} color="green" />
         <StatCard label="Latest Avg Score" value={avgMatchScore > 0 ? avgMatchScore : "-"} color="amber" highlight />
       </div>

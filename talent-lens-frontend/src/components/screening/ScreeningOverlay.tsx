@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
-import { clearScreening } from "@/lib/slices/screeningSlice";
+import { resetScreeningState } from "@/lib/slices/screeningSlice";
 
 export default function ScreeningOverlay() {
   const dispatch = useAppDispatch();
@@ -72,7 +72,7 @@ export default function ScreeningOverlay() {
               borderColor: "rgba(255,255,255,0.12)",
               color: "#9090a8",
             }}
-            onClick={() => dispatch(clearScreening())}
+            onClick={() => dispatch(resetScreeningState())}
           >
             Cancel
           </button>
