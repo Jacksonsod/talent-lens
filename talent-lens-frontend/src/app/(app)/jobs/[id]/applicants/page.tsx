@@ -52,9 +52,9 @@ export default function JobApplicantsPage() {
   return (
     <div className="max-w-6xl mx-auto stagger pb-20 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display font-bold text-3xl tracking-tight mb-2" style={{ color: "var(--text)" }}>
+          <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: "var(--text)" }}>
              Applicants for {job.roleTitle}
           </h1>
           <p className="text-sm" style={{ color: "var(--text3)" }}>
@@ -62,7 +62,7 @@ export default function JobApplicantsPage() {
           </p>
         </div>
         <button 
-          className="btn btn-primary animate-pulse-subtle h-12 px-6 shadow-sm"
+          className="btn btn-primary animate-pulse-subtle h-11 md:h-12 px-5 md:px-6 shadow-sm w-full sm:w-auto"
           onClick={handleScreenAll}
           disabled={screening || applicants.length === 0}
         >
@@ -174,19 +174,19 @@ function UmuravaForm({ jobId }: { jobId: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 fade-in">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required />
         <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required />
         <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required />
         <Input label="Phone (optional)" value={form.phone} onChange={(v: string) => setForm({...form, phone: v})} />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
          <Input label="Current Role" value={form.currentRole} onChange={(v: string) => setForm({...form, currentRole: v})} />
          <Input label="Umurava Profile ID" value={form.umuravaId} onChange={(v: string) => setForm({...form, umuravaId: v})} />
       </div>
       <Input label="Skills (comma separated)" placeholder="React, Node, UX" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} required />
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
            Years of Exp
            <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]" required />
@@ -341,7 +341,7 @@ function ExternalForm({ jobId }: { jobId: string }) {
         <div className="text-xs text-[var(--text3)] mt-1">{file ? "Click to change file" : "Max 5MB. PDF for single upload, CSV for bulk."}</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={!file || !file.name.endsWith('.csv')} />
         <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={!file || !file.name.endsWith('.csv')} />
         <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={!file || !file.name.endsWith('.csv')} />
@@ -351,7 +351,7 @@ function ExternalForm({ jobId }: { jobId: string }) {
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Skills (comma separated)" placeholder="React, APIs" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
          <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
            Education

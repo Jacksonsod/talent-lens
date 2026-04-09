@@ -76,7 +76,7 @@ export default function ShortlistPage() {
   return (
     <div className="stagger max-w-6xl mx-auto pb-20">
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total in Shortlist" value={totalScreened} />
         <StatCard label="Avg Match Score" value={avgScore} color="amber" />
         <StatCard label="Top Match Score" value={topScore} color="green" />

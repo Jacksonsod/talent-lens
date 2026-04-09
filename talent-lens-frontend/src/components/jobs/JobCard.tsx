@@ -124,7 +124,7 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
 
   return (
     <div
-      className="job-header flex items-center gap-4 px-5 py-4 rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)]"
+      className="job-header flex flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4 rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)]"
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
@@ -137,23 +137,35 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
         }
       }}
     >
-      {/* Icon */}
-      {(() => {
-        const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
-        return (
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: bg, border: `1.5px solid ${border}` }}
-          >
-            <Icon size={20} color={color} strokeWidth={1.8} />
-          </div>
-        );
-      })()}
+      <div className="flex items-center gap-4 w-full sm:w-auto">
+        {/* Icon */}
+        {(() => {
+          const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
+          return (
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: bg, border: `1.5px solid ${border}` }}
+            >
+              <Icon size={20} color={color} strokeWidth={1.8} />
+            </div>
+          );
+        })()}
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
+        {/* Info (Mobile Title Only) */}
+        <div className="flex-1 min-w-0 sm:hidden">
+          <div
+            className="font-display font-bold text-[16px] tracking-tight truncate"
+            style={{ color: "var(--text)" }}
+          >
+            {job.roleTitle}
+          </div>
+        </div>
+      </div>
+
+      {/* Info (Full on desktop, details on mobile) */}
+      <div className="flex-1 min-w-0 w-full">
         <div
-          className="font-display font-bold text-[16px] tracking-tight"
+          className="hidden sm:block font-display font-bold text-[16px] tracking-tight"
           style={{ color: "var(--text)" }}
         >
           {job.roleTitle}
@@ -165,23 +177,28 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
         </div>
         <div className="text-[12px] mt-0.5 mb-2" style={{ color: "var(--text3)" }}>
           {job.experienceLevel} · Target Shortlist: {job.shortlistSize}
+          {job.status && (
+            <span className="sm:hidden ml-2 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border border-[var(--border)]">
+              {job.status}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {job.requiredSkills && job.requiredSkills.slice(0, 5).map((skill) => (
+          {job.requiredSkills && job.requiredSkills.slice(0, 4).map((skill) => (
             <span
               key={skill}
-              className="text-[11px] px-2.5 py-[3px] rounded-full font-medium"
+              className="text-[10px] sm:text-[11px] px-2 py-[2px] sm:py-[3px] rounded-full font-medium"
               style={skillChipStyle(skill)}
             >
               {skill}
             </span>
           ))}
-          {job.requiredSkills && job.requiredSkills.length > 5 && (
+          {job.requiredSkills && job.requiredSkills.length > 4 && (
             <span
-              className="text-[11px] px-2.5 py-[3px] rounded-full font-medium"
+              className="text-[10px] sm:text-[11px] px-2 py-[2px] sm:py-[3px] rounded-full font-medium"
               style={{ background: "var(--surface3)", color: "var(--text3)" }}
             >
-              +{job.requiredSkills.length - 5} more
+              +{job.requiredSkills.length - 4}
             </span>
           )}
         </div>
@@ -189,30 +206,30 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
 
       {/* Actions */}
       <div
-        className="flex items-center gap-4 shrink-0"
+        className="flex items-center gap-3 sm:gap-4 shrink-0 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border)]"
         onClick={(e) => e.stopPropagation()}
       >
         {mode === "compare" ? (
           <button
-            className="btn px-5 py-2.5 font-bold text-sm bg-[rgba(124,111,255,0.1)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white transition-colors rounded-lg shadow-sm"
+            className="btn flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm bg-[rgba(124,111,255,0.1)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white transition-colors rounded-lg"
             onClick={handleCompareClick}
           >
-            Compare Candidates
+            Compare
           </button>
         ) : hasShortlist || job.status === "Closed" ? (
           <button
-            className="btn btn-ghost px-5 py-2.5 font-bold"
+            className="btn btn-ghost flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm"
             onClick={handleViewResults}
           >
             View Results
           </button>
         ) : (
           <button
-            className="btn btn-green px-5 py-2.5 font-bold shadow-sm animate-pulse-subtle"
+            className="btn btn-green flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm shadow-sm"
             onClick={handleRunScreening}
             disabled={loading}
           >
-            {loading ? "Screening..." : "▶ Run AI Screening"}
+            {loading ? "Screening..." : "Run Screening"}
           </button>
         )}
       </div>

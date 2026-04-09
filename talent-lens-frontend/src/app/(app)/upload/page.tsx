@@ -247,7 +247,7 @@ export default function UploadPage() {
          ) : (
           <>
             {/* Mode Selection */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
                <button 
                 className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
                 onClick={() => {
@@ -260,7 +260,7 @@ export default function UploadPage() {
                  </div>
                  <div>
                     <div className="font-bold text-sm text-[var(--text)]">AI Resume Extraction</div>
-                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Bulk OCR & Data Mining from PDF CVs</div>
+                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Bulk OCR & Data Mining</div>
                  </div>
                </button>
                <button 
@@ -274,8 +274,8 @@ export default function UploadPage() {
                     <Database size={20} />
                  </div>
                  <div>
-                    <div className="font-bold text-sm text-[var(--text)]">Direct Spreadsheet Ingestion</div>
-                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Import directly from CSV or Excel files</div>
+                    <div className="font-bold text-sm text-[var(--text)]">Direct Spreadsheet</div>
+                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Import from CSV or Excel</div>
                  </div>
                </button>
             </div>
@@ -290,10 +290,10 @@ export default function UploadPage() {
                   </h3>
                   <div className="max-h-64 overflow-y-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
                     {parsedPreview.map((r, i) => (
-                        <div key={i} className="text-sm p-3 border-b border-[var(--border)] last:border-0 truncate flex gap-4">
-                          <div className="font-bold text-[var(--text)] w-1/4 truncate">{r.firstName} {r.lastName}</div>
-                          <div className="text-[var(--text2)] w-1/4 truncate">{r.email}</div>
-                          <div className="text-[var(--text3)] w-1/2 min-w-0 truncate">Skills: {r.skills}</div>
+                        <div key={i} className="text-sm p-3 border-b border-[var(--border)] last:border-0 truncate flex flex-col sm:flex-row gap-1 sm:gap-4">
+                          <div className="font-bold text-[var(--text)] sm:w-1/4 truncate">{r.firstName} {r.lastName}</div>
+                          <div className="text-[var(--text2)] sm:w-1/4 truncate">{r.email}</div>
+                          <div className="text-[var(--text3)] sm:w-1/2 min-w-0 truncate italic sm:not-italic">Skills: {r.skills}</div>
                         </div>
                     ))}
                   </div>
@@ -357,7 +357,7 @@ export default function UploadPage() {
                            </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={true} />
                           <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={true} />
                           <Input label="Email Address" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={true} />
@@ -367,7 +367,7 @@ export default function UploadPage() {
                           </label>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input label="Skill Tags (comma separated)" placeholder="React, APIs, Sales" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
                            <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase tracking-widest pl-1">
                              Education Qualification

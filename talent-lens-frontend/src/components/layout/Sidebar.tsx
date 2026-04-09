@@ -15,6 +15,7 @@ import {
   ChevronUp,
   ChevronDown,
   LogOut,
+  X,
 } from "lucide-react";
 
 /* ─── nav tree ────────────────────────────────────────────────── */
@@ -44,12 +45,15 @@ const navItems: NavItem[] = [
   { label: "Upload CVs", href: "/upload",     icon: Upload },
 ];
 
-/* ─── component ───────────────────────────────────────────────── */
-export default function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
+
+export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  // track which group is open (by href)
   const [openGroup, setOpenGroup] = useState<string | null>("/jobs");
 
   const isActive = (href: string) => {
@@ -65,227 +69,150 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  /* ── sidebar width ── */
   const W = collapsed ? "72px" : "230px";
 
   return (
-    <aside
-      className="flex flex-col shrink-0 h-screen transition-all duration-300 overflow-hidden"
-      style={{
-        width: W,
-        minWidth: W,
-        background: "#2563EB",
-      }}
-    >
-      {/* ── Header: logo + collapse btn ── */}
-      <div
-        className="flex items-center justify-between px-4 pt-5 pb-5"
-        style={{ 
-          minHeight: 64,
-          borderBottom: "1px solid rgba(255,255,255,0.12)"
+    <>
+      {/* ── Overlay for mobile ── */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden transition-opacity"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ── */}
+      <aside
+        className={`flex flex-col shrink-0 h-screen transition-all duration-300 overflow-hidden fixed md:static z-50 ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        style={{
+          width: W,
+          minWidth: W,
+          background: "#2563EB",
         }}
       >
-        {!collapsed && (
-          <div className="flex flex-col leading-none mt-1">
-            <span
-              className="font-display font-extrabold text-[20px] tracking-tight text-white mb-0.5"
-              style={{ letterSpacing: "-0.5px" }}
-            >
-              TalentAI<span className="text-white">.</span>
-            </span>
-            <span
-              className="text-[9px] tracking-widest uppercase font-semibold"
-              style={{ color: "rgba(255,255,255,0.55)" }}
-            >
-              Powered by Umurava
-            </span>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center justify-center rounded-lg transition-all duration-150 shrink-0"
-          style={{
-            width: 30,
-            height: 30,
-            border: "1.5px solid rgba(255,255,255,0.45)",
-            background: "transparent",
-            color: "#fff",
-            marginLeft: collapsed ? "auto" : 0,
-            marginRight: collapsed ? "auto" : 0,
+        {/* ── Header ── */}
+        <div
+          className="flex items-center justify-between px-4 pt-5 pb-5"
+          style={{ 
+            minHeight: 64,
+            borderBottom: "1px solid rgba(255,255,255,0.12)"
           }}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-        </button>
-      </div>
+          {!collapsed && (
+            <div className="flex flex-col leading-none mt-1">
+              <span className="font-display font-extrabold text-[20px] tracking-tight text-white mb-0.5">
+                TalentAI<span className="text-white">.</span>
+              </span>
+              <span className="text-[9px] tracking-widest uppercase font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+                Powered by Umurava
+              </span>
+            </div>
+          )}
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            className="hidden md:flex items-center justify-center rounded-lg transition-all duration-150 shrink-0"
+            style={{
+              width: 30,
+              height: 30,
+              border: "1.5px solid rgba(255,255,255,0.45)",
+              background: "transparent",
+              color: "#fff",
+              marginLeft: collapsed ? "auto" : 0,
+            }}
+          >
+            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
+          
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden text-white/80 hover:text-white"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      {/* ── Main nav ── */}
-      <nav className="flex-1 overflow-y-auto px-3 mt-4 flex flex-col gap-0.5">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          const hasChildren = !!item.children?.length;
-          const isOpen = openGroup === item.href;
+        {/* ── Nav ── */}
+        <nav className="flex-1 overflow-y-auto px-3 mt-4 flex flex-col gap-0.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            const hasChildren = !!item.children?.length;
+            const isOpen = openGroup === item.href;
 
-          return (
-            <div key={item.href}>
-              {/* ── parent row ── */}
-              {hasChildren ? (
-                /* clickable div to toggle group */
-                <button
-                  onClick={() => toggleGroup(item.href)}
-                  className="w-full flex items-center gap-3 rounded-xl text-[13.5px] font-medium transition-all duration-150"
-                  style={{
-                    padding: "10px 12px",
-                    background: active ? "#FFFFFF" : isOpen ? "rgba(255,255,255,0.12)" : "transparent",
-                    color: active ? "#2563EB" : "rgba(255,255,255,0.92)",
-                    textAlign: "left",
-                  }}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <Icon size={16} style={{ flexShrink: 0 }} />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 truncate">{item.label}</span>
-                      {item.badge && (
-                        <span
-                          className="text-[11px] px-1.5 py-0.5 rounded-full font-bold"
-                          style={{
-                            background:
-                              active 
-                                ? "rgba(37,99,235,0.14)"
-                                : "rgba(255,255,255,0.18)",
-                            color: active ? "#2563EB" : "#fff",
-                          }}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                      {isOpen ? (
-                        <ChevronUp size={13} style={{ flexShrink: 0, opacity: 0.7 }} />
-                      ) : (
-                        <ChevronDown size={13} style={{ flexShrink: 0, opacity: 0.7 }} />
-                      )}
-                    </>
-                  )}
-                </button>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-3 rounded-xl text-[13.5px] font-medium transition-all duration-150"
-                  style={{
-                    padding: "10px 12px",
-                    background: active ? "#FFFFFF" : "transparent",
-                    color: active ? "#2563EB" : "rgba(255,255,255,0.92)",
-                  }}
-                  title={collapsed ? item.label : undefined}
-                  onMouseEnter={(e) => {
-                    if (!active)
-                      (e.currentTarget as HTMLElement).style.background =
-                        "rgba(255,255,255,0.12)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active)
-                      (e.currentTarget as HTMLElement).style.background =
-                        "transparent";
-                  }}
-                >
-                  <Icon size={16} style={{ flexShrink: 0 }} />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 truncate">{item.label}</span>
-                      {item.badge && (
-                        <span
-                          className="text-[11px] px-1.5 py-0.5 rounded-full font-bold"
-                          style={{
-                            background: active
-                              ? "rgba(37,99,235,0.14)"
-                              : "rgba(255,255,255,0.18)",
-                            color: active ? "#2563EB" : "#fff",
-                          }}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </Link>
-              )}
-
-              {/* ── children (sub-items) ── */}
-              {hasChildren && isOpen && !collapsed && (
-                <div className="mt-1 mb-2 ml-4 flex flex-col gap-1 border-l border-white/20 pl-4">
-                  {item.children!.map((child) => {
-                    const childActive = isActive(child.href);
-                    return (
+            return (
+              <div key={item.href}>
+                {hasChildren ? (
+                  <button
+                    onClick={() => toggleGroup(item.href)}
+                    className="w-full flex items-center gap-3 rounded-xl text-[13.5px] font-medium transition-all duration-150"
+                    style={{
+                      padding: "10px 12px",
+                      background: active ? "#FFFFFF" : isOpen ? "rgba(255,255,255,0.12)" : "transparent",
+                      color: active ? "#2563EB" : "rgba(255,255,255,0.92)",
+                    }}
+                  >
+                    <Icon size={16} />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 truncate text-left">{item.label}</span>
+                        {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 rounded-xl text-[13.5px] font-medium transition-all duration-150"
+                    style={{
+                      padding: "10px 12px",
+                      background: active ? "#FFFFFF" : "transparent",
+                      color: active ? "#2563EB" : "rgba(255,255,255,0.92)",
+                    }}
+                  >
+                    <Icon size={16} />
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                  </Link>
+                )}
+                {/* ... children logic ... */}
+                {hasChildren && isOpen && !collapsed && (
+                  <div className="mt-1 mb-2 ml-4 flex flex-col gap-1 border-l border-white/20 pl-4">
+                    {item.children!.map((child) => (
                       <Link
                         key={child.href}
                         href={child.href}
+                        onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-2 rounded-lg text-[13px] font-medium transition-all duration-150"
                         style={{
                           padding: "9px 12px",
-                          background: childActive
-                            ? "rgba(255,255,255,0.18)"
-                            : "transparent",
-                          color: childActive
-                            ? "#FFFFFF"
-                            : "rgba(255,255,255,0.72)",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!childActive)
-                            (e.currentTarget as HTMLElement).style.color =
-                              "#FFFFFF";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!childActive)
-                            (e.currentTarget as HTMLElement).style.color =
-                              "rgba(255,255,255,0.72)";
+                          color: isActive(child.href) ? "#FFFFFF" : "rgba(255,255,255,0.72)",
+                          background: isActive(child.href) ? "rgba(255,255,255,0.18)" : "transparent",
                         }}
                       >
-                        <span
-                          className="w-1 h-1 rounded-full shrink-0"
-                          style={{
-                            background: childActive
-                              ? "#fff"
-                              : "rgba(255,255,255,0.45)",
-                          }}
-                        />
-                        {child.label}
+                         <span className={`w-1 h-1 rounded-full ${isActive(child.href) ? 'bg-white' : 'bg-white/40'}`} />
+                         {child.label}
                       </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
 
-      {/* ── Logout Button ── */}
-      <div
-        className="px-3 py-3"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
-      >
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150"
-          style={{
-            background: "rgba(255,255,255,0.10)",
-            color: "rgba(255,255,255,0.92)",
-          }}
-          onMouseEnter={(e) =>
-            ((e.currentTarget as HTMLElement).style.background =
-              "rgba(255,255,255,0.16)")
-          }
-          onMouseLeave={(e) =>
-            ((e.currentTarget as HTMLElement).style.background =
-              "rgba(255,255,255,0.10)")
-          }
-        >
-          <LogOut size={16} />
-          {!collapsed && <span className="truncate">Logout</span>}
-        </button>
-      </div>
-    </aside>
+        {/* ── Logout ── */}
+        <div className="px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium"
+            style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.92)" }}
+          >
+            <LogOut size={16} />
+            {!collapsed && <span className="truncate">Logout</span>}
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

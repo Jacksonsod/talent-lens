@@ -38,7 +38,7 @@ export default function DashboardPage() {
   return (
     <div className="stagger">
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Active Jobs" value={activeJobsCount} color="blue" />
         <StatCard label="Total Jobs" value={totalJobsCount} color="purple" />
         <StatCard label="Screened Jobs" value={screenedJobsCount} color="green" />
