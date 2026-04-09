@@ -1,9 +1,11 @@
-"use client";
-
+import type { Metadata } from "next";
 import "./globals.css";
-import { store } from "@/lib/store";
-import { Provider } from "react-redux";
-import { Toaster } from "react-hot-toast";
+import StoreProvider from "@/components/providers/StoreProvider";
+
+export const metadata: Metadata = {
+  title: "TalentAI | Powered by Umurava",
+  description: "AI-powered talent screening and applicant management platform.",
+};
 
 export default function RootLayout({
   children,
@@ -12,27 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <title>Talent-lens</title>
-        <meta name="description" content="AI-powered talent screening by Umurava" />
-        <link rel="icon" href="/favicon.ico" />
-      </head>
-      <body>
-        <Provider store={store}>
+      <body suppressHydrationWarning={true}>
+        <StoreProvider>
           {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: "#1c1c26",
-                color: "#f0f0f5",
-                border: "1px solid rgba(255,255,255,0.1)",
-                fontFamily: "DM Sans, sans-serif",
-                fontSize: "13px",
-              },
-            }}
-          />
-        </Provider>
+        </StoreProvider>
       </body>
     </html>
   );
