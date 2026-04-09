@@ -41,7 +41,9 @@ const createToken = (payload: TokenPayload): string | null => {
     return null;
   }
 
-  return jwt.sign(payload, secret, { expiresIn: '1d' });
+  const expiresIn = (process.env.JWT_EXPIRES_IN ?? '1d') as jwt.SignOptions['expiresIn'];
+
+  return jwt.sign(payload, secret, { expiresIn });
 };
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {

@@ -85,20 +85,27 @@ const getProfileDataText = (profileData: unknown): string => {
 
 const sanitizeJson = (text: string): string => text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
+const getEnvList = (key: string, fallback: string[]): string[] => {
+  const value = process.env[key];
+  const items = value
+    ? value
+        .split(',')
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+    : [];
+
+  return items.length > 0 ? items : fallback;
+};
+
 const getGeminiModelNames = (): string[] => {
   const configuredModels = process.env.GEMINI_MODEL
     ?.split(',')
     .map((model) => model.trim())
     .filter((model) => model.length > 0) ?? [];
 
-  return Array.from(
-      new Set([
-        ...configuredModels,
-        'gemini-3.1-flash-lite-preview',
-        'gemini-1.5-flash',
-        'gemini-pro',
-      ]),
-  );
+  const fallbackModels = getEnvList('GEMINI_MODEL_FALLBACKS', ['gemini-3.1-flash-lite-preview', 'gemini-1.5-flash', 'gemini-pro']);
+
+  return Array.from(new Set([...configuredModels, ...fallbackModels]));
 };
 
 const isGeminiModelNotFoundError = (error: unknown): boolean => {
