@@ -1,3 +1,4 @@
+import axios from 'axios';
 import type { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PDFParse } from 'pdf-parse';
@@ -8,6 +9,7 @@ type ExtractedApplicantPayload = {
   firstName?: string;
   lastName?: string;
   email?: string;
+  phone?: string;
   skills?: unknown[];
   yearsOfExperience?: number;
   educationLevel?: string;
@@ -15,6 +17,68 @@ type ExtractedApplicantPayload = {
 };
 
 const sanitizeJson = (text: string): string => text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+
+const parseProfileData = (profileData: unknown): Record<string, unknown> => {
+  if (!profileData || typeof profileData !== 'object' || Array.isArray(profileData)) {
+    return {};
+  }
+
+  return { ...(profileData as Record<string, unknown>) };
+};
+
+const normalizeString = (value: unknown, fallback = ''): string => {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+};
+
+const normalizeSkills = (value: unknown): string[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean);
+};
+
+const normalizeYearsOfExperience = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  return 0;
+};
+
+const coerceYearsOfExperience = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const buildSafeEmail = (jobId: string, indexHint?: number): string => {
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${typeof indexHint === 'number' ? `-${indexHint}` : ''}`;
+  return `fake-email-${jobId}-${uniqueSuffix}@example.com`;
+};
+
+const buildFallbackApplicantData = (jobId: string, indexHint?: number) => ({
+  firstName: 'Unknown',
+  lastName: 'Candidate',
+  email: buildSafeEmail(jobId, indexHint),
+  phone: '',
+  skills: [],
+  yearsOfExperience: 0,
+  educationLevel: 'Other',
+  currentRole: '',
+});
 
 const getEnvNumber = (key: string, fallback: number): number => {
   const value = Number(process.env[key]);
@@ -123,26 +187,121 @@ export const addExternalApplicant = async (req: Request, res: Response): Promise
       return;
     }
 
-    let extractedText = '';
-    if (req.file?.buffer) {
-      const parser = new PDFParse({ data: req.file.buffer });
-      const parsedPdf = await parser.getText();
-      extractedText = parsedPdf.text;
-      await parser.destroy();
+    const bodyFields = req.body as Record<string, unknown> & { profileData?: unknown };
+    const fallbackApplicantData = buildFallbackApplicantData(jobId);
+    const incomingProfileData = parseProfileData(bodyFields.profileData);
+    const baseApplicantData = {
+      ...fallbackApplicantData,
+      ...bodyFields,
+      jobId,
+      source: 'External' as const,
+      status: 'pending' as const,
+      profileData: {
+        ...incomingProfileData,
+        rawResumeText: '',
+      },
+      ...(resumeUrl ? { resumeUrl } : {}),
+    };
+
+    let rawResumeText = '';
+    let extractedFromGemini: Partial<ExtractedApplicantPayload> = {};
+
+    const resumeBuffer = req.file?.buffer
+      ? req.file.buffer
+      : resumeUrl
+        ? await (async () => {
+            try {
+              const fetchedResume = await axios.get<ArrayBuffer>(resumeUrl, { responseType: 'arraybuffer' });
+              return Buffer.from(fetchedResume.data);
+            } catch (fetchError) {
+              console.error('Failed to fetch resume from URL:', fetchError);
+              return null;
+            }
+          })()
+        : null;
+
+    if (resumeBuffer) {
+      try {
+        const parser = new PDFParse({ data: resumeBuffer });
+        const parsedPdf = await parser.getText();
+        rawResumeText = parsedPdf.text ?? '';
+        await parser.destroy();
+      } catch (pdfError) {
+        console.error('Failed to parse resume PDF:', pdfError);
+      }
     }
 
-    const incomingProfileData = (req.body as { profileData?: unknown }).profileData;
-    const profileData =
-      incomingProfileData && typeof incomingProfileData === 'object'
-        ? { ...(incomingProfileData as Record<string, unknown>), rawResumeText: extractedText }
-        : { rawResumeText: extractedText };
+    if (rawResumeText) {
+      try {
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+          console.error('GEMINI_API_KEY is not configured. Skipping Gemini extraction.');
+        } else {
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({
+            model: process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite-preview',
+            generationConfig: { responseMimeType: 'application/json' },
+          });
+
+          const prompt =
+            'Extract structured data from this resume and return ONLY valid JSON with these exact fields — no markdown, no explanation, just the JSON object:\n' +
+            '{\n' +
+            'firstName: string,\n' +
+            'lastName: string,\n' +
+            'email: string,\n' +
+            'phone: string,\n' +
+            'currentRole: string,\n' +
+            'yearsOfExperience: number,\n' +
+            'educationLevel: one of [High School, Associate, Bachelor, Master, PhD, Other],\n' +
+            'skills: string[]\n' +
+            '}\n' +
+            'If a field cannot be found, use an empty string or 0.\n' +
+            `Resume text: ${rawResumeText.slice(0, GEMINI_RESUME_TEXT_LIMIT)}`;
+
+          const aiResponse = await model.generateContent(prompt);
+          const responseText = aiResponse.response.text();
+          const parsedResponse = JSON.parse(sanitizeJson(responseText)) as ExtractedApplicantPayload;
+
+          extractedFromGemini = {
+            firstName: normalizeString(parsedResponse.firstName),
+            lastName: normalizeString(parsedResponse.lastName),
+            email: normalizeString(parsedResponse.email),
+            phone: normalizeString(parsedResponse.phone),
+            skills: normalizeSkills(parsedResponse.skills),
+            yearsOfExperience: normalizeYearsOfExperience(parsedResponse.yearsOfExperience),
+            educationLevel: normalizeString(parsedResponse.educationLevel),
+            currentRole: normalizeString(parsedResponse.currentRole),
+          };
+        }
+      } catch (geminiError) {
+        console.error('Failed to extract resume data with Gemini:', geminiError);
+      }
+    }
 
     const applicant = await Applicant.create({
-      ...req.body,
-      jobId,
-      source: 'External',
-      profileData,
-      ...(resumeUrl ? { resumeUrl } : {}),
+      ...baseApplicantData,
+      firstName: normalizeString(extractedFromGemini.firstName, normalizeString(bodyFields.firstName, fallbackApplicantData.firstName)),
+      lastName: normalizeString(extractedFromGemini.lastName, normalizeString(bodyFields.lastName, fallbackApplicantData.lastName)),
+      email: normalizeString(extractedFromGemini.email, normalizeString(bodyFields.email, fallbackApplicantData.email)),
+      phone: normalizeString(extractedFromGemini.phone, normalizeString(bodyFields.phone, '')),
+      skills:
+        normalizeSkills(extractedFromGemini.skills).length > 0
+          ? normalizeSkills(extractedFromGemini.skills)
+          : normalizeSkills(bodyFields.skills),
+      yearsOfExperience:
+        typeof extractedFromGemini.yearsOfExperience === 'number' && extractedFromGemini.yearsOfExperience > 0
+          ? extractedFromGemini.yearsOfExperience
+          : coerceYearsOfExperience(bodyFields.yearsOfExperience),
+      educationLevel: normalizeString(
+        extractedFromGemini.educationLevel,
+        normalizeString(bodyFields.educationLevel, fallbackApplicantData.educationLevel),
+      ),
+      currentRole: normalizeString(extractedFromGemini.currentRole, normalizeString(bodyFields.currentRole, '')),
+      profileData: {
+        ...incomingProfileData,
+        rawResumeText,
+      },
     });
 
     res.status(201).json(applicant);

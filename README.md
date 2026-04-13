@@ -7,11 +7,19 @@ TalentLens backend for the AI HR Hackathon, built with Express, Mongoose, JWT, a
 1. Create local env file from template.
 
 ```bash
-cp .env.example .env
+cp talent-lens-backend/.env.example talent-lens-backend/.env
 ```
 
-2. Fill in `MONGO_URI`, `JWT_SECRET`, and (optionally for current API scope) `GEMINI_API_KEY`.
-   If your Google AI project does not expose the default screening model, set `GEMINI_MODEL` too (for example, `gemini-2.0-flash`).
+2. Fill in the backend env values:
+
+- `MONGO_URI`
+- `JWT_SECRET`
+- `GEMINI_API_KEY` (required for AI extraction/screening)
+- `FRONTEND_URL` (allowed CORS origin(s), comma-separated if you need more than one)
+- `GEMINI_MODEL` (optional override)
+- `PORT` (optional; defaults to `5000`)
+
+The backend also supports optional tuning values for MongoDB timeouts and upload limits.
 3. Install and run.
 
 ```bash
@@ -195,6 +203,7 @@ External applicant request uses `multipart/form-data`.
 - Max size: `5MB`
 - `jobId` must be sent as a text field in the same form data
 - If a PDF is uploaded, the raw text is extracted and stored in `profileData.rawResumeText`
+- If you want to test the URL-based flow, send `resumeUrl` and leave `resume` empty
 
 External applicant form fields example:
 
@@ -222,6 +231,19 @@ Example Postman form-data fields:
 - `educationLevel` → `Bachelor`
 - `resume` → choose a PDF file
 - `resumeUrl` → optional URL string
+
+Example Postman form-data fields for URL-based parsing only:
+
+- `jobId` → `<job_id>`
+- `firstName` → `Eric`
+- `lastName` → `Niyonzima`
+- `email` → `eric@example.com`
+- `skills` → `MongoDB` (add multiple rows for more skills)
+- `yearsOfExperience` → `3`
+- `educationLevel` → `Bachelor`
+- `currentRole` → `Backend Developer`
+- `resumeUrl` → `https://example.com/resumes/eric.pdf`
+- `resume` → do not add this field
 
 Common applicant errors:
 
