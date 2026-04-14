@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { Types } from 'mongoose';
-import Applicant from '../models/Applicant';
+import Applicant, { type ApplicantSkill } from '../models/Applicant';
 import Job from '../models/Job';
 import ScreeningResult from '../models/ScreeningResult';
 
@@ -38,7 +38,7 @@ type BatchApplicant = {
   _id: { toString(): string };
   firstName: string;
   lastName: string;
-  skills?: string[];
+  skills?: ApplicantSkill[];
   yearsOfExperience: number;
   educationLevel: string;
   currentRole?: string | null;
@@ -82,6 +82,11 @@ const getProfileDataText = (profileData: unknown): string => {
 
   return 'Not provided';
 };
+
+const getApplicantSkillNames = (skills: ApplicantSkill[] | undefined | null): string[] =>
+  (skills ?? [])
+    .map((skill) => skill?.name?.trim() ?? '')
+    .filter((skill) => skill.length > 0);
 
 const sanitizeJson = (text: string): string => text.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
@@ -152,7 +157,7 @@ const scoreMatchRatio = (matches: number, total: number): number => {
 const buildHeuristicScreeningResponse = (job: ScreeningJob, applicant: BatchApplicant): ParsedScreeningResponse => {
   const jobSkills = normalizeTextList(job.requiredSkills);
   const jobRequirements = normalizeTextList(job.requirements);
-  const applicantSkills = normalizeTextList(applicant.skills);
+  const applicantSkills = normalizeTextList(getApplicantSkillNames(applicant.skills));
   const matchedSkills = jobSkills.filter((skill) => applicantSkills.some((candidate) => candidate.toLowerCase().includes(skill.toLowerCase()) || skill.toLowerCase().includes(candidate.toLowerCase())));
   const matchedRequirements = jobRequirements.filter((requirement) =>
     applicantSkills.some((candidate) => candidate.toLowerCase().includes(requirement.toLowerCase()) || requirement.toLowerCase().includes(candidate.toLowerCase()))
@@ -269,7 +274,7 @@ ${batch
           (applicant, index) => `Applicant ${index + 1}:
 - ID: ${String(applicant._id)}
 - Name: ${applicant.firstName} ${applicant.lastName}
-- Skills: ${applicant.skills?.length ? applicant.skills.join(', ') : 'Not provided'}
+- Skills: ${getApplicantSkillNames(applicant.skills).length ? getApplicantSkillNames(applicant.skills).join(', ') : 'Not provided'}
 - Years of experience: ${applicant.yearsOfExperience}
 - Education: ${applicant.educationLevel}
 - Current role: ${applicant.currentRole ?? 'Not provided'}
@@ -406,7 +411,7 @@ JOB DESCRIPTION: ${job.description}
 REQUIREMENTS: ${job.requirements?.join(', ') ?? ''}
 REQUIRED SKILLS: ${job.requiredSkills?.join(', ') ?? ''}
 APPLICANT NAME: ${applicant.firstName} ${applicant.lastName}
-APPLICANT SKILLS: ${applicant.skills?.join(', ') ?? ''}
+APPLICANT SKILLS: ${getApplicantSkillNames(applicant.skills).join(', ')}
 YEARS OF EXPERIENCE: ${applicant.yearsOfExperience}
 RESUME / PROFILE DATA: ${getProfileDataText(applicant.profileData)}`;
 
@@ -417,10 +422,10 @@ RESUME / PROFILE DATA: ${getProfileDataText(applicant.profileData)}`;
           try {
             return JSON.parse(responseText) as ParsedScreeningResponse;
           } catch (parseError) {
-            return buildHeuristicScreeningResponse(job, applicant);
+            return buildHeuristicScreeningResponse(job as unknown as ScreeningJob, applicant as unknown as BatchApplicant);
           }
         })()
-      : buildHeuristicScreeningResponse(job, applicant);
+      : buildHeuristicScreeningResponse(job as unknown as ScreeningJob, applicant as unknown as BatchApplicant);
 
     const completedResult = await ScreeningResult.findOneAndUpdate(
         { jobId, applicantId },
@@ -621,7 +626,7 @@ export const screenAllApplicants = async (req: Request, res: Response): Promise<
 
     const batches: BatchApplicant[][] = [];
     for (let index = 0; index < applicants.length; index += 5) {
-      batches.push(applicants.slice(index, index + 5) as BatchApplicant[]);
+      batches.push(applicants.slice(index, index + 5) as unknown as BatchApplicant[]);
     }
 
     const settledBatches = await Promise.allSettled(batches.map((batch) => screenBatch(apiKey, job as ScreeningJob, batch)));
@@ -686,7 +691,7 @@ export const screenAllApplicants = async (req: Request, res: Response): Promise<
           },
         },
       ]);
-      await Job.findByIdAndUpdate(currentJobObjectId, { status: 'screened' });
+      await Job.findByIdAndUpdate(currentJobObjectId, { status: 'Closed' });
     }
 
     const completedDocs = await ScreeningResult.find({
