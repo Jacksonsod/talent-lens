@@ -96,7 +96,11 @@ export interface ParsedApplicantRow {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   currentRole: string;
+  headline: string;
+  location: string;
+  bio: string;
   yearsOfExperience: number | string;
   skills: string;
   educationLevel: string;
@@ -131,9 +135,99 @@ export interface UIState {
   theme: "dark" | "light";
 }
 
+// ─── USER PROFILE ────────────────────────────
+export interface ProfileSkill {
+  id: string;
+  name: string;
+  level: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+  yearsOfExperience: number;
+}
+
+export interface ProfileLanguage {
+  id: string;
+  name: string;
+  proficiency: "Basic" | "Conversational" | "Fluent" | "Native";
+}
+
+export interface ProfileExperience {
+  id: string;
+  company: string;
+  role: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  technologies: string[];
+  isCurrent: boolean;
+}
+
+export interface ProfileEducation {
+  id: string;
+  institution: string;
+  degree: string;
+  fieldOfStudy: string;
+  startYear: number;
+  endYear: number;
+}
+
+export interface ProfileProject {
+  id: string;
+  name: string;
+  description: string;
+  technologies: string[];
+  role: string;
+  link: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ProfileCertification {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: string;
+}
+
+export interface ProfileAvailability {
+  status: "available" | "open" | "not";
+  type: "Full-time" | "Part-time" | "Contract";
+  startDate: string;
+}
+
+export interface ProfileSocialLinks {
+  linkedin: string;
+  github: string;
+  portfolio: string;
+}
+
+export interface UserProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  headline: string;
+  bio: string;
+  location: string;
+  umuravaProfileId: string;
+  skills: ProfileSkill[];
+  languages: ProfileLanguage[];
+  experience: ProfileExperience[];
+  education: ProfileEducation[];
+  projects: ProfileProject[];
+  certifications: ProfileCertification[];
+  availability: ProfileAvailability;
+  socialLinks: ProfileSocialLinks;
+}
+
+export interface ProfileState {
+  data: UserProfile;
+  loaded: boolean;
+  saving: boolean;
+}
+
 export interface RootState {
   jobs: JobsState;
   applicants: ApplicantsState;
   screening: ScreeningState;
   ui: UIState;
+  profile: ProfileState;
 }
