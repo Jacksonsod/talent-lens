@@ -198,6 +198,8 @@ Postman sample:
 
 External applicant request uses `multipart/form-data`.
 
+- In Postman, set **Body** to `form-data`
+
 - File field: `resume`
 - Allowed type: `application/pdf`
 - Max size: `5MB`
@@ -229,6 +231,7 @@ Example Postman form-data fields:
 - `skills` → `MongoDB` (add multiple rows for more skills)
 - `yearsOfExperience` → `3`
 - `educationLevel` → `Bachelor`
+- `currentRole` → `Backend Developer`
 - `resume` → choose a PDF file
 - `resumeUrl` → optional URL string
 
@@ -253,21 +256,32 @@ Common applicant errors:
 
 Bulk upload (`POST /api/applicants/bulk-upload`) request uses `multipart/form-data`.
 
+- In Postman, set **Body** to `form-data`
+
 - Text field: `jobId` (required)
 - File field: `resumes` (required, repeat this key for multiple PDF files)
 - Allowed type per file: `application/pdf`
 - Max size per file: `5MB`
 - Files are processed sequentially; for batches larger than 5 files, the API waits 4 seconds between files to reduce Gemini free-tier rate-limit failures.
 
-Gemini extraction output per file is normalized to Applicant fields:
+Example Postman bulk-upload form-data fields:
 
-- `firstName` (default: `Unknown`)
-- `lastName` (default: `Candidate`)
-- `email` (fallback generated if missing)
-- `skills` (string array)
-- `yearsOfExperience` (number)
-- `educationLevel`
-- `currentRole`
+- `jobId` → `<job_id>`
+- `resumes` → choose `resume1.pdf`
+- `resumes` → choose `resume2.pdf`
+- `resumes` → choose `resume3.pdf`
+
+Gemini extraction output per file is normalized to the nested Applicant fields:
+
+- `firstName`, `lastName`, `email`, `phone`
+- `headline`, `bio`, `location`
+- `skills` as objects with `name`, `level`, `yearsOfExperience`
+- `languages` as objects with `name`, `proficiency`
+- `experience` as objects with `company`, `role`, `startDate`, `endDate`, `description`, `technologies`, `isCurrent`
+- `education` as objects with `institution`, `degree`, `fieldOfStudy`, `startYear`, `endYear`
+- `certifications`
+- `projects`
+- `socialLinks`
 
 Bulk upload success response shape (`200`):
 
