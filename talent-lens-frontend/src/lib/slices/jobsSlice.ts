@@ -71,6 +71,18 @@ export const updateJobStatus = createAsyncThunk(
   }
 );
 
+export const deleteJob = createAsyncThunk(
+  "jobs/delete",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await api.delete(`/api/jobs/${id}`);
+      return id;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || "Failed to delete job");
+    }
+  }
+);
+
 // ─── Slice ────────────────────────────────────
 
 const jobsSlice = createSlice({
@@ -131,6 +143,12 @@ const jobsSlice = createSlice({
         const idx = state.items.findIndex(j => j._id === action.payload._id);
         if (idx !== -1) state.items[idx] = action.payload;
         if (state.selected?._id === action.payload._id) state.selected = action.payload;
+      })
+
+      // deleteJob
+      .addCase(deleteJob.fulfilled, (state, action) => {
+        state.items = state.items.filter(j => j._id !== action.payload);
+        if (state.selected?._id === action.payload) state.selected = null;
       });
   },
 });
