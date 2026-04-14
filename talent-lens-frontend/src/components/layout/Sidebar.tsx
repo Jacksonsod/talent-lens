@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 
+import ConfirmModal from "@/components/ui/ConfirmModal";
+
 /* ─── nav tree ────────────────────────────────────────────────── */
 type NavChild = { label: string; href: string };
 type NavItem = {
@@ -55,6 +57,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>("/jobs");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (href: string) => {
     if (pathname === href) return true;
@@ -64,8 +67,9 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const toggleGroup = (href: string) =>
     setOpenGroup((prev) => (prev === href ? null : href));
 
-  const handleLogout = () => {
+  const executeLogout = () => {
     localStorage.removeItem("token");
+    setShowLogoutModal(false);
     router.push("/login");
   };
 
@@ -204,15 +208,26 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
         {/* ── Logout ── */}
         <div className="px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium"
-            style={{ background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.92)" }}
+            onClick={() => setShowLogoutModal(true)}
+            className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150 hover:bg-white/10"
+            style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.92)" }}
           >
             <LogOut size={16} />
             {!collapsed && <span className="truncate">Logout</span>}
           </button>
         </div>
       </aside>
+
+      {/* ── Logout Confirmation Modal ── */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Sign Out"
+        description="Are you sure you want to sign out? You will need to log back in to access your projects and shortlists."
+        confirmLabel="Sign Out"
+        cancelLabel="Stay Logged In"
+        onConfirm={executeLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </>
   );
 }
