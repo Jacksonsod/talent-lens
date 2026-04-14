@@ -223,18 +223,18 @@ export default function UploadPage() {
   return (
     <div className="stagger max-w-4xl mx-auto pb-20">
       <div className="mb-8">
-        <h1 className="font-display font-bold text-3xl tracking-tight mb-2" style={{ color: "var(--text)" }}>
+        <h1 className="font-display font-bold text-3xl tracking-tight mb-2 text-text">
           Global Applicant Upload
         </h1>
-        <p className="text-sm" style={{ color: "var(--text3)" }}>
+        <p className="text-sm text-text-muted">
           Ingest talent into any active job posting directly via single entry, PDF bulk extraction, or CSV sheet mapping.
         </p>
       </div>
 
-      <div className="rounded-2xl p-7" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="rounded-2xl p-7 bg-bg-surface border border-bg-surface3">
          {/* Job Selection */}
          <div className="mb-8">
-            <label className="flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-3" style={{ color: "var(--text2)" }}>
+            <label className="flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-3 text-text-light">
                <Briefcase size={16} /> Target Job Posting
             </label>
             <select
@@ -244,8 +244,7 @@ export default function UploadPage() {
                  if (parsedPreview.length > 0) dispatch(clearParsedPreview());
                  if (files.length > 0) setFiles([]);
                }}
-               className="w-full px-4 py-3 rounded-xl border focus:border-[var(--accent)] outline-none transition-all duration-200 cursor-pointer appearance-none text-base font-medium"
-               style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+               className="w-full px-4 py-3 rounded-xl border focus:border-brand-accent outline-none transition-all duration-200 cursor-pointer appearance-none text-base font-medium bg-bg-DEFAULT border-bg-surface3 text-text"
             >
                <option value="" disabled>-- Select a Job to ingest into --</option>
                {jobs.filter(j => j.status !== "Closed").map(j => (
@@ -264,37 +263,37 @@ export default function UploadPage() {
             {/* Mode Selection */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                <button 
-                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
+                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100'}`}
                 onClick={() => {
                   setImportMode("pdf");
                   dispatch(clearParsedPreview());
                 }}
                >
-                 <div className={`p-2.5 rounded-lg ${importMode === "pdf" ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface3)] text-[var(--text2)]'}`}>
+                 <div className={`p-2.5 rounded-lg ${importMode === "pdf" ? 'bg-brand-accent text-white' : 'bg-bg-surface3 text-text-light'}`}>
                     <Wand2 size={20} />
                  </div>
                  <div>
-                    <div className="font-bold text-sm text-[var(--text)]">AI Resume Extraction</div>
-                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Bulk OCR & Data Mining</div>
+                    <div className="font-bold text-sm text-text">AI Resume Extraction</div>
+                    <div className="text-[11px] text-text-muted mt-0.5">Bulk OCR & Data Mining</div>
                  </div>
                </button>
                <button 
-                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "data" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
+                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "data" ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100'}`}
                 onClick={() => {
                   setImportMode("data");
                   setFiles([]);
                 }}
                >
-                 <div className={`p-2.5 rounded-lg ${importMode === "data" ? 'bg-[var(--accent)] text-white' : 'bg-[var(--surface3)] text-[var(--text2)]'}`}>
+                 <div className={`p-2.5 rounded-lg ${importMode === "data" ? 'bg-brand-accent text-white' : 'bg-bg-surface3 text-text-light'}`}>
                     <Database size={20} />
                  </div>
                  <div>
-                    <div className="font-bold text-sm text-[var(--text)]">Direct Spreadsheet</div>
-                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Import from CSV or Excel</div>
+                    <div className="font-bold text-sm text-text">Direct Spreadsheet</div>
+                    <div className="text-[11px] text-text-muted mt-0.5">Import from CSV or Excel</div>
                  </div>
                </button>
                <button 
-                className="p-4 rounded-xl border transition-all text-left flex items-start gap-4 border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100 hover:border-[var(--accent)]"
+                className="p-4 rounded-xl border transition-all text-left flex items-start gap-4 border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100 hover:border-brand-accent"
                 onClick={() => {
                   if (!selectedJobId) {
                     toast.error("Please select a job first.");
@@ -303,29 +302,29 @@ export default function UploadPage() {
                   setWizardOpen(true);
                 }}
                >
-                 <div className="p-2.5 rounded-lg bg-[var(--surface3)] text-[var(--text2)]">
+                 <div className="p-2.5 rounded-lg bg-bg-surface3 text-text-light">
                     <UserPlus size={20} />
                  </div>
                  <div>
-                    <div className="font-bold text-sm text-[var(--text)]">Structured Profile</div>
-                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Full applicant form entry</div>
+                    <div className="font-bold text-sm text-text">Structured Profile</div>
+                    <div className="text-[11px] text-text-muted mt-0.5">Full applicant form entry</div>
                  </div>
                </button>
             </div>
 
             {parsedPreview && parsedPreview.length > 0 ? (
-                <div className="space-y-4 fade-in pt-6 border-t border-[var(--border)]">
+                <div className="space-y-4 fade-in pt-6 border-t border-bg-surface3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-lg text-[var(--text)]">
+                      <h3 className="font-bold text-lg text-text">
                         Import Preview
                       </h3>
-                      <p className="text-[12px] mt-0.5" style={{ color: "var(--text3)" }}>
+                      <p className="text-[12px] mt-0.5 text-text-muted">
                         {parsedPreview.length} candidates detected — review before importing
                       </p>
                     </div>
                     <button
-                      className="text-[var(--red)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[rgba(255,107,107,0.1)] transition-colors"
+                      className="text-brand-red text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-brand-red/10 transition-colors"
                       onClick={() => dispatch(clearParsedPreview())}
                     >
                       Cancel
@@ -333,55 +332,52 @@ export default function UploadPage() {
                   </div>
 
                   {/* Table preview */}
-                  <div className="max-h-[320px] overflow-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
-                    <table className="w-full text-left text-[12px]" style={{ minWidth: 700 }}>
+                  <div className="max-h-[320px] overflow-auto border border-bg-surface3 rounded-xl bg-bg-surface2">
+                    <table className="w-full text-left text-[12px] min-w-[700px]">
                       <thead>
-                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>#</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Name</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Email</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Role</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Location</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>YoE</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Skills</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Education</th>
+                        <tr className="border-[1.5px] border-b-bg-surface3">
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">#</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Name</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Email</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Role</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Location</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">YoE</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Skills</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Education</th>
                         </tr>
                       </thead>
                       <tbody>
                         {parsedPreview.map((r, i) => (
                           <tr
                             key={i}
-                            style={{ borderBottom: "1px solid var(--border)" }}
-                            className="hover:bg-[var(--accent-dim)] transition-colors"
+                            className="border-b border-bg-surface3 hover:bg-brand-accent-dim transition-colors"
                           >
-                            <td className="px-3 py-2 font-mono" style={{ color: "var(--text3)" }}>{i + 1}</td>
-                            <td className="px-3 py-2 font-semibold truncate max-w-[140px]" style={{ color: "var(--text)" }}>
+                            <td className="px-3 py-2 font-mono text-text-muted">{i + 1}</td>
+                            <td className="px-3 py-2 font-semibold truncate max-w-[140px] text-text">
                               {r.firstName} {r.lastName}
                             </td>
-                            <td className="px-3 py-2 truncate max-w-[160px]" style={{ color: "var(--text2)" }}>{r.email}</td>
-                            <td className="px-3 py-2 truncate max-w-[120px]" style={{ color: "var(--text2)" }}>{r.currentRole || "—"}</td>
-                            <td className="px-3 py-2 truncate max-w-[100px]" style={{ color: "var(--text3)" }}>{r.location || "—"}</td>
-                            <td className="px-3 py-2 text-center" style={{ color: "var(--text2)" }}>{r.yearsOfExperience || "—"}</td>
+                            <td className="px-3 py-2 truncate max-w-[160px] text-text-light">{r.email}</td>
+                            <td className="px-3 py-2 truncate max-w-[120px] text-text-light">{r.currentRole || "—"}</td>
+                            <td className="px-3 py-2 truncate max-w-[100px] text-text-muted">{r.location || "—"}</td>
+                            <td className="px-3 py-2 text-center text-text-light">{r.yearsOfExperience || "—"}</td>
                             <td className="px-3 py-2">
                               <div className="flex flex-wrap gap-1 max-w-[200px]">
                                 {(r.skills || "").split(",").filter(Boolean).slice(0, 3).map((sk, j) => (
                                   <span
                                     key={j}
-                                    className="px-1.5 py-0.5 rounded text-[10px]"
-                                    style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid rgba(47,111,228,0.15)" }}
+                                    className="px-1.5 py-0.5 rounded text-[10px] bg-brand-accent-dim text-brand-accent border border-brand-accent/15"
                                   >
                                     {sk.trim()}
                                   </span>
                                 ))}
                                 {(r.skills || "").split(",").filter(Boolean).length > 3 && (
-                                  <span className="text-[10px]" style={{ color: "var(--text3)" }}>+{(r.skills || "").split(",").filter(Boolean).length - 3}</span>
+                                  <span className="text-[10px] text-text-muted">+{(r.skills || "").split(",").filter(Boolean).length - 3}</span>
                                 )}
                               </div>
                             </td>
                             <td className="px-3 py-2">
                               <span
-                                className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                                style={{ background: "var(--green-dim)", color: "var(--green)" }}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand-green-dim text-brand-green"
                               >
                                 {r.educationLevel || "—"}
                               </span>
@@ -398,14 +394,14 @@ export default function UploadPage() {
                   </button>
                 </div>
             ) : (
-                <div className="space-y-6 fade-in pt-6 border-t border-[var(--border)]">
-                  <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--surface2)]'}`}>
+                <div className="space-y-6 fade-in pt-6 border-t border-bg-surface3">
+                  <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-surface2'}`}>
                     <input {...getInputProps()} />
-                    <UploadCloud size={40} className={`mb-4 ${isDragActive ? 'text-[var(--accent)]' : 'text-[var(--text3)]'}`} strokeWidth={1.5} />
-                    <div className="font-bold text-lg text-[var(--text)] text-center">
+                    <UploadCloud size={40} className={`mb-4 ${isDragActive ? 'text-brand-accent' : 'text-text-muted'}`} strokeWidth={1.5} />
+                    <div className="font-bold text-lg text-text text-center">
                       {importMode === "pdf" ? "Drag & drop multiple PDF resumes here" : "Drag & drop CSV or Excel data file here"}
                     </div>
-                    <div className="text-sm text-[var(--text3)] mt-2 text-center max-w-md">
+                    <div className="text-sm text-text-muted mt-2 text-center max-w-md">
                       {importMode === "pdf" 
                         ? "Upload multiple PDFs for AI batch extraction. Our Gemini model will automatically map candidate details." 
                         : "Upload a single CSV or Excel (.xlsx/.xls) file to directly import candidate rows."}
@@ -414,21 +410,17 @@ export default function UploadPage() {
 
                   {importMode === "data" && (
                     <div
-                      className="rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                      className="rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-bg-surface2 border border-bg-surface3"
                     >
                       <div>
-                        <div className="text-[12px] font-bold" style={{ color: "var(--text)" }}>Need a template?</div>
-                        <div className="text-[11px] mt-0.5" style={{ color: "var(--text3)" }}>
+                        <div className="text-[12px] font-bold text-text">Need a template?</div>
+                        <div className="text-[11px] mt-0.5 text-text-muted">
                           Download our CSV template with all 11 supported columns pre-defined.
                         </div>
                       </div>
                       <button
                         onClick={downloadTemplate}
-                        className="flex items-center gap-2 text-[12px] font-bold px-4 py-2 rounded-lg transition-all shrink-0"
-                        style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid rgba(47,111,228,0.2)" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-dim)"; e.currentTarget.style.color = "var(--accent)"; }}
+                        className="flex items-center gap-2 text-[12px] font-bold px-4 py-2 rounded-lg transition-all shrink-0 bg-brand-accent-dim text-brand-accent border border-brand-accent/20 hover:bg-brand-accent hover:text-white"
                       >
                         <Download size={14} /> Download Template
                       </button>
@@ -437,18 +429,18 @@ export default function UploadPage() {
 
               {files.length > 0 && (
                  <div className="fade-in">
-                    <h3 className="text-sm font-bold tracking-widest uppercase mb-3 flex items-center justify-between text-[var(--text2)]">
+                    <h3 className="text-sm font-bold tracking-widest uppercase mb-3 flex items-center justify-between text-text-light">
                        Queued Resumes ({files.length} selected)
-                       <button onClick={() => setFiles([])} className="text-[var(--red)] uppercase tracking-widest text-[10px] font-bold px-2 py-1 rounded hover:bg-[rgba(255,107,107,0.1)] transition-colors">
+                       <button onClick={() => setFiles([])} className="text-brand-red uppercase tracking-widest text-[10px] font-bold px-2 py-1 rounded hover:bg-brand-red/10 transition-colors">
                          Clear Queue
                        </button>
                     </h3>
                     <div className="flex flex-wrap gap-2 mb-6 max-h-40 overflow-y-auto p-1">
                       {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-[var(--surface2)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs text-[var(--text)] group">
-                           <FileSignature size={14} className="text-[var(--accent)]" />
+                        <div key={i} className="flex items-center gap-2 bg-bg-surface2 border border-bg-surface3 rounded-lg px-3 py-2 text-xs text-text group">
+                           <FileSignature size={14} className="text-brand-accent" />
                            <span className="truncate max-w-[150px]">{f.name}</span>
-                           <button onClick={(e) => { e.stopPropagation(); setFiles(files.filter((_, idx) => idx !== i)); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-[var(--text3)] hover:text-[var(--red)]">
+                           <button onClick={(e) => { e.stopPropagation(); setFiles(files.filter((_, idx) => idx !== i)); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-text-muted hover:text-brand-red">
                              <X size={14} />
                            </button>
                         </div>
@@ -456,10 +448,10 @@ export default function UploadPage() {
                     </div>
 
                     {files.length === 1 ? (
-                      <form onSubmit={handleSingleSubmit} className="space-y-6 fade-in p-6 rounded-xl border border-[var(--border)] bg-[var(--surface2)]">
-                        <div className="text-xs font-bold uppercase tracking-widest text-[var(--accent)] mb-2 flex flex-col">
+                      <form onSubmit={handleSingleSubmit} className="space-y-6 fade-in p-6 rounded-xl border border-bg-surface3 bg-bg-surface2">
+                        <div className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2 flex flex-col">
                            Single PDF Upload Mode
-                           <span className="text-[10px] text-[var(--text3)] normal-case font-normal mt-1 leading-relaxed">
+                           <span className="text-[10px] text-text-muted normal-case font-normal mt-1 leading-relaxed">
                               When uploading exactly one candidate manually, you must provide their explicit details down below. Add another PDF above to seamlessly switch into Gemini Batch AI Extraction.
                            </span>
                         </div>
@@ -468,17 +460,17 @@ export default function UploadPage() {
                           <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={true} />
                           <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={true} />
                           <Input label="Email Address" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={true} />
-                          <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase tracking-widest pl-1">
-                             Years of Experience
-                             <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full mt-1 px-4 py-3 border rounded-xl bg-[var(--surface)] border-[var(--border)] focus:border-[var(--accent)] text-[var(--text)] transition-all outline-none" required />
+                          <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
+                             <span className="group-hover:text-text transition-colors">Years of Experience <span className="text-brand-red">*</span></span>
+                             <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text placeholder:text-text-muted/60 outline-none transition-all duration-200 text-sm font-medium shadow-sm" required />
                           </label>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input label="Skill Tags (comma separated)" placeholder="React, APIs, Sales" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
-                           <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase tracking-widest pl-1">
-                             Education Qualification
-                             <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-4 py-3 border rounded-xl bg-[var(--surface)] border-[var(--border)] focus:border-[var(--accent)] text-[var(--text)] transition-all outline-none appearance-none">
+                           <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
+                             <span className="group-hover:text-text transition-colors">Education Qualification</span>
+                             <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text outline-none transition-all duration-200 text-sm font-medium shadow-sm appearance-none cursor-pointer">
                                <option value="Associate">Associate Degree</option>
                                <option value="Bachelor">Bachelor&apos;s Degree</option>
                                <option value="Master">Master&apos;s Degree</option>
@@ -488,7 +480,7 @@ export default function UploadPage() {
                           </label>
                         </div>
 
-                        <button type="submit" disabled={loading} className="btn btn-outline w-full h-14 text-base font-bold shadow-sm mt-4">
+                        <button type="submit" disabled={loading} className="btn w-full h-14 text-base font-bold shadow-md mt-4 bg-brand-blue hover:bg-brand-accent-hover text-white rounded-xl transition-all disabled:opacity-50">
                           {loading ? "Transmitting Single Context..." : "Upload Applicant to Job"}
                         </button>
                       </form>
@@ -523,15 +515,15 @@ export default function UploadPage() {
 
 function Input({ label, value, onChange, type="text", placeholder, required=false }: any) {
   return (
-    <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase tracking-widest pl-1">
-       {label}
+    <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
+       <span className="group-hover:text-text transition-colors">{label} {required && <span className="text-brand-red">*</span>}</span>
        <input 
           type={type} 
           required={required}
           placeholder={placeholder}
           value={value} 
           onChange={e => onChange(e.target.value)} 
-          className="w-full mt-1 px-4 py-3 border rounded-xl bg-[var(--surface)] focus:border-[var(--accent)] border-[var(--border)] text-[var(--text)] outline-none transition-all" 
+          className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text placeholder:text-text-muted/60 outline-none transition-all duration-200 text-sm font-medium shadow-sm"
        />
     </label>
   );
