@@ -11,8 +11,9 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { UploadCloud, FileText, Briefcase, FileSignature, X, Database, Wand2, Download } from "lucide-react";
+import { UploadCloud, FileText, Briefcase, FileSignature, X, Database, Wand2, Download, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
 
 export default function UploadPage() {
   const dispatch = useAppDispatch();
@@ -25,6 +26,7 @@ export default function UploadPage() {
   const [importMode, setImportMode] = useState<"pdf" | "data">("pdf");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [wizardOpen, setWizardOpen] = useState(false);
   
   const [form, setForm] = useState({
     firstName: "",
@@ -50,13 +52,17 @@ export default function UploadPage() {
       const json = XLSX.utils.sheet_to_json(sheet) as any[];
       
       const mappedData: ParsedApplicantRow[] = json.map(row => ({
-        firstName: row.firstName || row.FirstName || "",
-        lastName: row.lastName || row.LastName || "",
+        firstName: row.firstName || row.FirstName || row.first_name || "",
+        lastName: row.lastName || row.LastName || row.last_name || "",
         email: row.email || row.Email || "",
-        currentRole: row.currentRole || row.Role || "",
-        yearsOfExperience: row.yearsOfExperience || row.Experience || 0,
+        phone: row.phone || row.Phone || "",
+        currentRole: row.currentRole || row.Role || row.role || "",
+        headline: row.headline || row.Headline || row.title || "",
+        location: row.location || row.Location || row.city || "",
+        bio: row.bio || row.Bio || row.summary || "",
+        yearsOfExperience: row.yearsOfExperience || row.Experience || row.years || 0,
         skills: row.skills || row.Skills || "",
-        educationLevel: row.educationLevel || row.Education || "Bachelor"
+        educationLevel: row.educationLevel || row.Education || row.degree || "Bachelor"
       }));
 
       dispatch(setParsedPreview(mappedData));
@@ -104,8 +110,17 @@ export default function UploadPage() {
   });
 
   const downloadTemplate = () => {
-    const headers = "firstName,lastName,email,currentRole,yearsOfExperience,skills,educationLevel\nJohn,Doe,john@example.com,Developer,5,\"React, Node, SQL\",Bachelor";
-    const blob = new Blob([headers], { type: "text/csv" });
+    const headers = [
+      "firstName", "lastName", "email", "phone", "currentRole",
+      "headline", "location", "bio", "yearsOfExperience", "skills", "educationLevel"
+    ].join(",");
+    const example = [
+      "Alice", "Mutoni", "alice@example.com", "+250 700 000 000", "Backend Engineer",
+      "Node.js & AI Systems Engineer", "Kigali Rwanda", "5 years building distributed APIs",
+      "5", '"React, Node.js, Python, Docker"', "Bachelor"
+    ].join(",");
+    const csv = headers + "\n" + example;
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -182,6 +197,11 @@ export default function UploadPage() {
         fd.append("firstName", row.firstName);
         fd.append("lastName", row.lastName);
         fd.append("email", row.email);
+        if (row.phone) fd.append("phone", row.phone);
+        if (row.headline) fd.append("headline", row.headline);
+        if (row.location) fd.append("location", row.location);
+        if (row.bio) fd.append("bio", row.bio);
+        if (row.currentRole) fd.append("currentRole", row.currentRole);
         fd.append("yearsOfExperience", String(row.yearsOfExperience || 0));
         fd.append("educationLevel", row.educationLevel || "Bachelor");
         
@@ -242,7 +262,7 @@ export default function UploadPage() {
          ) : (
           <>
             {/* Mode Selection */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                <button 
                 className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100'}`}
                 onClick={() => {
@@ -273,28 +293,108 @@ export default function UploadPage() {
                     <div className="text-[11px] text-[var(--text3)] mt-0.5">Import from CSV or Excel</div>
                  </div>
                </button>
+               <button 
+                className="p-4 rounded-xl border transition-all text-left flex items-start gap-4 border-[var(--border)] bg-[var(--bg)] opacity-60 hover:opacity-100 hover:border-[var(--accent)]"
+                onClick={() => {
+                  if (!selectedJobId) {
+                    toast.error("Please select a job first.");
+                    return;
+                  }
+                  setWizardOpen(true);
+                }}
+               >
+                 <div className="p-2.5 rounded-lg bg-[var(--surface3)] text-[var(--text2)]">
+                    <UserPlus size={20} />
+                 </div>
+                 <div>
+                    <div className="font-bold text-sm text-[var(--text)]">Structured Profile</div>
+                    <div className="text-[11px] text-[var(--text3)] mt-0.5">Full applicant form entry</div>
+                 </div>
+               </button>
             </div>
 
             {parsedPreview && parsedPreview.length > 0 ? (
                 <div className="space-y-4 fade-in pt-6 border-t border-[var(--border)]">
-                  <h3 className="font-bold text-lg text-[var(--text)] flex items-center justify-between">
-                      Import Preview ({parsedPreview.length} rows detected)
-                      <button className="text-[var(--red)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[rgba(255,107,107,0.1)] transition-colors" onClick={() => dispatch(clearParsedPreview())}>
-                        Cancel Batch
-                      </button>
-                  </h3>
-                  <div className="max-h-64 overflow-y-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
-                    {parsedPreview.map((r, i) => (
-                        <div key={i} className="text-sm p-3 border-b border-[var(--border)] last:border-0 truncate flex flex-col sm:flex-row gap-1 sm:gap-4">
-                          <div className="font-bold text-[var(--text)] sm:w-1/4 truncate">{r.firstName} {r.lastName}</div>
-                          <div className="text-[var(--text2)] sm:w-1/4 truncate">{r.email}</div>
-                          <div className="text-[var(--text3)] sm:w-1/2 min-w-0 truncate italic sm:not-italic">Skills: {r.skills}</div>
-                        </div>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg text-[var(--text)]">
+                        Import Preview
+                      </h3>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--text3)" }}>
+                        {parsedPreview.length} candidates detected — review before importing
+                      </p>
+                    </div>
+                    <button
+                      className="text-[var(--red)] text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-[rgba(255,107,107,0.1)] transition-colors"
+                      onClick={() => dispatch(clearParsedPreview())}
+                    >
+                      Cancel
+                    </button>
                   </div>
+
+                  {/* Table preview */}
+                  <div className="max-h-[320px] overflow-auto border border-[var(--border)] rounded-xl bg-[var(--surface2)]">
+                    <table className="w-full text-left text-[12px]" style={{ minWidth: 700 }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>#</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Name</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Email</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Role</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Location</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>YoE</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Skills</th>
+                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0" style={{ background: "var(--surface2)", color: "var(--text3)" }}>Education</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsedPreview.map((r, i) => (
+                          <tr
+                            key={i}
+                            style={{ borderBottom: "1px solid var(--border)" }}
+                            className="hover:bg-[var(--accent-dim)] transition-colors"
+                          >
+                            <td className="px-3 py-2 font-mono" style={{ color: "var(--text3)" }}>{i + 1}</td>
+                            <td className="px-3 py-2 font-semibold truncate max-w-[140px]" style={{ color: "var(--text)" }}>
+                              {r.firstName} {r.lastName}
+                            </td>
+                            <td className="px-3 py-2 truncate max-w-[160px]" style={{ color: "var(--text2)" }}>{r.email}</td>
+                            <td className="px-3 py-2 truncate max-w-[120px]" style={{ color: "var(--text2)" }}>{r.currentRole || "—"}</td>
+                            <td className="px-3 py-2 truncate max-w-[100px]" style={{ color: "var(--text3)" }}>{r.location || "—"}</td>
+                            <td className="px-3 py-2 text-center" style={{ color: "var(--text2)" }}>{r.yearsOfExperience || "—"}</td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                {(r.skills || "").split(",").filter(Boolean).slice(0, 3).map((sk, j) => (
+                                  <span
+                                    key={j}
+                                    className="px-1.5 py-0.5 rounded text-[10px]"
+                                    style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid rgba(47,111,228,0.15)" }}
+                                  >
+                                    {sk.trim()}
+                                  </span>
+                                ))}
+                                {(r.skills || "").split(",").filter(Boolean).length > 3 && (
+                                  <span className="text-[10px]" style={{ color: "var(--text3)" }}>+{(r.skills || "").split(",").filter(Boolean).length - 3}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <span
+                                className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                                style={{ background: "var(--green-dim)", color: "var(--green)" }}
+                              >
+                                {r.educationLevel || "—"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
                   <button onClick={handleBulkUploadCSV} disabled={loading} className="btn btn-green w-full h-14 text-base font-bold shadow-sm flex items-center justify-center gap-2 mt-2">
                     {loading ? <LoadingSpinner size={20} /> : <FileText size={20} />}
-                    {loading ? "Transmitting payload..." : "Confirm & Import Mapping into Selected Job"}
+                    {loading ? `Importing candidates...` : `Import ${parsedPreview.length} Candidates into Job`}
                   </button>
                 </div>
             ) : (
@@ -313,12 +413,24 @@ export default function UploadPage() {
                   </div>
 
                   {importMode === "data" && (
-                    <div className="flex justify-center">
-                      <button 
+                    <div
+                      className="rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                      style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
+                    >
+                      <div>
+                        <div className="text-[12px] font-bold" style={{ color: "var(--text)" }}>Need a template?</div>
+                        <div className="text-[11px] mt-0.5" style={{ color: "var(--text3)" }}>
+                          Download our CSV template with all 11 supported columns pre-defined.
+                        </div>
+                      </div>
+                      <button
                         onClick={downloadTemplate}
-                        className="flex items-center gap-2 text-xs font-bold text-[var(--accent)] hover:underline opacity-80"
+                        className="flex items-center gap-2 text-[12px] font-bold px-4 py-2 rounded-lg transition-all shrink-0"
+                        style={{ background: "var(--accent-dim)", color: "var(--accent)", border: "1px solid rgba(47,111,228,0.2)" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-dim)"; e.currentTarget.style.color = "var(--accent)"; }}
                       >
-                        <Download size={14} /> Download Import Template (.csv)
+                        <Download size={14} /> Download Template
                       </button>
                     </div>
                   )}
@@ -393,6 +505,18 @@ export default function UploadPage() {
         </>
       )}
       </div>
+
+      {/* Structured Profile Wizard Modal */}
+      <ProfileWizardModal
+        open={wizardOpen}
+        jobId={selectedJobId}
+        jobTitle={jobs.find(j => j._id === selectedJobId)?.roleTitle}
+        onClose={() => setWizardOpen(false)}
+        onSuccess={() => {
+          setWizardOpen(false);
+          router.push(`/jobs/${selectedJobId}/applicants`);
+        }}
+      />
     </div>
   );
 }

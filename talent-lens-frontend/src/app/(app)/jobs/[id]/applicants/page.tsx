@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
-import { fetchApplicantsByJob, addUmuravaApplicant, addExternalApplicant, setParsedPreview, clearParsedPreview } from "@/lib/slices/applicantsSlice";
+import { fetchApplicantsByJob, addExternalApplicant, setParsedPreview, clearParsedPreview } from "@/lib/slices/applicantsSlice";
 import { fetchJobById, updateJobStatus } from "@/lib/slices/jobsSlice";
 import { screenAll } from "@/lib/slices/screeningSlice";
 import { Applicant, EducationLevel, ParsedApplicantRow } from "@/lib/types";
@@ -12,6 +12,7 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Upload, FileText, Zap, User } from "lucide-react";
+import UmuravaWizardForm from "@/components/profile/UmuravaWizardForm";
 
 export default function JobApplicantsPage() {
   const { id } = useParams<{ id: string }>();
@@ -132,82 +133,18 @@ export default function JobApplicantsPage() {
   );
 }
 
-// ─── Umurava Form ─────────────────────────────────────────────────────────────
+// ─── Umurava Form (Full 7-step wizard) ────────────────────────────────────────
 
 function UmuravaForm({ jobId }: { jobId: string }) {
   const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
-  
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    skillsStr: "",
-    yearsOfExperience: 0,
-    educationLevel: "Bachelor" as EducationLevel,
-    currentRole: "",
-    umuravaId: ""
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const payload = {
-      jobId, ...form,
-      skills: form.skillsStr.split(",").map(s => s.trim()).filter(Boolean),
-      profileData: { umuravaId: form.umuravaId }
-    };
-    
-    try {
-      const res = await dispatch(addUmuravaApplicant(payload));
-      if (addUmuravaApplicant.fulfilled.match(res)) {
-        toast.success("Umurava applicant added!");
-        setForm({ firstName: "", lastName: "", email: "", phone: "", skillsStr: "", yearsOfExperience: 0, educationLevel: "Bachelor", currentRole: "", umuravaId: "" });
-      } else {
-        toast.error(res.payload as string);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required />
-        <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required />
-        <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required />
-        <Input label="Phone (optional)" value={form.phone} onChange={(v: string) => setForm({...form, phone: v})} />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-         <Input label="Current Role" value={form.currentRole} onChange={(v: string) => setForm({...form, currentRole: v})} />
-         <Input label="Umurava Profile ID" value={form.umuravaId} onChange={(v: string) => setForm({...form, umuravaId: v})} />
-      </div>
-      <Input label="Skills (comma separated)" placeholder="React, Node, UX" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} required />
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
-           Years of Exp
-           <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]" required />
-        </label>
-        <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
-           Education Label
-           <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]">
-             <option value="High School">High School</option>
-             <option value="Associate">Associate</option>
-             <option value="Bachelor">Bachelor</option>
-             <option value="Master">Master</option>
-             <option value="PhD">PhD</option>
-             <option value="Other">Other</option>
-           </select>
-        </label>
-      </div>
-
-      <button type="submit" disabled={loading} className="btn btn-outline w-full mt-4 h-12">
-        {loading ? "Adding..." : "Add Umurava Candidate"}
-      </button>
-    </form>
+    <UmuravaWizardForm
+      jobId={jobId}
+      onSuccess={() => {
+        dispatch(fetchApplicantsByJob(jobId));
+      }}
+    />
   );
 }
 
