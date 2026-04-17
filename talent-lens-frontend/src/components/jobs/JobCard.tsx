@@ -27,6 +27,7 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 interface JobCardProps {
   job: Job;
   mode?: "default" | "compare";
+  onViewDetails?: () => void;
 }
 
 // 6 vibrant color palettes — deterministic by skill name hash
@@ -76,7 +77,7 @@ function getJobIcon(title: string): IconConfig {
   return { Icon: Briefcase,     bg: "#475569", color: "#ffffff", border: "#334155" };
 }
 
-export default function JobCard({ job, mode = "default" }: JobCardProps) {
+export default function JobCard({ job, mode = "default", onViewDetails }: JobCardProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { shortlists } = useAppSelector((state) => state.screening);
@@ -157,6 +158,8 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
         onClick={() => {
           if (mode === "compare") {
             router.push(`/compare?jobId=${job._id}`);
+          } else if (onViewDetails) {
+            onViewDetails();
           } else {
             router.push(`/jobs/${job._id}/applicants`);
           }

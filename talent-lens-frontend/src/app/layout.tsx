@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/components/providers/StoreProvider";
-
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "TalentAI | Powered by Umurava",
@@ -21,7 +14,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={bricolage.className} suppressHydrationWarning={true}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body suppressHydrationWarning={true}>
         <StoreProvider>
           {children}
         </StoreProvider>

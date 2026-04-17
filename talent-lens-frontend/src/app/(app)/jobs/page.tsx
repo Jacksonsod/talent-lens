@@ -3,17 +3,20 @@
 import React, { useEffect, useState } from "react";
 import StatCard from "@/components/ui/StatCard";
 import JobCard from "@/components/jobs/JobCard";
+import JobDetailsModal from "@/components/jobs/JobDetailsModal";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Search, Plus, Briefcase, CheckCircle2, Users, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { Job } from "@/lib/types";
 
 export default function JobsPage() {
   const dispatch = useAppDispatch();
   const { items: jobs, loading } = useAppSelector((s) => s.jobs);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
     dispatch(fetchJobs());
@@ -120,7 +123,11 @@ export default function JobsPage() {
       <div className="space-y-4">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
-            <JobCard key={job._id} job={job} />
+            <JobCard 
+              key={job._id} 
+              job={job} 
+              onViewDetails={() => setSelectedJob(job)} 
+            />
           ))
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
@@ -134,6 +141,15 @@ export default function JobsPage() {
           </div>
         )}
       </div>
+
+      {/* ─── Modals ────────────────────────────────── */}
+      {selectedJob && (
+        <JobDetailsModal 
+          job={selectedJob} 
+          isOpen={!!selectedJob} 
+          onClose={() => setSelectedJob(null)} 
+        />
+      )}
     </div>
   );
 }
