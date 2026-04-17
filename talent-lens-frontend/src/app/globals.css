@@ -46,7 +46,7 @@
   --red:        #EF4444;
   --red-dim:    rgba(239, 68, 68, 0.12);
 
-  /* ── Badge / chip tints ── */
+  /* -- Badge / chip tints -- */
   --chip-blue-bg:   #E8F0FE;
   --chip-blue-text: #2F6FE4;
   --chip-green-bg:  #E6F7F1;
