@@ -219,7 +219,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <div className="py-12 text-center">
-                  <p className="text-gray-400 text-[13px]">No postings match "{searchTerm}"</p>
+                  <p className="text-gray-400 text-[13px]">No postings match &quot;{searchTerm}&quot;</p>
                 </div>
               )}
             </div>

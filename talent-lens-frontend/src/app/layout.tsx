@@ -1,6 +1,12 @@
-import type { Metadata } from "next";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/components/providers/StoreProvider";
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-bricolage",
+});
 
 export const metadata: Metadata = {
   title: "TalentAI | Powered by Umurava",
@@ -13,13 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={bricolage.variable}>
       <body suppressHydrationWarning={true}>
         <StoreProvider>
           {children}

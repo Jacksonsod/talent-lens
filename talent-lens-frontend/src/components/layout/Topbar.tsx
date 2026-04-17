@@ -161,7 +161,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
                 {!hasResults && (
                   <div className="p-8 text-center">
-                    <p className="text-[13px] text-gray-400">No matches found for "{searchTerm}"</p>
+                    <p className="text-[13px] text-gray-400">No matches found for &quot;{searchTerm}&quot;</p>
                   </div>
                 )}
               </div>
