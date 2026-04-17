@@ -61,8 +61,8 @@ export function formatDate(dateStr: string): string {
   });
 }
 
-export function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+export function timeAgo(date: string | number | Date): string {
+  const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);

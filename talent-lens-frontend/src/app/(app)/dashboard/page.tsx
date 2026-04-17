@@ -560,7 +560,7 @@ function TopCandidatesCard({ results, jobs }: { results: ScreeningResult[], jobs
 interface ActivityItem {
   id: string;
   text: string;
-  sub: string;
+  sub?: string;
   time: string | number | Date;
   color: string;
 }
