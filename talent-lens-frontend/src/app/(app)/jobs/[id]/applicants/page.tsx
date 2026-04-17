@@ -1,29 +1,31 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
-import { fetchApplicantsByJob, addExternalApplicant, setParsedPreview, clearParsedPreview } from "@/lib/slices/applicantsSlice";
+import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
 import { fetchJobById, updateJobStatus } from "@/lib/slices/jobsSlice";
 import { screenAll } from "@/lib/slices/screeningSlice";
-import { Applicant, EducationLevel, ParsedApplicantRow } from "@/lib/types";
 import toast from "react-hot-toast";
-import { useDropzone } from "react-dropzone";
-import Papa from "papaparse";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Upload, FileText, Zap, User } from "lucide-react";
-import UmuravaWizardForm from "@/components/profile/UmuravaWizardForm";
+import { Users, Zap, Plus, Upload, UserPlus, Search, ArrowLeft, Mail, Briefcase, GraduationCap, MapPin } from "lucide-react";
+import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
+import ImportCandidateModal from "@/components/applicants/ImportCandidateModal";
 
-export default function JobApplicantsPage() {
+export default function ApplicantHubPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
   const job = useAppSelector(s => s.jobs.selected);
-  const { items: applicants, loading: appsLoading, parsedPreview } = useAppSelector(s => s.applicants);
+  const { items: applicants, loading: appsLoading } = useAppSelector(s => s.applicants);
   
-  const [activeTab, setActiveTab] = useState<"umurava" | "external">("umurava");
   const [screening, setScreening] = useState(false);
+  const [search, setSearch] = useState("");
+  
+  // Modal states
+  const [showManualAdd, setShowManualAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   useEffect(() => {
     dispatch(fetchJobById(id));
@@ -42,288 +44,263 @@ export default function JobApplicantsPage() {
       router.push(`/jobs/${id}/shortlist`);
     } else {
       toast.error(result.payload as string || "Failed to screen applicants.");
-      // Rollback to open if failed
       if (job?.status === "Open") await dispatch(updateJobStatus({ id, status: "Open" }));
       setScreening(false);
     }
   };
 
-  if (!job) return <LoadingSpinner />;
+  if (!job) return <div className="flex h-[80vh] items-center justify-center"><LoadingSpinner /></div>;
+
+  const filteredApplicants = applicants.filter(a => 
+    a.firstName.toLowerCase().includes(search.toLowerCase()) || 
+    a.lastName.toLowerCase().includes(search.toLowerCase()) ||
+    a.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="max-w-6xl mx-auto stagger pb-20 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display font-bold text-2xl md:text-3xl tracking-tight mb-2" style={{ color: "var(--text)" }}>
-             Applicants for {job.roleTitle}
-          </h1>
-          <p className="text-sm" style={{ color: "var(--text3)" }}>
-             {applicants.length} total applicants ready for ingestion.
-          </p>
-        </div>
-        <button 
-          className="btn btn-primary animate-pulse-subtle h-11 md:h-12 px-5 md:px-6 shadow-sm w-full sm:w-auto"
-          onClick={handleScreenAll}
-          disabled={screening || applicants.length === 0}
-        >
-          {screening ? (
-            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : <Zap size={18} className="mr-2" />}
-          {screening ? "Screening..." : "Screen All Applicants"}
-        </button>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-up">
+      
+      {/* ─── Premium Header ─── */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#2563EB] text-white p-8 md:p-10 shadow-xl shadow-blue-900/10">
+        {/* Abstract background elements */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-400/10 blur-3xl" />
 
-      {/* Forms Area */}
-      <div className="rounded-2xl p-7" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-        
-        {/* Tabs */}
-        <div className="flex items-center gap-4 border-b border-[var(--border)] mb-6 -mt-2">
-           <button 
-             className={`pb-4 px-2 text-sm font-bold border-b-2 transition-all ${activeTab === "umurava" ? "border-[var(--accent)] text-[var(--accent)]" : "border-transparent text-[var(--text3)] hover:text-[var(--text2)]"}`}
-             onClick={() => setActiveTab("umurava")}
-           >
-             Umurava Platform
-           </button>
-           <button 
-             className={`pb-4 px-2 text-sm font-bold border-b-2 transition-all ${activeTab === "external" ? "border-[var(--accent)] text-[var(--accent)]" : "border-transparent text-[var(--text3)] hover:text-[var(--text2)]"}`}
-             onClick={() => setActiveTab("external")}
-           >
-             External / Upload
-           </button>
-        </div>
+        <div className="relative z-10">
+          <button 
+            onClick={() => router.push('/jobs')}
+            className="flex items-center gap-2 text-blue-100 hover:text-white mb-6 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft size={16} /> Back to Jobs
+          </button>
 
-        {activeTab === "umurava" ? <UmuravaForm jobId={id} /> : <ExternalForm jobId={id} />}
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3 mb-4">
+                 <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
+                   {job.status}
+                 </span>
+                 <span className="text-blue-200 text-sm font-medium flex items-center gap-1.5">
+                   <Briefcase size={14} /> {job.experienceLevel}
+                 </span>
+              </div>
+              <h1 className="font-display font-extrabold text-4xl md:text-5xl tracking-tight leading-tight mb-2">
+                 {job.roleTitle}
+              </h1>
+              <p className="text-blue-100/80 text-lg max-w-2xl">
+                 Manage, import, and screen your candidate pipeline for this role.
+              </p>
+            </div>
 
-      </div>
-
-      {/* Applicant List */}
-      <div>
-        <h2 className="text-xl font-bold font-display mb-4" style={{ color: "var(--text)" }}>Imported Applicants</h2>
-        {appsLoading && applicants.length === 0 ? (
-          <LoadingSpinner />
-        ) : applicants.length === 0 ? (
-          <div className="p-8 text-center rounded-xl border border-dashed border-[var(--border)] text-[var(--text3)]">
-            No applicants imported yet. Use the form above to add some!
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             {applicants.map(app => (
-               <div key={app._id} className="p-4 rounded-xl flex items-center gap-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--surface3)] text-[var(--text2)]">
-                     <User size={18} />
-                  </div>
-                  <div>
-                    <div className="font-bold text-[var(--text)]">{app.firstName} {app.lastName}</div>
-                    <div className="text-xs text-[var(--text3)]">{app.email} • {app.currentRole || "Candidate"}</div>
-                  </div>
-                  <div className="ml-auto text-xs px-2 py-1 rounded bg-[var(--surface3)] border border-[var(--border)] text-[var(--text3)] uppercase font-bold tracking-widest">
-                     {app.source}
-                  </div>
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 shrink-0">
+               <div className="text-center px-4">
+                 <div className="text-3xl font-black">{applicants.length}</div>
+                 <div className="text-[10px] uppercase tracking-widest text-blue-200 font-bold mt-1">Total Apps</div>
                </div>
-             ))}
+               <div className="w-px h-12 bg-white/20" />
+               <div className="text-center px-4">
+                 <div className="text-3xl font-black">{job.shortlistSize}</div>
+                 <div className="text-[10px] uppercase tracking-widest text-blue-200 font-bold mt-1">Goal</div>
+               </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* ─── Toolbar ─── */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+         <div className="relative w-full md:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text3)]" size={18} />
+            <input 
+              type="text"
+              placeholder="Search applicants..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3.5 bg-white border border-[var(--border2)] rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+            />
+         </div>
+
+         <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="flex bg-white border border-[var(--border2)] rounded-2xl p-1 shadow-sm w-full md:w-auto overflow-x-auto">
+               <button 
+                 onClick={() => setShowManualAdd(true)}
+                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium text-sm transition-all whitespace-nowrap"
+               >
+                 <UserPlus size={16} /> Add Manually
+               </button>
+               <button 
+                 onClick={() => setShowImport(true)}
+                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium text-sm transition-all whitespace-nowrap"
+               >
+                 <Upload size={16} /> Import Resumes/CSV
+               </button>
+            </div>
+
+            <button 
+              onClick={handleScreenAll}
+              disabled={screening || applicants.length === 0}
+              className="btn flex-1 md:flex-none h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-2xl whitespace-nowrap"
+            >
+              {screening ? (
+                <svg className="animate-spin mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : <Zap size={18} className="mr-2" />}
+              {screening ? "Screening..." : "Screen All"}
+            </button>
+         </div>
+      </div>
+
+      {/* ─── Main Content ─── */}
+      {appsLoading && applicants.length === 0 ? (
+        <div className="py-20 flex justify-center"><LoadingSpinner /></div>
+      ) : applicants.length === 0 ? (
+        /* Empty State */
+        <div className="bg-white border border-[var(--border2)] rounded-3xl p-12 text-center shadow-sm max-w-4xl mx-auto">
+           <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
+             <Users size={32} className="text-blue-600" />
+           </div>
+           <h2 className="font-display font-extrabold text-2xl text-gray-900 mb-3">No Applicants Yet</h2>
+           <p className="text-gray-500 mb-10 max-w-lg mx-auto">
+             Your applicant pipeline is currently empty. You can manually create candidate profiles using our structured wizard, or bulk import them from external sources.
+           </p>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+              <button 
+                onClick={() => setShowManualAdd(true)}
+                className="group p-6 rounded-2xl border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all flex flex-col items-center text-center gap-4"
+              >
+                 <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                   <UserPlus size={24} />
+                 </div>
+                 <div>
+                   <h3 className="font-bold text-gray-900 mb-1">Add Applicant Manually</h3>
+                   <p className="text-sm text-gray-500">Create a rich, structured profile using our 7-step onboarding wizard for highest AI accuracy.</p>
+                 </div>
+              </button>
+
+              <button 
+                onClick={() => setShowImport(true)}
+                className="group p-6 rounded-2xl border-2 border-dashed border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all flex flex-col items-center text-center gap-4"
+              >
+                 <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                   <Upload size={24} />
+                 </div>
+                 <div>
+                   <h3 className="font-bold text-gray-900 mb-1">Import Resumes or CSV</h3>
+                   <p className="text-sm text-gray-500">Upload PDF resumes directly or drag-and-drop a CSV file to bulk import hundreds of candidates instantly.</p>
+                 </div>
+              </button>
+           </div>
+        </div>
+      ) : (
+        /* Applicant Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {filteredApplicants.map(app => {
+             const colors = [
+               { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', avatar: 'from-red-500 to-rose-600' },
+               { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', avatar: 'from-orange-500 to-amber-600' },
+               { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', avatar: 'from-amber-400 to-orange-500' },
+               { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200', avatar: 'from-emerald-500 to-green-600' },
+               { bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', avatar: 'from-teal-500 to-emerald-600' },
+               { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', avatar: 'from-cyan-500 to-blue-500' },
+               { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', avatar: 'from-blue-500 to-indigo-600' },
+               { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', avatar: 'from-indigo-500 to-violet-600' },
+               { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', avatar: 'from-purple-500 to-fuchsia-600' },
+               { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200', avatar: 'from-pink-500 to-rose-600' },
+             ];
+             
+             const getHash = (str: string) => {
+               let hash = 0;
+               for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+               return Math.abs(hash);
+             };
+             
+             const appColor = colors[getHash(app.firstName + app.lastName) % colors.length];
+
+             return (
+               <div 
+                 key={app._id} 
+                 className="group bg-white rounded-3xl p-6 border border-gray-100 hover:border-transparent hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300"
+               >
+                  <div className="flex items-start justify-between mb-5">
+                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${appColor.avatar} shadow-sm flex items-center justify-center text-white font-display font-bold text-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300`}>
+                        {app.firstName[0]}{app.lastName[0]}
+                     </div>
+                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                       app.source.toLowerCase() === 'external' ? 'bg-amber-50 text-amber-600 border-amber-200/50' : 'bg-blue-50 text-blue-600 border-blue-200/50'
+                     }`}>
+                       {app.source}
+                     </span>
+                  </div>
+                  
+                  <h3 className="font-bold text-lg text-gray-900 mb-1 truncate group-hover:text-blue-600 transition-colors">{app.firstName} {app.lastName}</h3>
+                  <p className="text-sm font-medium text-gray-500 mb-4 truncate">{app.currentRole || "Candidate"}</p>
+                  
+                  <div className="space-y-3 p-4 rounded-2xl bg-gray-50/50 border border-gray-100/50">
+                     <div className="flex items-center gap-3 text-[13px] text-gray-600">
+                       <Mail size={14} className="text-gray-400 shrink-0" />
+                       <span className="truncate">{app.email}</span>
+                     </div>
+                     <div className="flex items-center gap-3 text-[13px] text-gray-600">
+                       <Briefcase size={14} className="text-gray-400 shrink-0" />
+                       {app.yearsOfExperience} Years Exp.
+                     </div>
+                     <div className="flex items-center gap-3 text-[13px] text-gray-600">
+                       <GraduationCap size={14} className="text-gray-400 shrink-0" />
+                       <span className="truncate">{app.educationLevel || "Not specified"}</span>
+                     </div>
+                  </div>
+
+                  {app.skills && app.skills.length > 0 && (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {app.skills.slice(0, 3).map((s: any, idx) => {
+                        const skillName = typeof s === 'string' ? s : s?.name;
+                        if (!skillName) return null;
+                        const skillColor = colors[getHash(skillName) % colors.length];
+                        return (
+                          <span key={typeof s === 'string' ? s : (s._id || idx)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border ${skillColor.bg} ${skillColor.text} ${skillColor.border}`}>
+                            {skillName}
+                          </span>
+                        );
+                      })}
+                      {app.skills.length > 3 && (
+                        <span className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-[11px] font-bold text-gray-500">
+                          +{app.skills.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+               </div>
+             );
+           })}
+           {filteredApplicants.length === 0 && search && (
+             <div className="col-span-full py-12 text-center text-gray-500">
+               No applicants match your search &quot;{search}&quot;.
+             </div>
+           )}
+        </div>
+      )}
+
+      {/* Modals */}
+      <ProfileWizardModal 
+        open={showManualAdd}
+        jobId={id}
+        jobTitle={job.roleTitle}
+        onClose={() => setShowManualAdd(false)}
+        onSuccess={() => {
+          setShowManualAdd(false);
+          dispatch(fetchApplicantsByJob(id));
+        }}
+      />
+
+      <ImportCandidateModal 
+        open={showImport}
+        jobId={id}
+        onClose={() => setShowImport(false)}
+      />
 
     </div>
-  );
-}
-
-// ─── Umurava Form (Full 7-step wizard) ────────────────────────────────────────
-
-function UmuravaForm({ jobId }: { jobId: string }) {
-  const dispatch = useAppDispatch();
-
-  return (
-    <UmuravaWizardForm
-      jobId={jobId}
-      onSuccess={() => {
-        dispatch(fetchApplicantsByJob(jobId));
-      }}
-    />
-  );
-}
-
-// ─── External Form ─────────────────────────────────────────────────────────────
-
-function ExternalForm({ jobId }: { jobId: string }) {
-  const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    skillsStr: "",
-    yearsOfExperience: 0,
-    educationLevel: "Bachelor" as EducationLevel,
-    resumeUrl: ""
-  });
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles[0]) {
-       // Check if PDF or CSV
-       const f = acceptedFiles[0];
-       if (f.name.endsWith('.pdf')) {
-          setFile(f);
-       } else if (f.name.endsWith('.csv')) {
-          Papa.parse(f, {
-            header: true,
-            complete: (results) => {
-              dispatch(setParsedPreview(results.data as ParsedApplicantRow[]));
-              toast.success(`Parsed ${results.data.length} rows`);
-            }
-          });
-       } else {
-          toast.error("Only PDF or CSV formats allowed.");
-       }
-    }
-  }, [dispatch]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'application/pdf': ['.pdf'], 'text/csv': ['.csv']} });
-  const { parsedPreview } = useAppSelector(s => s.applicants);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append("jobId", jobId);
-    formData.append("firstName", form.firstName);
-    formData.append("lastName", form.lastName);
-    formData.append("email", form.email);
-    formData.append("yearsOfExperience", String(form.yearsOfExperience));
-    formData.append("educationLevel", form.educationLevel);
-    if (form.resumeUrl) formData.append("resumeUrl", form.resumeUrl);
-    
-    // Arrays must be appended per item
-    const skills = form.skillsStr.split(",").map(s => s.trim()).filter(Boolean);
-    skills.forEach(s => formData.append("skills", s)); // Wait! The spec says `skills[]` or `skills`? "Skills array in FormData must be sent as multiple fields with same key e.g. formData.append("skills", "MongoDB") repeated per skill". OK! I used `skills`. However wait! `skills[]` in bash example, but `skills` in form note. We'll use `skills` based on rule 7 "formData.append('skills', 'MongoDB')".
-
-    if (file && file.name.endsWith('.pdf')) {
-       formData.append("resume", file);
-    }
-
-    try {
-      const res = await dispatch(addExternalApplicant(formData));
-      if (addExternalApplicant.fulfilled.match(res)) {
-        toast.success("External applicant added!");
-        setForm({...form, firstName: "", lastName: "", email: "", skillsStr: ""});
-        setFile(null);
-      } else {
-        toast.error(res.payload as string);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBulkUploadCSV = async () => {
-     setLoading(true);
-     let success = 0, failed = 0;
-     for (const row of parsedPreview) {
-        if (!row.firstName || !row.lastName || !row.email) continue;
-        const fd = new FormData();
-        fd.append("jobId", jobId);
-        fd.append("firstName", row.firstName);
-        fd.append("lastName", row.lastName);
-        fd.append("email", row.email);
-        fd.append("yearsOfExperience", String(row.yearsOfExperience || 0));
-        fd.append("educationLevel", row.educationLevel || "Bachelor");
-        
-        const sks = (row.skills || "").split(",").map(s => s.trim()).filter(Boolean);
-        sks.forEach(s => fd.append("skills", s));
-
-        const res = await dispatch(addExternalApplicant(fd));
-        if (addExternalApplicant.fulfilled.match(res)) success++;
-        else failed++;
-     }
-     toast.success(`Imported ${success} candidates. ${failed ? failed + ' failed.' : ''}`);
-     dispatch(clearParsedPreview());
-     await dispatch(fetchApplicantsByJob(jobId));
-     setLoading(false);
-  };
-
-  if (parsedPreview && parsedPreview.length > 0) {
-      return (
-        <div className="space-y-4 fade-in">
-           <h3 className="font-bold text-lg text-[var(--text)] flex justify-between">
-              CSV Preview ({parsedPreview.length} rows)
-              <button className="text-red-400 text-xs hover:underline" onClick={() => dispatch(clearParsedPreview())}>Cancel Bulk</button>
-           </h3>
-           <div className="max-h-64 overflow-y-auto border border-[var(--border)] rounded-xl bg-[var(--bg)] p-2">
-             {parsedPreview.map((r, i) => (
-                <div key={i} className="text-xs p-2 border-b border-[var(--border)] text-[var(--text2)] last:border-0 truncate">
-                  <span className="font-bold text-[var(--text)]">{r.firstName} {r.lastName}</span> - {r.email} - Skills: {r.skills}
-                </div>
-             ))}
-           </div>
-           <button onClick={handleBulkUploadCSV} disabled={loading} className="btn btn-outline w-full h-12">
-             {loading ? "Bulk Uploading..." : "Confirm & Import All"}
-           </button>
-        </div>
-      )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6 fade-in">
-      <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-[var(--accent)] bg-[var(--accent-dim)]' : 'border-[var(--border)] bg-[var(--bg)]'}`}>
-        <input {...getInputProps()} />
-        <FileText size={32} className={`mb-3 ${isDragActive ? 'text-[var(--accent)]' : 'text-[var(--text3)]'}`} />
-        <div className="font-bold text-sm text-[var(--text)]">{file ? file.name : "Drag & drop a Resume PDF or CSV"}</div>
-        <div className="text-xs text-[var(--text3)] mt-1">{file ? "Click to change file" : "Max 5MB. PDF for single upload, CSV for bulk."}</div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={!file || !file.name.endsWith('.csv')} />
-        <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={!file || !file.name.endsWith('.csv')} />
-        <Input label="Email" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={!file || !file.name.endsWith('.csv')} />
-        <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
-           Years of Exp
-           <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]" required />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="Skills (comma separated)" placeholder="React, APIs" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
-         <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
-           Education
-           <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent border-[var(--border)] text-[var(--text)]">
-             <option value="Associate">Associate</option>
-             <option value="Bachelor">Bachelor</option>
-             <option value="Master">Master</option>
-             <option value="PhD">PhD</option>
-             <option value="Other">Other</option>
-           </select>
-        </label>
-      </div>
-
-      <button type="submit" disabled={loading} className="btn btn-outline w-full h-12">
-        {loading ? "Uploading..." : "Upload Single Applicant"}
-      </button>
-    </form>
-  );
-}
-
-// ─── Helpers ────────────────────────────────────────────────────────
-
-function Input({ label, value, onChange, type="text", placeholder, required=false }: any) {
-  return (
-    <label className="space-y-1 text-xs font-bold text-[var(--text2)] uppercase">
-       {label}
-       <input 
-          type={type} 
-          required={required}
-          placeholder={placeholder}
-          value={value} 
-          onChange={e => onChange(e.target.value)} 
-          className="w-full mt-1 px-3 py-2 border rounded-lg bg-transparent focus:border-[var(--accent)] border-[var(--border)] text-[var(--text)] outline-none" 
-       />
-    </label>
   );
 }

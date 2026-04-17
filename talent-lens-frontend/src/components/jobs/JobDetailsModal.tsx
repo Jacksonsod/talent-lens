@@ -136,8 +136,8 @@ export default function JobDetailsModal({ job, isOpen, onClose }: JobDetailsModa
                onClick={() => router.push(`/jobs/${job._id}/applicants`)}
                className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200"
              >
-               View Pipeline
-               <ChevronRight size={16} />
+               View More
+               <Users size={16} />
              </button>
           </div>
         </div>
