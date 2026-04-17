@@ -557,8 +557,16 @@ function TopCandidatesCard({ results, jobs }: { results: ScreeningResult[], jobs
   );
 }
 
+interface ActivityItem {
+  id: string;
+  text: string;
+  sub: string;
+  time: string | number | Date;
+  color: string;
+}
+
 function RecentActivityCard({ jobs, shortlists }: { jobs: Job[], shortlists: Record<string, ScreeningResult[]> }) {
-  const activities = [];
+  const activities: ActivityItem[] = [];
 
   // derive from state
   Object.keys(shortlists).forEach(jobId => {
