@@ -4,6 +4,7 @@ import { UIState } from "@/lib/types";
 const initialState: UIState = {
   sidebarOpen: true,
   theme: "dark",
+  searchTerm: "",
 };
 
 const uiSlice = createSlice({
@@ -16,8 +17,11 @@ const uiSlice = createSlice({
     setSidebarOpen(state, action: PayloadAction<boolean>) {
       state.sidebarOpen = action.payload;
     },
+    setSearchTerm(state, action: PayloadAction<string>) {
+      state.searchTerm = action.payload;
+    },
   },
 });
 
-export const { toggleSidebar, setSidebarOpen } = uiSlice.actions;
+export const { toggleSidebar, setSidebarOpen, setSearchTerm } = uiSlice.actions;
 export default uiSlice.reducer;
