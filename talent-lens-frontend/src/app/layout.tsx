@@ -6,7 +6,7 @@ import StoreProvider from "@/components/providers/StoreProvider";
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
-  variable: "--font-bricolage",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={bricolage.variable}>
-      <body suppressHydrationWarning={true}>
+    <html lang="en">
+      <body className={bricolage.className} suppressHydrationWarning={true}>
         <StoreProvider>
           {children}
         </StoreProvider>

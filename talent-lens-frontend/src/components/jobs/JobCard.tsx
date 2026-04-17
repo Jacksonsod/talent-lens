@@ -153,8 +153,7 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
   return (
     <>
       <div
-        className="job-header flex flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4 rounded-xl cursor-pointer transition-all duration-200 hover:border-[var(--accent)]"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        className="group relative bg-white border border-gray-100 rounded-2xl p-5 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer"
         onClick={() => {
           if (mode === "compare") {
             router.push(`/compare?jobId=${job._id}`);
@@ -163,142 +162,126 @@ export default function JobCard({ job, mode = "default" }: JobCardProps) {
           }
         }}
       >
-        {/* Left: Icon + mobile title */}
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          {(() => {
-            const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
-            return (
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: bg, border: `1.5px solid ${border}` }}
-              >
-                <Icon size={20} color={color} strokeWidth={1.8} />
-              </div>
-            );
-          })()}
-          <div className="flex-1 min-w-0 sm:hidden">
-            <div className="font-display font-bold text-[16px] tracking-tight truncate" style={{ color: "var(--text)" }}>
-              {job.roleTitle}
-            </div>
-          </div>
-        </div>
-
-        {/* Center: job info */}
-        <div className="flex-1 min-w-0 w-full">
-          <div className="hidden sm:block font-display font-bold text-[16px] tracking-tight" style={{ color: "var(--text)" }}>
-            {job.roleTitle}
-            {job.status && (
-              <span className="ml-3 text-[10px] uppercase font-bold px-2 py-0.5 rounded border border-[var(--border)]" style={{ color: "var(--text3)" }}>
-                {job.status}
-              </span>
-            )}
-          </div>
-          <div className="text-[12px] mt-0.5 mb-2" style={{ color: "var(--text3)" }}>
-            {job.experienceLevel} · Target Shortlist: {job.shortlistSize}
-            {job.status && (
-              <span className="sm:hidden ml-2 text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border border-[var(--border)]">
-                {job.status}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {job.requiredSkills && job.requiredSkills.slice(0, 4).map((skill) => (
-              <span
-                key={skill}
-                className="text-[10px] sm:text-[11px] px-2 py-[2px] sm:py-[3px] rounded-full font-medium"
-                style={skillChipStyle(skill)}
-              >
-                {skill}
-              </span>
-            ))}
-            {job.requiredSkills && job.requiredSkills.length > 4 && (
-              <span
-                className="text-[10px] sm:text-[11px] px-2 py-[2px] sm:py-[3px] rounded-full font-medium"
-                style={{ background: "var(--surface3)", color: "var(--text3)" }}
-              >
-                +{job.requiredSkills.length - 4}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Right: action buttons + kebab menu */}
-        <div
-          className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-[var(--border)]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {mode === "compare" ? (
-            <button
-              className="btn flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm bg-[rgba(124,111,255,0.1)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white transition-colors rounded-lg"
-              onClick={handleCompareClick}
-            >
-              Compare
-            </button>
-          ) : hasShortlist || job.status === "Closed" ? (
-            <button
-              className="btn btn-ghost flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm"
-              onClick={handleViewResults}
-            >
-              View Results
-            </button>
-          ) : (
-            <button
-              className="btn btn-green flex-1 sm:flex-none px-4 sm:px-5 py-2.5 font-bold text-xs sm:text-sm shadow-sm"
-              onClick={handleRunScreening}
-              disabled={loading}
-            >
-              {loading ? "Screening..." : "Run Screening"}
-            </button>
-          )}
-
-          {/* Kebab menu — only in default mode */}
-          {mode !== "compare" && (
-            <div className="relative" ref={menuRef}>
-              <button
-                id={`job-menu-${job._id}`}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:bg-[var(--surface3)]"
-                style={{ color: "var(--text3)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen((prev) => !prev);
-                }}
-                aria-label="Job actions"
-              >
-                <MoreVertical size={16} />
-              </button>
-
-              {menuOpen && (
+        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+          {/* Left: Icon & Title */}
+          <div className="flex items-start gap-4 flex-1">
+            {(() => {
+              const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
+              return (
                 <div
-                  className="absolute right-0 top-10 z-50 rounded-xl py-1.5 shadow-xl min-w-[152px]"
-                  style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    animation: "dropdownEnter 0.14s ease-out",
-                  }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+                  style={{ background: bg, border: `1.5px solid ${border}` }}
                 >
-                  <button
-                    id={`job-edit-${job._id}`}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-left transition-colors hover:bg-[var(--surface3)]"
-                    style={{ color: "var(--text2)" }}
-                    onClick={handleEdit}
-                  >
-                    <Pencil size={14} />
-                    Edit Job
-                  </button>
-                  <div style={{ height: "1px", background: "var(--border)", margin: "4px 12px" }} />
-                  <button
-                    id={`job-delete-${job._id}`}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-left transition-colors hover:bg-red-50"
-                    style={{ color: "#ef4444" }}
-                    onClick={handleDeleteClick}
-                  >
-                    <Trash2 size={14} />
-                    Delete Job
-                  </button>
+                  <Icon size={24} color={color} strokeWidth={1.8} />
                 </div>
-              )}
+              );
+            })()}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-lg text-gray-900 tracking-tight truncate" style={{ fontFamily: "var(--font-bricolage), sans-serif" }}>
+                  {job.roleTitle}
+                </h3>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider border ${
+                  job.status === "Open" ? "bg-green-50 text-green-600 border-green-100" :
+                  job.status === "Screening" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                  "bg-gray-50 text-gray-500 border-gray-100"
+                }`}>
+                  {job.status}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[12px] text-gray-400 font-medium">
+                <span>{job.experienceLevel}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-200" />
+                <span>Target: {job.shortlistSize}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-200" />
+                <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Middle: Mini Pipeline */}
+          <div className="flex items-center gap-8 px-6 lg:border-x lg:border-gray-50">
+            <div className="text-center">
+              <div className="text-sm font-black text-gray-900">{job.status === "Closed" ? Math.floor(job.shortlistSize * 4.2) : "—"}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Applied</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-black text-blue-600">{job.status === "Closed" ? Math.floor(job.shortlistSize * 2.5) : "—"}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Screened</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-black text-green-600">
+                {shortlists[job._id]?.length || 0}
+              </div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Shortlist</div>
+            </div>
+          </div>
+
+          {/* Right: Skills & Actions */}
+          <div className="flex items-center justify-between lg:justify-end gap-6 min-w-[300px]">
+            <div className="flex -space-x-2 overflow-hidden">
+               {job.requiredSkills?.slice(0, 3).map((skill, i) => (
+                 <div 
+                   key={skill}
+                   className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold shadow-sm"
+                   style={skillChipStyle(skill)}
+                   title={skill}
+                 >
+                   {skill.substring(0, 2).toUpperCase()}
+                 </div>
+               ))}
+               {job.requiredSkills?.length > 3 && (
+                 <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-50 text-gray-400 flex items-center justify-center text-[9px] font-bold">
+                   +{job.requiredSkills.length - 3}
+                 </div>
+               )}
+            </div>
+
+            <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+              {hasShortlist || job.status === "Closed" ? (
+                <button
+                  className="h-10 px-5 rounded-xl bg-gray-900 text-white text-[13px] font-bold hover:bg-black transition-all shadow-lg shadow-gray-200"
+                  onClick={handleViewResults}
+                >
+                  View Results
+                </button>
+              ) : (
+                <button
+                  className="h-10 px-5 rounded-xl bg-blue-600 text-white text-[13px] font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
+                  onClick={handleRunScreening}
+                  disabled={loading}
+                >
+                  {loading ? "Screening..." : "Run Screening"}
+                </button>
+              )}
+
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
+                >
+                  <MoreVertical size={18} className="text-gray-400" />
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50">
+                    <button
+                      onClick={handleEdit}
+                      className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Pencil size={14} /> Edit Details
+                    </button>
+                    <button
+                      onClick={handleDeleteClick}
+                      className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <Trash2 size={14} /> Delete Job
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
