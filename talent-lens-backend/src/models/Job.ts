@@ -9,7 +9,8 @@ export interface IJob {
   requirements: string[];
   requiredSkills: string[];
   experienceLevel: string;
-  shortlistSize: 10 | 20;
+  shortlistSize: number;
+  externalPostingUrl: string;
   status: JobStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -50,8 +51,13 @@ const jobSchema = new Schema<IJob>(
     },
     shortlistSize: {
       type: Number,
-      enum: [10, 20],
+      min: 1,
       default: 10,
+    },
+    externalPostingUrl: {
+      type: String,
+      trim: true,
+      default: '',
     },
     status: {
       type: String,
