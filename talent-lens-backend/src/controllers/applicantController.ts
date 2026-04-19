@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { PDFParse } from 'pdf-parse';
 import Applicant, {
   type ApplicantAvailability,
   type ApplicantCertification,
@@ -23,6 +22,7 @@ type ExtractedApplicantPayload = {
   headline?: string;
   bio?: string;
   location?: string;
+  isResumeIncomplete?: unknown;
   skills?: Array<{ name?: unknown; level?: unknown; yearsOfExperience?: unknown } | string>;
   languages?: Array<{ name?: unknown; proficiency?: unknown } | string>;
   experience?: Array<{
@@ -380,8 +380,8 @@ const normalizeSocialLinks = (value: unknown): ApplicantSocialLinks => {
   };
 };
 
-const buildApplicantExtractionPrompt = (resumeText: string): string =>
-  `You are an HR Data Extractor. Extract structured data from this resume and return ONLY valid JSON with these exact fields — no markdown, no explanation, just the JSON object:
+const buildApplicantExtractionPrompt = (): string =>
+  `You are an HR Data Extractor. Extract structured data from this resume PDF and return ONLY valid JSON with these exact fields — no markdown, no explanation, just the JSON object:
 {
   "firstName": "string (default 'Unknown')",
   "lastName": "string (default 'Candidate')",
@@ -390,6 +390,7 @@ const buildApplicantExtractionPrompt = (resumeText: string): string =>
   "headline": "string (Short professional summary)",
   "bio": "string (Detailed biography)",
   "location": "string (City, Country)",
+  "isResumeIncomplete": boolean,
   "skills": [ { "name": "string", "level": "Beginner | Intermediate | Advanced | Expert", "yearsOfExperience": number } ],
   "languages": [ { "name": "string", "proficiency": "Basic | Conversational | Fluent | Native" } ],
   "experience": [ { "company": "string", "role": "string", "startDate": "YYYY-MM", "endDate": "YYYY-MM | Present", "description": "string", "technologies": ["string"], "isCurrent": boolean } ],
@@ -399,7 +400,7 @@ const buildApplicantExtractionPrompt = (resumeText: string): string =>
   "socialLinks": { "linkedin": "string", "github": "string", "portfolio": "string" }
 }
 If a field is completely missing from the resume, omit it or use empty strings/arrays, but preserve the exact schema structure.
-Resume text: ${resumeText}`;
+Set 'isResumeIncomplete' to true ONLY IF any of these conditions are met: 1) The document is completely unreadable/corrupt, 2) Missing First Name, Last Name, or Email, 3) The 'experience' array is empty, 4) The 'education' array is empty, or 5) The 'skills' array is empty.`;
 
 const buildGeminiModel = (): ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -416,42 +417,30 @@ const buildGeminiModel = (): ReturnType<GoogleGenerativeAI['getGenerativeModel']
   });
 };
 
-const parsePdfText = async (buffer: Buffer): Promise<string> => {
-  const parser = new PDFParse({ data: buffer });
-  try {
-    const parsedPdf = await parser.getText();
-    return parsedPdf.text ?? '';
-  } finally {
-    await parser.destroy().catch(() => undefined);
-  }
-};
-
 const extractResume = async (
   buffer: Buffer,
   model: ReturnType<GoogleGenerativeAI['getGenerativeModel']> | null,
-): Promise<{ rawResumeText: string; extracted: Partial<ExtractedApplicantPayload> }> => {
-  let rawResumeText = '';
-
-  try {
-    rawResumeText = await parsePdfText(buffer);
-  } catch (error) {
-    console.error('Failed to parse resume PDF:', error);
-    return { rawResumeText: '', extracted: {} };
-  }
-
-  if (!rawResumeText || !model) {
-    return { rawResumeText, extracted: {} };
+): Promise<{ extracted: Partial<ExtractedApplicantPayload> }> => {
+  if (!model) {
+    return { extracted: {} };
   }
 
   try {
-    const prompt = buildApplicantExtractionPrompt(rawResumeText.slice(0, getEnvNumber('GEMINI_RESUME_TEXT_LIMIT', 15000)));
-    const aiResponse = await model.generateContent(prompt);
+    const prompt = buildApplicantExtractionPrompt();
+    const pdfPart = {
+      inlineData: {
+        data: buffer.toString('base64'),
+        mimeType: 'application/pdf',
+      },
+    };
+
+    const aiResponse = await model.generateContent([prompt, pdfPart]);
     const responseText = aiResponse.response.text();
     const parsedResponse = JSON.parse(sanitizeJson(responseText)) as Partial<ExtractedApplicantPayload>;
-    return { rawResumeText, extracted: parsedResponse };
+    return { extracted: parsedResponse };
   } catch (error) {
-    console.error('Failed to extract resume data with Gemini:', error);
-    return { rawResumeText, extracted: {} };
+    console.error('Failed to extract resume data with Gemini PDF handling:', error);
+    return { extracted: {} };
   }
 };
 
@@ -492,6 +481,7 @@ const buildApplicantCreatePayload = ({
   rawResumeText,
   indexHint,
   resumeUrl,
+  resumeFetchError,
 }: {
   jobId: string;
   source: ApplicantSource;
@@ -501,6 +491,7 @@ const buildApplicantCreatePayload = ({
   rawResumeText: string;
   indexHint?: number;
   resumeUrl?: string;
+  resumeFetchError?: string;
 }): Record<string, unknown> => {
   const fallback = buildFallbackApplicantData(jobId, indexHint);
 
@@ -569,6 +560,10 @@ const buildApplicantCreatePayload = ({
     yearsOfExperience: resolveNumberField(extractedFields?.yearsOfExperience, bodyFields.yearsOfExperience, fallback.yearsOfExperience),
     educationLevel: resolveStringField(extractedFields?.educationLevel, bodyFields.educationLevel, fallback.educationLevel),
     currentRole: resolveStringField(extractedFields?.currentRole, bodyFields.currentRole, fallback.currentRole),
+    resumeFetchError: normalizeString(resumeFetchError),
+    isResumeIncomplete: Boolean(normalizeString(resumeFetchError))
+      ? true
+      : normalizeBoolean(extractedFields?.isResumeIncomplete, false),
     profileData: {
       ...(profileData ?? {}),
       rawResumeText,
@@ -668,6 +663,7 @@ export const addExternalApplicant = async (req: Request, res: Response): Promise
 
     let rawResumeText = '';
     let extracted: Partial<ExtractedApplicantPayload> = {};
+    let resumeFetchError = '';
 
     const resumeBuffer = req.file?.buffer
       ? req.file.buffer
@@ -677,7 +673,16 @@ export const addExternalApplicant = async (req: Request, res: Response): Promise
               const fetchedResume = await axios.get<ArrayBuffer>(resumeUrl, { responseType: 'arraybuffer' });
               return Buffer.from(fetchedResume.data);
             } catch (fetchError) {
-              console.error('Failed to fetch resume from URL:', fetchError);
+              const message =
+                axios.isAxiosError(fetchError)
+                  ? fetchError.response
+                    ? `${fetchError.response.status} ${fetchError.response.statusText}`.trim()
+                    : fetchError.code ?? fetchError.message
+                  : fetchError instanceof Error
+                    ? fetchError.message
+                    : String(fetchError);
+              resumeFetchError = message;
+              console.error('Failed to fetch resume from URL:', message);
               return null;
             }
           })()
@@ -686,8 +691,10 @@ export const addExternalApplicant = async (req: Request, res: Response): Promise
     if (resumeBuffer) {
       const model = buildGeminiModel();
       const extractedResult = await extractResume(resumeBuffer, model);
-      rawResumeText = extractedResult.rawResumeText;
       extracted = extractedResult.extracted;
+
+      // Keep some searchable/debuggable text for downstream screening prompts.
+      rawResumeText = `Resume extracted via Gemini PDF parsing.\n\n${sanitizeJson(JSON.stringify(extracted ?? {})).slice(0, 15000)}`;
     }
 
     const applicant = await Applicant.create(
@@ -699,6 +706,7 @@ export const addExternalApplicant = async (req: Request, res: Response): Promise
         profileData: incomingProfileData,
         rawResumeText,
         resumeUrl,
+        resumeFetchError,
       }),
     );
 
@@ -844,7 +852,8 @@ export const bulkUploadAndExtract = async (req: Request, res: Response): Promise
       const file = files[i];
 
       try {
-        const { rawResumeText, extracted } = await extractResume(file.buffer, model);
+        const { extracted } = await extractResume(file.buffer, model);
+        const rawResumeText = `Resume extracted via Gemini PDF parsing.\n\n${sanitizeJson(JSON.stringify(extracted ?? {})).slice(0, 15000)}`;
         const applicant = await Applicant.create(
           buildApplicantCreatePayload({
             jobId,

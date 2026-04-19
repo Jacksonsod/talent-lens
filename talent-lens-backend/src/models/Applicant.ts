@@ -81,6 +81,8 @@ export interface IApplicant {
   yearsOfExperience: number;
   educationLevel: string;
   currentRole?: string;
+  isResumeIncomplete: boolean;
+  resumeFetchError: string;
   profileData?: unknown;
   resumeUrl?: string;
   status: ApplicantStatus;
@@ -380,6 +382,16 @@ const applicantSchema = new Schema<IApplicant>(
     currentRole: {
       type: String,
       trim: true,
+    },
+    isResumeIncomplete: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    resumeFetchError: {
+      type: String,
+      trim: true,
+      default: '',
     },
     profileData: {
       type: Schema.Types.Mixed,
