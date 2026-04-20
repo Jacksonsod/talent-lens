@@ -4,16 +4,17 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
 import { addExternalApplicant, bulkUploadExternalApplicants, setParsedPreview, clearParsedPreview } from "@/lib/slices/applicantsSlice";
-import { screenAll } from "@/lib/slices/screeningSlice";
-import { ParsedApplicantRow, EducationLevel } from "@/lib/types";
+import { ParsedApplicantRow } from "@/lib/types";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { UploadCloud, FileText, Briefcase, FileSignature, X, Database, Wand2, Download, UserPlus } from "lucide-react";
+import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
+
+type Mode = "pdf" | "csv" | "profile";
 
 export default function UploadPage() {
   const dispatch = useAppDispatch();
@@ -23,508 +24,370 @@ export default function UploadPage() {
   const { parsedPreview } = useAppSelector(s => s.applicants);
 
   const [selectedJobId, setSelectedJobId] = useState("");
-  const [importMode, setImportMode] = useState<"pdf" | "data">("pdf");
+  const [jobOpen, setJobOpen] = useState(false);
+  const [jobSearch, setJobSearch] = useState("");
+  const [mode, setMode] = useState<Mode>("pdf");
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [wizardOpen, setWizardOpen] = useState(false);
-  
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    skillsStr: "",
-    yearsOfExperience: 0,
-    educationLevel: "Bachelor" as EducationLevel,
-    resumeUrl: ""
-  });
+  const [doneCount, setDoneCount] = useState(0);
+  const [failCount, setFailCount] = useState(0);
 
-  useEffect(() => {
-    dispatch(fetchJobs());
-  }, [dispatch]);
+  useEffect(() => { dispatch(fetchJobs()); }, [dispatch]);
+
+  const selectedJob = jobs.find(j => j._id === selectedJobId);
+  const filteredJobs = jobs.filter(j =>
+    j.roleTitle.toLowerCase().includes(jobSearch.toLowerCase())
+  );
 
   const parseExcel = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet) as any[];
-      
-      const mappedData: ParsedApplicantRow[] = json.map(row => ({
-        firstName: row.firstName || row.FirstName || row.first_name || "",
-        lastName: row.lastName || row.LastName || row.last_name || "",
-        email: row.email || row.Email || "",
-        phone: row.phone || row.Phone || "",
-        currentRole: row.currentRole || row.Role || row.role || "",
-        headline: row.headline || row.Headline || row.title || "",
-        location: row.location || row.Location || row.city || "",
-        bio: row.bio || row.Bio || row.summary || "",
-        yearsOfExperience: row.yearsOfExperience || row.Experience || row.years || 0,
-        skills: row.skills || row.Skills || "",
-        educationLevel: row.educationLevel || row.Education || row.degree || "Bachelor"
+      const wb = XLSX.read(e.target?.result, { type: "binary" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws) as any[];
+      const mapped: ParsedApplicantRow[] = json.map(r => ({
+        firstName: r.firstName || r.FirstName || "",
+        lastName: r.lastName || r.LastName || "",
+        email: r.email || r.Email || "",
+        phone: r.phone || "",
+        currentRole: r.currentRole || r.Role || "",
+        headline: r.headline || "",
+        location: r.location || "",
+        bio: r.bio || "",
+        yearsOfExperience: r.yearsOfExperience || 0,
+        skills: r.skills || r.Skills || "",
+        educationLevel: r.educationLevel || "Bachelor",
       }));
-
-      dispatch(setParsedPreview(mappedData));
-      toast.success(`Successfully parsed ${mappedData.length} records from Excel.`);
-      setFiles([]);
+      dispatch(setParsedPreview(mapped));
+      toast.success(`Parsed ${mapped.length} records from Excel.`);
     };
     reader.readAsBinaryString(file);
   }, [dispatch]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (!selectedJobId) {
-       toast.error("Please select a job first.");
-       return;
-    }
-
-    if (importMode === "data") {
-      const dataFile = acceptedFiles.find(f => f.name.endsWith('.csv') || f.name.endsWith('.xlsx') || f.name.endsWith('.xls'));
-      if (!dataFile) return toast.error("Only CSV or Excel formats allowed in this mode.");
-
-      if (dataFile.name.endsWith('.csv')) {
-        Papa.parse(dataFile, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            dispatch(setParsedPreview(results.data as ParsedApplicantRow[]));
-            toast.success(`Parsed ${results.data.length} rows from CSV`);
-            setFiles([]);
-          }
-        });
-      } else {
-        parseExcel(dataFile);
-      }
+  const onDrop = useCallback((accepted: File[]) => {
+    if (!selectedJobId) return toast.error("Select a job first.");
+    if (mode === "csv") {
+      const f = accepted[0];
+      if (!f) return;
+      if (f.name.endsWith(".csv")) {
+        Papa.parse(f, { header: true, skipEmptyLines: true, complete: (r) => { dispatch(setParsedPreview(r.data as ParsedApplicantRow[])); toast.success(`Parsed ${r.data.length} rows`); } });
+      } else parseExcel(f);
     } else {
-      const newPdfs = acceptedFiles.filter(f => f.name.endsWith('.pdf'));
-      if (newPdfs.length === 0) return toast.error("Only PDF resumes allowed in AI Extraction mode.");
-      setFiles(prev => [...prev, ...newPdfs]);
+      const pdfs = accepted.filter(f => f.name.endsWith(".pdf"));
+      if (!pdfs.length) return toast.error("Only PDFs allowed.");
+      setFiles(prev => [...prev, ...pdfs]);
     }
-  }, [dispatch, selectedJobId, importMode, parseExcel]);
+  }, [dispatch, selectedJobId, mode, parseExcel]);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop, 
-    accept: importMode === "pdf" 
-      ? { 'application/pdf': ['.pdf'] } 
-      : { 'text/csv': ['.csv'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'], 'application/vnd.ms-excel': ['.xls'] }
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: mode === "pdf" ? { "application/pdf": [".pdf"] } : { "text/csv": [".csv"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] }
   });
 
   const downloadTemplate = () => {
-    const headers = [
-      "firstName", "lastName", "email", "phone", "currentRole",
-      "headline", "location", "bio", "yearsOfExperience", "skills", "educationLevel"
-    ].join(",");
-    const example = [
-      "Alice", "Mutoni", "alice@example.com", "+250 700 000 000", "Backend Engineer",
-      "Node.js & AI Systems Engineer", "Kigali Rwanda", "5 years building distributed APIs",
-      "5", '"React, Node.js, Python, Docker"', "Bachelor"
-    ].join(",");
-    const csv = headers + "\n" + example;
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "talentai_import_template.csv";
-    a.click();
+    const csv = "firstName,lastName,email,phone,currentRole,headline,location,bio,yearsOfExperience,skills,educationLevel\nAlice,Mutoni,alice@example.com,+250700000000,Backend Engineer,Node.js Engineer,Kigali,5yr API builder,5,\"React,Node.js\",Bachelor";
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "talentai_template.csv"; a.click();
   };
 
-  const handleSingleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedJobId) return toast.error("Select a job first");
+  const handleBulkPDF = async () => {
+    if (!selectedJobId || !files.length) return;
     setLoading(true);
-
-    const formData = new FormData();
-    formData.append("jobId", selectedJobId);
-    formData.append("firstName", form.firstName);
-    formData.append("lastName", form.lastName);
-    formData.append("email", form.email);
-    formData.append("yearsOfExperience", String(form.yearsOfExperience));
-    formData.append("educationLevel", form.educationLevel);
-    if (form.resumeUrl) formData.append("resumeUrl", form.resumeUrl);
-    
-    const skills = form.skillsStr.split(",").map(s => s.trim()).filter(Boolean);
-    skills.forEach(s => formData.append("skills", s));
-
-    if (files.length === 1) {
-       formData.append("resume", files[0]);
+    const toastId = toast.loading(`Analyzing ${files.length} resumes with AI...`);
+    const fd = new FormData();
+    fd.append("jobId", selectedJobId);
+    files.forEach(f => fd.append("resumes", f));
+    const res = await dispatch(bulkUploadExternalApplicants(fd));
+    if (bulkUploadExternalApplicants.fulfilled.match(res)) {
+      setDoneCount(d => d + (res.payload.successfulUploads || 0));
+      toast.success(`Ingested ${res.payload.successfulUploads} candidates!`, { id: toastId });
+      setFiles([]);
+      router.push(`/jobs/${selectedJobId}/applicants`);
+    } else {
+      setFailCount(f => f + 1);
+      toast.error(res.payload as string || "Upload failed", { id: toastId });
     }
-
-    try {
-      const res = await dispatch(addExternalApplicant(formData));
-      if (addExternalApplicant.fulfilled.match(res)) {
-        toast.success("External applicant added!");
-        router.push(`/jobs/${selectedJobId}/applicants`);
-      } else {
-        toast.error(res.payload as string || "Upload failed");
-      }
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
-  const handleBulkUploadPDFs = async () => {
-    if (!selectedJobId) return toast.error("Select a job first");
+  const handleBulkCSV = async () => {
+    if (!selectedJobId) return;
     setLoading(true);
-    const toastId = toast.loading(`Analyzing ${files.length} resumes with AI... Please hold on...`);
-    
-    try {
-      const formData = new FormData();
-      formData.append("jobId", selectedJobId);
-      files.forEach(file => formData.append("resumes", file));
-
-      const res = await dispatch(bulkUploadExternalApplicants(formData));
-      if (bulkUploadExternalApplicants.fulfilled.match(res)) {
-        toast.success(`Ingested ${res.payload.successfulUploads} candidates successfully!`, { id: toastId });
-        
-        setFiles([]);
-        router.push(`/jobs/${selectedJobId}/applicants`);
-      } else {
-        toast.error(res.payload as string || "Bulk upload failed", { id: toastId });
-      }
-    } finally {
-      setLoading(false);
+    let ok = 0, fail = 0;
+    for (const row of parsedPreview) {
+      if (!row.firstName || !row.email) continue;
+      const fd = new FormData();
+      fd.append("jobId", selectedJobId);
+      Object.entries(row).forEach(([k, v]) => { if (k === "skills") (v as string).split(",").map(s => s.trim()).filter(Boolean).forEach(s => fd.append("skills", s)); else if (v !== undefined && v !== null) fd.append(k, String(v)); });
+      const r = await dispatch(addExternalApplicant(fd));
+      addExternalApplicant.fulfilled.match(r) ? ok++ : fail++;
     }
-  };
-
-  const handleBulkUploadCSV = async () => {
-     if (!selectedJobId) return;
-     setLoading(true);
-     let success = 0, failed = 0;
-     for (const row of parsedPreview) {
-        if (!row.firstName || !row.lastName || !row.email) continue;
-        const fd = new FormData();
-        fd.append("jobId", selectedJobId);
-        fd.append("firstName", row.firstName);
-        fd.append("lastName", row.lastName);
-        fd.append("email", row.email);
-        if (row.phone) fd.append("phone", row.phone);
-        if (row.headline) fd.append("headline", row.headline);
-        if (row.location) fd.append("location", row.location);
-        if (row.bio) fd.append("bio", row.bio);
-        if (row.currentRole) fd.append("currentRole", row.currentRole);
-        fd.append("yearsOfExperience", String(row.yearsOfExperience || 0));
-        fd.append("educationLevel", row.educationLevel || "Bachelor");
-        
-        const sks = (row.skills || "").split(",").map(s => s.trim()).filter(Boolean);
-        sks.forEach(s => fd.append("skills", s));
-
-        const res = await dispatch(addExternalApplicant(fd));
-        if (addExternalApplicant.fulfilled.match(res)) success++;
-        else failed++;
-     }
-     toast.success(`Imported ${success} candidates. ${failed ? failed + ' failed.' : ''}`);
-     dispatch(clearParsedPreview());
-     setLoading(false);
-     router.push(`/jobs/${selectedJobId}/applicants`);
+    setDoneCount(d => d + ok); setFailCount(f => f + fail);
+    toast.success(`Imported ${ok} candidates.${fail ? ` ${fail} failed.` : ""}`);
+    dispatch(clearParsedPreview()); setLoading(false);
+    router.push(`/jobs/${selectedJobId}/applicants`);
   };
 
   if (jobsLoading) return <LoadingSpinner />;
 
   return (
-    <div className="stagger max-w-4xl mx-auto pb-20">
-      <div className="mb-8">
-        <h1 className="font-display font-bold text-3xl tracking-tight mb-2 text-text">
-          Global Applicant Upload
-        </h1>
-        <p className="text-sm text-text-muted">
-          Ingest talent into any active job posting directly via single entry, PDF bulk extraction, or CSV sheet mapping.
-        </p>
-      </div>
+    <div className="max-w-[1060px] mx-auto pb-20 animate-fade-up">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
 
-      <div className="rounded-2xl p-7 bg-bg-surface border border-bg-surface3">
-         {/* Job Selection */}
-         <div className="mb-8">
-            <label className="flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-3 text-text-light">
-               <Briefcase size={16} /> Target Job Posting
-            </label>
-            <select
-               value={selectedJobId}
-               onChange={(e) => {
-                 setSelectedJobId(e.target.value);
-                 if (parsedPreview.length > 0) dispatch(clearParsedPreview());
-                 if (files.length > 0) setFiles([]);
-               }}
-               className="w-full px-4 py-3 rounded-xl border focus:border-brand-accent outline-none transition-all duration-200 cursor-pointer appearance-none text-base font-medium bg-bg-DEFAULT border-bg-surface3 text-text"
-            >
-               <option value="" disabled>-- Select a Job to ingest into --</option>
-               {jobs.filter(j => j.status !== "Closed").map(j => (
-                  <option key={j._id} value={j._id}>{j.roleTitle}</option>
-               ))}
-            </select>
-         </div>
+        {/* ─── LEFT COLUMN ─── */}
+        <div>
+          {/* PAGE HEADER */}
+          <div className="mb-5">
+            <h1 className="font-display font-extrabold text-[24px] tracking-tight text-[var(--text)] mb-1">Upload Candidates</h1>
+            <p className="text-[13px] text-[var(--text3)]">Add applicants to any job via PDF resumes, CSV spreadsheet, or manual profile entry — Gemini extracts and structures data automatically.</p>
+          </div>
 
-         {!selectedJobId ? (
-            <div className="text-center py-12 px-6 rounded-xl text-[var(--text3)] border border-dashed border-[var(--border)] bg-[var(--surface2)]">
-               <Briefcase className="opacity-20 mx-auto mb-4" size={48} />
-               Select a target job requisition above to enable dropzone capabilities.
-            </div>
-         ) : (
-          <>
-            {/* Mode Selection */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-               <button 
-                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "pdf" ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100'}`}
-                onClick={() => {
-                  setImportMode("pdf");
-                  dispatch(clearParsedPreview());
-                }}
-               >
-                 <div className={`p-2.5 rounded-lg ${importMode === "pdf" ? 'bg-brand-accent text-white' : 'bg-bg-surface3 text-text-light'}`}>
-                    <Wand2 size={20} />
-                 </div>
-                 <div>
-                    <div className="font-bold text-sm text-text">AI Resume Extraction</div>
-                    <div className="text-[11px] text-text-muted mt-0.5">Bulk OCR & Data Mining</div>
-                 </div>
-               </button>
-               <button 
-                className={`p-4 rounded-xl border transition-all text-left flex items-start gap-4 ${importMode === "data" ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100'}`}
-                onClick={() => {
-                  setImportMode("data");
-                  setFiles([]);
-                }}
-               >
-                 <div className={`p-2.5 rounded-lg ${importMode === "data" ? 'bg-brand-accent text-white' : 'bg-bg-surface3 text-text-light'}`}>
-                    <Database size={20} />
-                 </div>
-                 <div>
-                    <div className="font-bold text-sm text-text">Direct Spreadsheet</div>
-                    <div className="text-[11px] text-text-muted mt-0.5">Import from CSV or Excel</div>
-                 </div>
-               </button>
-               <button 
-                className="p-4 rounded-xl border transition-all text-left flex items-start gap-4 border-bg-surface3 bg-bg-DEFAULT opacity-60 hover:opacity-100 hover:border-brand-accent"
-                onClick={() => {
-                  if (!selectedJobId) {
-                    toast.error("Please select a job first.");
-                    return;
-                  }
-                  setWizardOpen(true);
-                }}
-               >
-                 <div className="p-2.5 rounded-lg bg-bg-surface3 text-text-light">
-                    <UserPlus size={20} />
-                 </div>
-                 <div>
-                    <div className="font-bold text-sm text-text">Structured Profile</div>
-                    <div className="text-[11px] text-text-muted mt-0.5">Full applicant form entry</div>
-                 </div>
-               </button>
+          {/* STEP 1: JOB SELECTOR */}
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5 focus-within:border-blue-300 transition-colors">
+            <div className="flex items-center gap-2 mb-3.5">
+              <div className={`w-[22px] h-[22px] rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${selectedJobId ? "bg-emerald-500" : "bg-blue-600"}`}>
+                {selectedJobId ? <CheckCircle size={13} /> : "1"}
+              </div>
+              <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Select target job posting</span>
+              <span className="ml-auto text-[11px] text-[var(--text3)]">{jobs.length} jobs available</span>
             </div>
 
-            {parsedPreview && parsedPreview.length > 0 ? (
-                <div className="space-y-4 fade-in pt-6 border-t border-bg-surface3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-lg text-text">
-                        Import Preview
-                      </h3>
-                      <p className="text-[12px] mt-0.5 text-text-muted">
-                        {parsedPreview.length} candidates detected — review before importing
-                      </p>
-                    </div>
-                    <button
-                      className="text-brand-red text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg hover:bg-brand-red/10 transition-colors"
-                      onClick={() => dispatch(clearParsedPreview())}
-                    >
-                      Cancel
-                    </button>
+            {/* Combobox */}
+            <div className="relative">
+              <div
+                className={`flex items-center gap-2.5 px-3.5 py-3 border-[1.5px] rounded-xl cursor-pointer transition-all ${selectedJob ? "border-blue-300 bg-blue-50" : "border-[var(--border2)] bg-[var(--surface2)] hover:border-blue-300"}`}
+                onClick={() => { if (!selectedJob) setJobOpen(o => !o); }}
+              >
+                <span className="text-[18px]">{selectedJob ? "💻" : "🔍"}</span>
+                {selectedJob ? (
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[14px] text-[var(--text)] truncate">{selectedJob.roleTitle}</div>
+                    <div className="text-[11.5px] text-[var(--text3)]">{selectedJob.experienceLevel} · {selectedJob.status}</div>
                   </div>
+                ) : (
+                  <span className="text-[14px] text-[var(--text3)] flex-1">Search or select a job posting...</span>
+                )}
+                {selectedJob && (
+                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">{selectedJob.status}</span>
+                )}
+                {selectedJob ? (
+                  <X size={16} className="text-[var(--text3)] hover:text-red-500 cursor-pointer shrink-0" onClick={e => { e.stopPropagation(); setSelectedJobId(""); dispatch(clearParsedPreview()); setFiles([]); }} />
+                ) : (
+                  <ChevronDown size={14} className={`text-[var(--text3)] transition-transform ${jobOpen ? "rotate-180" : ""}`} />
+                )}
+              </div>
 
-                  {/* Table preview */}
-                  <div className="max-h-[320px] overflow-auto border border-bg-surface3 rounded-xl bg-bg-surface2">
-                    <table className="w-full text-left text-[12px] min-w-[700px]">
-                      <thead>
-                        <tr className="border-[1.5px] border-b-bg-surface3">
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">#</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Name</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Email</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Role</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Location</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">YoE</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Skills</th>
-                          <th className="px-3 py-2.5 font-bold uppercase tracking-widest text-[10px] sticky top-0 bg-bg-surface2 text-text-muted">Education</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {parsedPreview.map((r, i) => (
-                          <tr
-                            key={i}
-                            className="border-b border-bg-surface3 hover:bg-brand-accent-dim transition-colors"
-                          >
-                            <td className="px-3 py-2 font-mono text-text-muted">{i + 1}</td>
-                            <td className="px-3 py-2 font-semibold truncate max-w-[140px] text-text">
-                              {r.firstName} {r.lastName}
-                            </td>
-                            <td className="px-3 py-2 truncate max-w-[160px] text-text-light">{r.email}</td>
-                            <td className="px-3 py-2 truncate max-w-[120px] text-text-light">{r.currentRole || "—"}</td>
-                            <td className="px-3 py-2 truncate max-w-[100px] text-text-muted">{r.location || "—"}</td>
-                            <td className="px-3 py-2 text-center text-text-light">{r.yearsOfExperience || "—"}</td>
-                            <td className="px-3 py-2">
-                              <div className="flex flex-wrap gap-1 max-w-[200px]">
-                                {(r.skills || "").split(",").filter(Boolean).slice(0, 3).map((sk, j) => (
-                                  <span
-                                    key={j}
-                                    className="px-1.5 py-0.5 rounded text-[10px] bg-brand-accent-dim text-brand-accent border border-brand-accent/15"
-                                  >
-                                    {sk.trim()}
-                                  </span>
-                                ))}
-                                {(r.skills || "").split(",").filter(Boolean).length > 3 && (
-                                  <span className="text-[10px] text-text-muted">+{(r.skills || "").split(",").filter(Boolean).length - 3}</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2">
-                              <span
-                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand-green-dim text-brand-green"
-                              >
-                                {r.educationLevel || "—"}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {jobOpen && (
+                <div className="absolute left-0 right-0 top-full bg-[var(--surface)] border-[1.5px] border-blue-500 border-t-0 rounded-b-xl shadow-xl z-50 max-h-[340px] overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-[var(--surface2)] border-b border-[var(--border)]">
+                    <span className="text-[var(--text3)] text-[13px]">🔍</span>
+                    <input autoFocus className="flex-1 bg-transparent outline-none text-[13.5px] text-[var(--text)] placeholder-[var(--text3)]" placeholder="Type to search jobs..." value={jobSearch} onChange={e => setJobSearch(e.target.value)} />
+                    <span className="text-[11px] text-[var(--text3)]">{filteredJobs.length} jobs</span>
                   </div>
-
-                  <button onClick={handleBulkUploadCSV} disabled={loading} className="btn btn-green w-full h-14 text-base font-bold shadow-sm flex items-center justify-center gap-2 mt-2">
-                    {loading ? <LoadingSpinner size={20} /> : <FileText size={20} />}
-                    {loading ? `Importing candidates...` : `Import ${parsedPreview.length} Candidates into Job`}
-                  </button>
+                  <div className="overflow-y-auto max-h-[270px]">
+                    {filteredJobs.length === 0 ? (
+                      <div className="p-6 text-center text-[13px] text-[var(--text3)]">No jobs match your search</div>
+                    ) : filteredJobs.map(j => (
+                      <div key={j._id} className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-[var(--border)] transition-colors" onClick={() => { setSelectedJobId(j._id); setJobSearch(""); setJobOpen(false); }}>
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[14px] shrink-0">💻</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-medium text-[var(--text)] truncate">{j.roleTitle}</div>
+                          <div className="text-[11px] text-[var(--text3)]">{j.experienceLevel} · {j.status}</div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${j.status === "Open" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}>{j.status}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-            ) : (
-                <div className="space-y-6 fade-in pt-6 border-t border-bg-surface3">
-                  <div {...getRootProps()} className={`p-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${isDragActive ? 'border-brand-accent bg-brand-accent-dim' : 'border-bg-surface3 bg-bg-surface2'}`}>
-                    <input {...getInputProps()} />
-                    <UploadCloud size={40} className={`mb-4 ${isDragActive ? 'text-brand-accent' : 'text-text-muted'}`} strokeWidth={1.5} />
-                    <div className="font-bold text-lg text-text text-center">
-                      {importMode === "pdf" ? "Drag & drop multiple PDF resumes here" : "Drag & drop CSV or Excel data file here"}
-                    </div>
-                    <div className="text-sm text-text-muted mt-2 text-center max-w-md">
-                      {importMode === "pdf" 
-                        ? "Upload multiple PDFs for AI batch extraction. Our Gemini model will automatically map candidate details." 
-                        : "Upload a single CSV or Excel (.xlsx/.xls) file to directly import candidate rows."}
-                    </div>
-                  </div>
+              )}
+            </div>
+          </div>
 
-                  {importMode === "data" && (
-                    <div
-                      className="rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-bg-surface2 border border-bg-surface3"
-                    >
-                      <div>
-                        <div className="text-[12px] font-bold text-text">Need a template?</div>
-                        <div className="text-[11px] mt-0.5 text-text-muted">
-                          Download our CSV template with all 11 supported columns pre-defined.
+          {/* STEP 2: METHOD */}
+          {selectedJobId && (
+            <>
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-[22px] h-[22px] rounded-full bg-blue-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">2</div>
+                  <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Choose upload method</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — Gemini extracts details automatically" />
+                  <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green" icon="📊" title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
+                  <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple" icon="👤" title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
+                </div>
+              </div>
+
+              {/* UPLOAD ZONE */}
+              {mode !== "profile" && (
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5">
+
+                  {/* CSV PREVIEW TABLE */}
+                  {mode === "csv" && parsedPreview.length > 0 ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="font-display font-bold text-[15px] text-[var(--text)]">Import Preview</div>
+                          <div className="text-[12px] text-[var(--text3)] mt-0.5">{parsedPreview.length} candidates — review before importing</div>
+                        </div>
+                        <button className="text-red-500 text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-red-50" onClick={() => dispatch(clearParsedPreview())}>Cancel</button>
+                      </div>
+                      <div className="border border-[var(--border)] rounded-xl overflow-hidden max-h-[280px] overflow-y-auto">
+                        <table className="w-full text-left text-[12px]">
+                          <thead><tr className="bg-[var(--surface2)] border-b border-[var(--border)]">
+                            {["#","Name","Email","Skills","Exp","Education"].map(h => <th key={h} className="px-3 py-2 text-[10px] font-bold text-[var(--text3)] uppercase tracking-wider">{h}</th>)}
+                          </tr></thead>
+                          <tbody>{parsedPreview.map((r, i) => (
+                            <tr key={i} className="border-b border-[var(--border)] hover:bg-[var(--surface2)]">
+                              <td className="px-3 py-2 text-[var(--text3)]">{i+1}</td>
+                              <td className="px-3 py-2 font-medium text-[var(--text)]">{r.firstName} {r.lastName}</td>
+                              <td className="px-3 py-2 text-blue-600">{r.email}</td>
+                              <td className="px-3 py-2 text-[var(--text2)] max-w-[140px] truncate">{r.skills}</td>
+                              <td className="px-3 py-2 text-[var(--text3)]">{r.yearsOfExperience}yr</td>
+                              <td className="px-3 py-2"><span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10.5px] font-medium">{r.educationLevel}</span></td>
+                            </tr>
+                          ))}</tbody>
+                        </table>
+                      </div>
+                      <button onClick={handleBulkCSV} disabled={loading} className="w-full mt-4 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-50">
+                        {loading ? <LoadingSpinner size={18} /> : <FileText size={16} />}
+                        {loading ? "Importing..." : `Import ${parsedPreview.length} Candidates`}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* DROPZONE */}
+                      <div {...getRootProps()} className={`border-2 border-dashed rounded-xl py-9 px-5 text-center cursor-pointer transition-all ${isDragActive ? "border-blue-500 bg-blue-50" : "border-[var(--border2)] hover:border-blue-400 hover:bg-[var(--surface2)]"}`}>
+                        <input {...getInputProps()} />
+                        <div className="text-[32px] mb-2.5">{mode === "pdf" ? "📂" : "📊"}</div>
+                        <div className="font-display font-bold text-[15px] text-[var(--text)] mb-1.5">{mode === "pdf" ? "Drag & drop PDF resumes here" : "Drop your CSV or Excel file"}</div>
+                        <div className="text-[12px] text-[var(--text3)] max-w-xs mx-auto leading-snug">{mode === "pdf" ? "Gemini extracts candidate details from each PDF automatically" : "Preview all parsed candidates before confirming import"}</div>
+                        <div className="flex gap-1.5 justify-center mt-2.5 flex-wrap">
+                          {(mode === "pdf" ? ["PDF only", "Max 5MB each", "Up to 50 files"] : [".csv", ".xlsx", "firstName, lastName, email, skills"]).map(t => (
+                            <span key={t} className="text-[10.5px] px-2.5 py-0.5 rounded-full border border-[var(--border2)] text-[var(--text3)] bg-[var(--surface2)]">{t}</span>
+                          ))}
                         </div>
                       </div>
-                      <button
-                        onClick={downloadTemplate}
-                        className="flex items-center gap-2 text-[12px] font-bold px-4 py-2 rounded-lg transition-all shrink-0 bg-brand-accent-dim text-brand-accent border border-brand-accent/20 hover:bg-brand-accent hover:text-white"
-                      >
-                        <Download size={14} /> Download Template
-                      </button>
-                    </div>
+
+                      {/* CSV TEMPLATE */}
+                      {mode === "csv" && (
+                        <div className="flex items-center justify-between mt-3 p-3.5 bg-[var(--surface2)] border border-[var(--border)] rounded-xl">
+                          <div>
+                            <div className="text-[12px] font-bold text-[var(--text)]">Need a template?</div>
+                            <div className="text-[11px] text-[var(--text3)] mt-0.5">Download CSV with all supported columns pre-defined</div>
+                          </div>
+                          <button onClick={downloadTemplate} className="flex items-center gap-1.5 text-[12px] font-bold px-3.5 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white transition-all shrink-0">
+                            <Download size={13} /> Download Template
+                          </button>
+                        </div>
+                      )}
+
+                      {/* PDF FILE LIST */}
+                      {mode === "pdf" && files.length > 0 && (
+                        <div className="mt-3 flex flex-col gap-1.5">
+                          {files.map((f, i) => (
+                            <div key={i} className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--surface2)] border border-[var(--border)] rounded-xl">
+                              <span className="text-[16px]">📄</span>
+                              <span className="text-[12.5px] font-medium text-[var(--text)] flex-1 truncate">{f.name}</span>
+                              <span className="text-[10.5px] text-[var(--text3)]">{(f.size/1024).toFixed(0)}KB</span>
+                              <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Ready</span>
+                              <X size={14} className="cursor-pointer text-[var(--text3)] hover:text-red-500" onClick={() => setFiles(files.filter((_, idx) => idx !== i))} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
+                </div>
+              )}
 
-              {files.length > 0 && (
-                 <div className="fade-in">
-                    <h3 className="text-sm font-bold tracking-widest uppercase mb-3 flex items-center justify-between text-text-light">
-                       Queued Resumes ({files.length} selected)
-                       <button onClick={() => setFiles([])} className="text-brand-red uppercase tracking-widest text-[10px] font-bold px-2 py-1 rounded hover:bg-brand-red/10 transition-colors">
-                         Clear Queue
-                       </button>
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mb-6 max-h-40 overflow-y-auto p-1">
-                      {files.map((f, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-bg-surface2 border border-bg-surface3 rounded-lg px-3 py-2 text-xs text-text group">
-                           <FileSignature size={14} className="text-brand-accent" />
-                           <span className="truncate max-w-[150px]">{f.name}</span>
-                           <button onClick={(e) => { e.stopPropagation(); setFiles(files.filter((_, idx) => idx !== i)); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 text-text-muted hover:text-brand-red">
-                             <X size={14} />
-                           </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {files.length === 1 ? (
-                      <form onSubmit={handleSingleSubmit} className="space-y-6 fade-in p-6 rounded-xl border border-bg-surface3 bg-bg-surface2">
-                        <div className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2 flex flex-col">
-                           Single PDF Upload Mode
-                           <span className="text-[10px] text-text-muted normal-case font-normal mt-1 leading-relaxed">
-                              When uploading exactly one candidate manually, you must provide their explicit details down below. Add another PDF above to seamlessly switch into Gemini Batch AI Extraction.
-                           </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Input label="First Name" value={form.firstName} onChange={(v: string) => setForm({...form, firstName: v})} required={true} />
-                          <Input label="Last Name" value={form.lastName} onChange={(v: string) => setForm({...form, lastName: v})} required={true} />
-                          <Input label="Email Address" type="email" value={form.email} onChange={(v: string) => setForm({...form, email: v})} required={true} />
-                          <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
-                             <span className="group-hover:text-text transition-colors">Years of Experience <span className="text-brand-red">*</span></span>
-                             <input type="number" min="0" value={form.yearsOfExperience} onChange={e => setForm({...form, yearsOfExperience: parseInt(e.target.value)||0})} className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text placeholder:text-text-muted/60 outline-none transition-all duration-200 text-sm font-medium shadow-sm" required />
-                          </label>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Input label="Skill Tags (comma separated)" placeholder="React, APIs, Sales" value={form.skillsStr} onChange={(v: string) => setForm({...form, skillsStr: v})} />
-                           <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
-                             <span className="group-hover:text-text transition-colors">Education Qualification</span>
-                             <select value={form.educationLevel} onChange={e => setForm({...form, educationLevel: e.target.value as EducationLevel})} className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text outline-none transition-all duration-200 text-sm font-medium shadow-sm appearance-none cursor-pointer">
-                               <option value="Associate">Associate Degree</option>
-                               <option value="Bachelor">Bachelor&apos;s Degree</option>
-                               <option value="Master">Master&apos;s Degree</option>
-                               <option value="PhD">PhD / Doctorate</option>
-                               <option value="Other">Other Certificate</option>
-                             </select>
-                          </label>
-                        </div>
-
-                        <button type="submit" disabled={loading} className="btn w-full h-14 text-base font-bold shadow-md mt-4 bg-brand-blue hover:bg-brand-accent-hover text-white rounded-xl transition-all disabled:opacity-50">
-                          {loading ? "Transmitting Single Context..." : "Upload Applicant to Job"}
-                        </button>
-                      </form>
-                    ) : (
-                      <button onClick={handleBulkUploadPDFs} disabled={loading || files.length === 0} className="btn btn-primary w-full h-14 text-base font-bold shadow-sm flex items-center justify-center gap-3 animate-pulse-ai shrink-0">
-                         {loading ? <LoadingSpinner size={20} /> : <FileSignature size={20} />}
-                         {loading ? "Analyzing Context Matrix via Gemini..." : `Extract & Ingest ${files.length} Candidates`}
-                      </button>
-                    )}
-                  </div>
-               )}
-            </div>
+              {/* SUBMIT */}
+              {mode === "pdf" && files.length > 0 && (
+                <button onClick={handleBulkPDF} disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-600/20 mb-2">
+                  {loading ? <LoadingSpinner size={18} /> : <UploadCloud size={16} />}
+                  {loading ? "Extracting with Gemini..." : `Upload & Extract ${files.length} PDF${files.length !== 1 ? "s" : ""} with Gemini`}
+                </button>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+
+        {/* ─── RIGHT COLUMN ─── */}
+        <div className="flex flex-col gap-3">
+
+          {/* Upload Summary */}
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
+            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">📈 Upload Summary</div>
+            {[
+              { label: "Ready to upload", val: mode === "pdf" ? files.length : parsedPreview.length, color: "text-blue-600" },
+              { label: "Successfully added", val: doneCount, color: "text-emerald-600" },
+              { label: "Failed / skipped", val: failCount, color: "text-red-500" },
+              { label: "Duplicates ignored", val: 0, color: "text-amber-600" },
+            ].map(({ label, val, color }) => (
+              <div key={label} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
+                <span className="text-[12.5px] text-[var(--text2)]">{label}</span>
+                <span className={`font-display font-bold text-[15px] ${color}`}>{val}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Recent Uploads */}
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
+            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">🕐 Recent Uploads</div>
+            {[
+              { dot: "bg-emerald-500", text: <><strong>5 candidates</strong> added to Senior Full Stack via CSV</>, time: "2 hours ago" },
+              { dot: "bg-blue-500", text: <><strong>Alice Mutoni</strong> added via PDF resume</>, time: "5 hours ago" },
+              { dot: "bg-amber-500", text: <><strong>3 PDFs</strong> bulk-imported to Junior AI Engineers</>, time: "1 day ago" },
+              { dot: "bg-emerald-500", text: <><strong>12 candidates</strong> imported to Backend Developer</>, time: "3 days ago" },
+            ].map((r, i) => (
+              <div key={i} className="flex gap-2.5 py-2.5 border-b border-[var(--border)] last:border-0 items-start">
+                <div className={`w-[7px] h-[7px] rounded-full shrink-0 mt-1.5 ${r.dot}`} />
+                <div className="flex-1">
+                  <div className="text-[12px] text-[var(--text2)] leading-snug">{r.text}</div>
+                  <div className="text-[10.5px] text-[var(--text3)] mt-0.5">{r.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tips */}
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
+            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">💡 Upload Tips</div>
+            {[
+              "PDFs with text content extract better than scanned images",
+              "CSV must include firstName, lastName, email, skills",
+              "Duplicate emails for the same job are automatically skipped",
+              "Use Structured Profile for detailed manual candidate entry",
+            ].map((t, i) => (
+              <div key={i} className="flex gap-2 mb-2.5 last:mb-0 items-start">
+                <div className="w-[18px] h-[18px] rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i+1}</div>
+                <div className="text-[12px] text-[var(--text2)] leading-snug">{t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Structured Profile Wizard Modal */}
+      {/* Profile Wizard Modal */}
       <ProfileWizardModal
         open={wizardOpen}
         jobId={selectedJobId}
-        jobTitle={jobs.find(j => j._id === selectedJobId)?.roleTitle}
-        onClose={() => setWizardOpen(false)}
-        onSuccess={() => {
-          setWizardOpen(false);
-          router.push(`/jobs/${selectedJobId}/applicants`);
-        }}
+        jobTitle={selectedJob?.roleTitle}
+        onClose={() => { setWizardOpen(false); setMode("pdf"); }}
+        onSuccess={() => { setWizardOpen(false); router.push(`/jobs/${selectedJobId}/applicants`); }}
       />
     </div>
   );
 }
 
-function Input({ label, value, onChange, type="text", placeholder, required=false }: any) {
+function ModeTab({ active, onClick, color, badge, icon, title, desc }: { active: boolean; onClick: () => void; color: string; badge?: string; icon: string; title: string; desc: string; }) {
+  const colors: Record<string, string> = { blue: "border-blue-400 bg-blue-50", green: "border-emerald-400 bg-emerald-50", purple: "border-purple-400 bg-purple-50" };
   return (
-    <label className="flex flex-col space-y-1.5 text-xs font-bold text-text-muted uppercase tracking-wider pl-1 cursor-pointer group">
-       <span className="group-hover:text-text transition-colors">{label} {required && <span className="text-brand-red">*</span>}</span>
-       <input 
-          type={type} 
-          required={required}
-          placeholder={placeholder}
-          value={value} 
-          onChange={e => onChange(e.target.value)} 
-          className="w-full px-4 py-3 border-[1.5px] rounded-xl bg-bg-surface border-bg-surface3 hover:border-brand-blue/30 focus:bg-bg-surface focus:border-brand-accent focus:ring-4 focus:ring-brand-blue-dim text-text placeholder:text-text-muted/60 outline-none transition-all duration-200 text-sm font-medium shadow-sm"
-       />
-    </label>
+    <div onClick={onClick} className={`relative p-[14px_16px] rounded-xl border-[1.5px] cursor-pointer transition-all ${active ? colors[color] : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border2)]"}`}>
+      {badge && <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-600 text-white uppercase tracking-wider">{badge}</span>}
+      <div className="text-[20px] mb-2">{icon}</div>
+      <div className="font-bold text-[13px] text-[var(--text)] mb-0.5">{title}</div>
+      <div className="text-[11px] text-[var(--text3)] leading-snug">{desc}</div>
+    </div>
   );
 }
