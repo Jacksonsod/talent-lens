@@ -36,7 +36,8 @@ export default function UploadPage() {
   useEffect(() => { dispatch(fetchJobs()); }, [dispatch]);
 
   const selectedJob = jobs.find(j => j._id === selectedJobId);
-  const filteredJobs = jobs.filter(j =>
+  const openJobs = jobs.filter(j => j.status === "Open");
+  const filteredJobs = openJobs.filter(j =>
     j.roleTitle.toLowerCase().includes(jobSearch.toLowerCase())
   );
 
@@ -149,7 +150,7 @@ export default function UploadPage() {
                 {selectedJobId ? <CheckCircle size={13} /> : "1"}
               </div>
               <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Select target job posting</span>
-              <span className="ml-auto text-[11px] text-[var(--text3)]">{jobs.length} jobs available</span>
+              <span className="ml-auto text-[11px] text-[var(--text3)]">{openJobs.length} jobs available</span>
             </div>
 
             {/* Combobox */}
