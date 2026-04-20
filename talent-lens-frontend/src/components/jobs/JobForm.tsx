@@ -148,7 +148,7 @@ export default function JobForm() {
             Create New Job
           </h1>
           <p className="text-[13.5px] text-[var(--text3)] leading-relaxed max-w-[500px]">
-            Define the role clearly — the more detail you provide, the more accurate Gemini's candidate scoring will be.
+            Define the role clearly — the more detail you provide, the more accurate Gemini&apos;s candidate scoring will be.
           </p>
         </div>
         <div className="text-right mt-1 w-[280px]">
@@ -178,7 +178,7 @@ export default function JobForm() {
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Role Details</h2>
-                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">Core information Gemini uses to understand what you're hiring for</p>
+                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">Core information Gemini uses to understand what you&apos;re hiring for</p>
               </div>
             </div>
             
@@ -192,7 +192,7 @@ export default function JobForm() {
                   onChange={e => setFormData({...formData, roleTitle: e.target.value})}
                   className="bg-[var(--surface2)] border-[1.5px] border-[var(--border)] rounded-[10px] px-3.5 py-2.5 text-[13.5px] text-[var(--text)] outline-none focus:border-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
                 />
-                <span className="text-[11px] text-[var(--text3)] mt-0.5">Be specific — "Senior React Engineer" outperforms "Developer"</span>
+                <span className="text-[11px] text-[var(--text3)] mt-0.5">Be specific — &quot;Senior React Engineer&quot; outperforms &quot;Developer&quot;</span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10.5px] font-bold text-[var(--text2)] uppercase tracking-wider">Experience Level<span className="text-red-500 ml-0.5">*</span></label>
