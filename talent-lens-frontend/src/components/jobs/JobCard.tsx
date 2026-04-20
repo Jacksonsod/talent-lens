@@ -179,7 +179,7 @@ export default function JobCard({ job, mode = "default", onViewDetails }: JobCar
                 </div>
               );
             })()}
-            <div className="min-w-0">
+            <div className="min-w-[320px] max-w-[320px]">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="font-bold text-lg text-gray-900 tracking-tight truncate" style={{ fontFamily: "var(--font-bricolage), sans-serif" }}>
                   {job.roleTitle}
