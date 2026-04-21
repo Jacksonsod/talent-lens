@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/lib/hooks/redux";
-import { createJob } from "@/lib/slices/jobsSlice";
+import { createJob, updateJob } from "@/lib/slices/jobsSlice";
 import toast from "react-hot-toast";
-import { CreateJobInput, JobStatus } from "@/lib/types";
-import { Sparkles, X, Target, Zap, ClipboardList, Trophy } from "lucide-react";
+import { CreateJobInput, Job, JobStatus } from "@/lib/types";
+import { Sparkles, X, Target, Zap, ClipboardList, Trophy, Save } from "lucide-react";
 
 const SKILL_SUGGESTIONS: Record<string, string[]> = {
   'full stack': ['React', 'Next.js', 'Node.js', 'TypeScript', 'MongoDB', 'REST API', 'Git', 'Docker'],
@@ -20,27 +20,48 @@ const SKILL_SUGGESTIONS: Record<string, string[]> = {
   'data': ['SQL', 'Python', 'Tableau', 'Power BI', 'ETL', 'Spark', 'Airflow', 'Data Modeling'],
 };
 
-export default function JobForm() {
+interface JobFormProps {
+  initialData?: Job;
+  mode?: "create" | "edit";
+  jobId?: string;
+}
+
+export default function JobForm({ initialData, mode = "create", jobId }: JobFormProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    roleTitle: "",
-    description: "",
-    experienceLevel: "",
-    shortlistSize: 10,
-    status: "Draft" as JobStatus,
+    roleTitle: initialData?.roleTitle || "",
+    description: initialData?.description || "",
+    experienceLevel: initialData?.experienceLevel || "",
+    shortlistSize: initialData?.shortlistSize || 10,
+    status: initialData?.status || "Draft" as JobStatus,
   });
 
-  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [requiredSkills, setRequiredSkills] = useState<string[]>(initialData?.requiredSkills || []);
   const [skillInput, setSkillInput] = useState("");
 
-  const [requirements, setRequirements] = useState<string[]>([]);
+  const [requirements, setRequirements] = useState<string[]>(initialData?.requirements || []);
   const [reqInput, setReqInput] = useState("");
 
   const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
   const [showChips, setShowChips] = useState(false);
+
+  // Re-hydrate if initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        roleTitle: initialData.roleTitle,
+        description: initialData.description,
+        experienceLevel: initialData.experienceLevel,
+        shortlistSize: initialData.shortlistSize,
+        status: initialData.status,
+      });
+      setRequiredSkills(initialData.requiredSkills || []);
+      setRequirements(initialData.requirements || []);
+    }
+  }, [initialData]);
 
   // Derived state for Readiness Score
   const descWords = formData.description.trim().split(/\s+/).filter(Boolean).length;
@@ -123,16 +144,22 @@ export default function JobForm() {
         description: formData.description || "Required job description.",
         experienceLevel: formData.experienceLevel || "Mid-level",
         shortlistSize: formData.shortlistSize,
-        status: "Open", // Always create as Open for now based on UI
+        status: mode === "create" ? "Open" : formData.status, 
         requiredSkills,
         requirements,
       };
 
-      const res = await dispatch(createJob(payload)).unwrap();
-      toast.success("Job created successfully!");
-      router.push(`/jobs/${res._id}/applicants`);
+      if (mode === "edit" && jobId) {
+        await dispatch(updateJob({ id: jobId, data: payload })).unwrap();
+        toast.success("Job updated successfully!");
+        router.push("/jobs");
+      } else {
+        const res = await dispatch(createJob(payload)).unwrap();
+        toast.success("Job created successfully!");
+        router.push(`/jobs/${res._id}/applicants`);
+      }
     } catch (err) {
-      toast.error("Failed to create job.");
+      toast.error(mode === "edit" ? "Failed to update job." : "Failed to create job.");
     } finally {
       setLoading(false);
     }
@@ -153,8 +180,13 @@ export default function JobForm() {
         requirements,
       };
 
-      await dispatch(createJob(payload)).unwrap();
-      toast.success("Draft saved successfully!");
+      if (mode === "edit" && jobId) {
+        await dispatch(updateJob({ id: jobId, data: payload })).unwrap();
+        toast.success("Draft updated successfully!");
+      } else {
+        await dispatch(createJob(payload)).unwrap();
+        toast.success("Draft saved successfully!");
+      }
       router.push("/jobs");
     } catch (err) {
       toast.error("Failed to save draft.");
@@ -170,10 +202,10 @@ export default function JobForm() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="font-display font-extrabold text-[26px] tracking-tight text-[var(--text)] mb-1.5">
-            Create New Job
+            {mode === "edit" ? "Edit Job Post" : "Create New Job"}
           </h1>
           <p className="text-[13.5px] text-[var(--text3)] leading-relaxed max-w-[500px]">
-            Define the role clearly — the more detail you provide, the more accurate Gemini&apos;s candidate scoring will be.
+            {mode === "edit" ? `Updating the details for ${formData.roleTitle || "this job"}` : "Define the role clearly — the more detail you provide, the more accurate Gemini's candidate scoring will be."}
           </p>
         </div>
         <div className="text-right mt-1 w-[280px]">
@@ -402,9 +434,10 @@ export default function JobForm() {
               disabled={loading}
               className="flex-1 h-[48px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
             >
-              {loading ? "Creating..." : (
+              {loading ? (mode === "edit" ? "Updating..." : "Creating...") : (
                 <>
-                  <Sparkles size={16} /> Create Job & Start Screening
+                  {mode === "edit" ? <Save size={16} /> : <Sparkles size={16} />} 
+                  {mode === "edit" ? "Save Changes" : "Create Job & Start Screening"}
                 </>
               )}
             </button>
