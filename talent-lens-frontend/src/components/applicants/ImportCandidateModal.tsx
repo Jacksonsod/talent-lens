@@ -317,7 +317,7 @@ export default function ImportCandidateModal({ open, jobId, onClose }: Props) {
                     </div>
                     <div className="text-[15px] text-gray-500 mt-2 text-center max-w-md leading-relaxed">
                       {importMode === "pdf" 
-                        ? "Upload multiple PDFs for AI batch extraction. Our Gemini model will automatically map candidate details." 
+                        ? "Upload multiple PDFs for AI batch extraction. Our AI model will automatically map candidate details." 
                         : "Upload a single CSV or Excel (.xlsx/.xls) file to directly import structured candidate rows."}
                     </div>
                   </div>
@@ -361,7 +361,7 @@ export default function ImportCandidateModal({ open, jobId, onClose }: Props) {
 
                         <button onClick={handleBulkUploadPDFs} disabled={loading || files.length === 0} className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[15px] font-bold shadow-lg shadow-blue-600/20 flex items-center justify-center gap-3 transition-all">
                            {loading ? <LoadingSpinner size={20} /> : <Wand2 size={20} />}
-                           {loading ? "Analyzing Context Matrix via Gemini..." : `Extract & Ingest ${files.length} Candidates`}
+                           {loading ? "Analyzing Context Matrix via AI..." : `Extract & Ingest ${files.length} Candidates`}
                         </button>
                      </div>
                   )}

@@ -91,7 +91,7 @@ export default function ShortlistPage() {
             {job?.roleTitle ?? "Shortlist"}
           </h1>
           <p className="text-[13px] text-[var(--text3)]">
-            AI Screening completed · Reviewed {shortlist.length} applicants · Results ranked by Gemini AI
+            AI Screening completed · Reviewed {shortlist.length} applicants · Results ranked by System AI
           </p>
         </div>
         <div className="flex items-center gap-2.5 mt-1">
@@ -143,7 +143,7 @@ export default function ShortlistPage() {
         <StatCard label="Total Shortlisted" value={shortlist.length} sub={`of ${job?.shortlistSize ?? "—"} target`} progress={job?.shortlistSize ? (shortlist.length / job.shortlistSize) * 100 : 0} accentClass="before:bg-blue-500" valueClass="text-blue-600" />
         <StatCard label="Top Match Score" value={topScore} sub={topCandidateName} progress={topScore} accentClass="before:bg-emerald-500" valueClass="text-emerald-600" />
         <StatCard label="Avg Match Score" value={avgScore} sub={`across ${shortlist.length} candidates`} progress={avgScore} accentClass="before:bg-amber-500" valueClass="text-amber-600" />
-        <StatCard label="Strongly Recommended" value={stronglyRecommended} sub="by Gemini AI" progress={(stronglyRecommended / shortlist.length) * 100} accentClass="before:bg-purple-500" valueClass="text-purple-600" />
+        <StatCard label="Strongly Recommended" value={stronglyRecommended} sub="by System AI" progress={(stronglyRecommended / shortlist.length) * 100} accentClass="before:bg-purple-500" valueClass="text-purple-600" />
         <StatCard label="Incomplete Profiles" value={incompleteItems.length} sub="scores may be lower" progress={(incompleteItems.length / shortlist.length) * 100} accentClass="before:bg-orange-500" valueClass="text-orange-600" />
       </div>
 
@@ -156,7 +156,7 @@ export default function ShortlistPage() {
             <div className="text-[11.5px] text-[var(--text3)] mt-0.5 flex items-center gap-1.5">
               {job?.experienceLevel} · Target shortlist: {job?.shortlistSize ?? "—"} ·
               <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Gemini AI
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> System AI
               </span>
             </div>
           </div>

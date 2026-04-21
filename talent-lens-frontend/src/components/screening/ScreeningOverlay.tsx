@@ -28,7 +28,7 @@ export default function ScreeningOverlay() {
           AI Screening in Progress
         </div>
         <div className="text-[13px] mb-6" style={{ color: "#5a5a72" }}>
-          Gemini is analyzing all candidates against the job criteria
+          System AI is analyzing all candidates against the job criteria
         </div>
 
         {/* Progress bar */}

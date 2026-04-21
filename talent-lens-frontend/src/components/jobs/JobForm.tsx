@@ -12,7 +12,7 @@ const SKILL_SUGGESTIONS: Record<string, string[]> = {
   'full stack': ['React', 'Next.js', 'Node.js', 'TypeScript', 'MongoDB', 'REST API', 'Git', 'Docker'],
   'frontend': ['React', 'Next.js', 'Tailwind CSS', 'TypeScript', 'Redux', 'Figma', 'Jest', 'Vite'],
   'backend': ['Node.js', 'TypeScript', 'MongoDB', 'PostgreSQL', 'REST API', 'Docker', 'Auth/JWT', 'Redis'],
-  'ai': ['Python', 'PyTorch', 'TensorFlow', 'Gemini API', 'LLM', 'Prompt Engineering', 'RAG', 'FastAPI'],
+  'ai': ['Python', 'PyTorch', 'TensorFlow', 'LLM', 'Prompt Engineering', 'RAG', 'FastAPI'],
   'ml': ['Python', 'scikit-learn', 'PyTorch', 'Pandas', 'NumPy', 'MLflow', 'Data Pipelines', 'SQL'],
   'designer': ['Figma', 'UX Research', 'Prototyping', 'Design Systems', 'User Testing', 'Adobe XD'],
   'devops': ['Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Terraform', 'Linux', 'GitHub Actions', 'Monitoring'],
@@ -205,7 +205,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
             {mode === "edit" ? "Edit Job Post" : "Create New Job"}
           </h1>
           <p className="text-[13.5px] text-[var(--text3)] leading-relaxed max-w-[500px]">
-            {mode === "edit" ? `Updating the details for ${formData.roleTitle || "this job"}` : "Define the role clearly — the more detail you provide, the more accurate Gemini's candidate scoring will be."}
+            {mode === "edit" ? `Updating the details for ${formData.roleTitle || "this job"}` : "Define the role clearly — the more detail you provide, the more accurate the AI's candidate scoring will be."}
           </p>
         </div>
         <div className="text-right mt-1 w-[280px]">
@@ -235,7 +235,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Role Details</h2>
-                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">Core information Gemini uses to understand what you&apos;re hiring for</p>
+                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">Core information the AI uses to understand what you&apos;re hiring for</p>
               </div>
             </div>
             
@@ -292,7 +292,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Required Skills</h2>
-                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">Gemini weights candidates by how well their skills match these — add as many as relevant</p>
+                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">System AI weights candidates by how well their skills match these — add as many as relevant</p>
               </div>
             </div>
 
@@ -306,7 +306,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
                   <Sparkles size={14} />
                 </div>
                 <div className="flex-1">
-                  <div className="text-[13px] font-semibold text-blue-700">Gemini detected skills for this role</div>
+                  <div className="text-[13px] font-semibold text-blue-700">System AI detected skills for this role</div>
                   <div className="text-[11px] text-[var(--text3)]">Click to see suggestions based on your job title</div>
                 </div>
                 <div className="text-[12px] font-bold text-blue-600">Add all →</div>
@@ -395,7 +395,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Shortlist Settings</h2>
-                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">How many top candidates should Gemini return after screening?</p>
+                <p className="text-[11.5px] text-[var(--text3)] mt-0.5">How many top candidates should the AI return after screening?</p>
               </div>
             </div>
 
@@ -407,7 +407,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
                   <div className="flex-1 text-center font-display font-bold text-[16px]">{formData.shortlistSize}</div>
                   <button type="button" className="w-10 h-10 flex items-center justify-center text-lg text-[var(--text2)] hover:bg-[var(--surface3)] transition-colors" onClick={() => adjustShortlist(5)}>+</button>
                 </div>
-                <span className="text-[11px] text-[var(--text3)] mt-0.5">Gemini returns top <span className="font-bold">{formData.shortlistSize}</span> candidates</span>
+                <span className="text-[11px] text-[var(--text3)] mt-0.5">System AI returns top <span className="font-bold">{formData.shortlistSize}</span> candidates</span>
               </div>
 
               <div className="flex flex-col justify-center gap-2 pt-1">
@@ -487,7 +487,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
           {/* Live Preview Panel */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[18px_20px]">
             <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-4">
-              <span className="text-[14px]">👁</span> Gemini Will See
+              <span className="text-[14px]">👁</span> System Will See
             </h3>
             
             <PreviewField label="Role" empty={!formData.roleTitle}>
@@ -532,10 +532,10 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
               <span className="text-[14px]">💡</span> Screening Tips
             </h3>
             <div className="flex flex-col gap-3">
-              <TipItem dot="bg-blue-600">Add <strong>5–10 specific skills</strong> — Gemini weights each one against candidate profiles</TipItem>
+              <TipItem dot="bg-blue-600">Add <strong>5–10 specific skills</strong> — System AI weights each one against candidate profiles</TipItem>
               <TipItem dot="bg-purple-500">Descriptions over <strong>150 words</strong> produce 40% more accurate shortlists</TipItem>
               <TipItem dot="bg-emerald-500">Use <strong>Top 20</strong> for competitive roles with many qualified applicants</TipItem>
-              <TipItem dot="bg-amber-500">Gemini explains <strong>every score</strong> — strengths, gaps, and final recommendation</TipItem>
+              <TipItem dot="bg-amber-500">System AI explains <strong>every score</strong> — strengths, gaps, and final recommendation</TipItem>
             </div>
           </div>
 

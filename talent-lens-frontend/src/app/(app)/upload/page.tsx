@@ -141,7 +141,7 @@ export default function UploadPage() {
             {/* PAGE HEADER */}
             <div className="mb-5">
               <h1 className="font-display font-extrabold text-[24px] tracking-tight text-[var(--text)] mb-1">Upload Candidates</h1>
-              <p className="text-[13px] text-[var(--text3)]">Add applicants to any job via PDF resumes, CSV spreadsheet, or manual profile entry — Gemini extracts and structures data automatically.</p>
+              <p className="text-[13px] text-[var(--text3)]">Add applicants to any job via PDF resumes, CSV spreadsheet, or manual profile entry — System AI extracts and structures data automatically.</p>
             </div>
 
           {/* STEP 1: JOB SELECTOR */}
@@ -232,7 +232,7 @@ export default function UploadPage() {
                       <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Choose upload method</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2.5">
-                      <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — Gemini extracts details automatically" />
+                      <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — System AI extracts details automatically" />
                       <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green" icon="📊" title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
                       <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple" icon="👤" title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
                     </div>
@@ -281,7 +281,7 @@ export default function UploadPage() {
                         <input {...getInputProps()} />
                         <div className="text-[32px] mb-2.5">{mode === "pdf" ? "📂" : "📊"}</div>
                         <div className="font-display font-bold text-[15px] text-[var(--text)] mb-1.5">{mode === "pdf" ? "Drag & drop PDF resumes here" : "Drop your CSV or Excel file"}</div>
-                        <div className="text-[12px] text-[var(--text3)] max-w-xs mx-auto leading-snug">{mode === "pdf" ? "Gemini extracts candidate details from each PDF automatically" : "Preview all parsed candidates before confirming import"}</div>
+                        <div className="text-[12px] text-[var(--text3)] max-w-xs mx-auto leading-snug">{mode === "pdf" ? "System AI extracts candidate details from each PDF automatically" : "Preview all parsed candidates before confirming import"}</div>
                         <div className="flex gap-1.5 justify-center mt-2.5 flex-wrap">
                           {(mode === "pdf" ? ["PDF only", "Max 5MB each", "Up to 50 files"] : [".csv", ".xlsx", "firstName, lastName, email, skills"]).map(t => (
                             <span key={t} className="text-[10.5px] px-2.5 py-0.5 rounded-full border border-[var(--border2)] text-[var(--text3)] bg-[var(--surface2)]">{t}</span>
@@ -325,7 +325,7 @@ export default function UploadPage() {
               {mode === "pdf" && files.length > 0 && (
                 <button onClick={handleBulkPDF} disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-600/20 mb-2">
                   {loading ? <LoadingSpinner size={18} /> : <UploadCloud size={16} />}
-                  {loading ? "Extracting with Gemini..." : `Upload & Extract ${files.length} PDF${files.length !== 1 ? "s" : ""} with Gemini`}
+                  {loading ? "Extracting with System AI..." : `Upload & Extract ${files.length} PDF${files.length !== 1 ? "s" : ""} with System AI`}
                 </button>
               )}
                 </>

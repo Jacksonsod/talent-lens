@@ -27,7 +27,7 @@ export default function SocialLinksStep({ data, onChange }: Props) {
           Social Links
         </h2>
         <p className="text-[13.5px] mt-1.5 leading-relaxed" style={{ color: "var(--text3)" }}>
-          External profiles help verify skills and expand Gemini&apos;s evaluation context.
+          External profiles help verify skills and expand the AI's evaluation context.
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function SocialLinksStep({ data, onChange }: Props) {
           Ready to save
         </div>
         <p className="text-[13px] leading-relaxed" style={{ color: "var(--text2)" }}>
-          Your talent profile will be saved locally and made available for AI screening via Gemini.
+          Your talent profile will be saved locally and made available for screening via System AI.
           The richer the profile, the more accurate the match score and reasoning will be.
         </p>
       </div>
