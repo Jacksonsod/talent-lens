@@ -27,7 +27,7 @@ export default function SocialLinksStep({ data, onChange }: Props) {
           Social Links
         </h2>
         <p className="text-[13.5px] mt-1.5 leading-relaxed" style={{ color: "var(--text3)" }}>
-          External profiles help verify skills and expand the AI's evaluation context.
+          External profiles help verify skills and expand the AI&apos;s evaluation context.
         </p>
       </div>
 
