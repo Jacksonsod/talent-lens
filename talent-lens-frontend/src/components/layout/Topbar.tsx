@@ -19,6 +19,9 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   const { items: jobs } = useAppSelector((s) => s.jobs);
   const { shortlists } = useAppSelector((s) => s.screening);
   
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  
   const [isFocused, setIsFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +88,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
               color: "var(--text)"
             }}
           >
-            Good morning, {user?.firstName || "Recruiter"} 👋
+            {greeting}, {user?.firstName || "Recruiter"} 👋
           </h1>
         </div>
 
