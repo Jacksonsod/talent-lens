@@ -14,7 +14,8 @@ import {
   Smartphone,
   Database,
   Globe,
-  Briefcase
+  Briefcase,
+  Search
 } from "lucide-react";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -53,13 +54,20 @@ export default function ShortlistsPage() {
   const dispatch = useAppDispatch();
   const { items: jobs, loading } = useAppSelector((s) => s.jobs);
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [search, setSearch] = React.useState("");
   const pageSize = 10;
   
   // A shortlist exists for any job that has completed screening
-  const screenedJobs = jobs.filter(j => j.status === "Closed" || j.status === "screened" as any);
+  const screenedJobs = jobs.filter(j => (j.status === "Closed" || j.status === "screened" as any) && 
+    j.roleTitle.toLowerCase().includes(search.toLowerCase())
+  );
   
   const totalPages = Math.ceil(screenedJobs.length / pageSize);
   const paginatedJobs = screenedJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   useEffect(() => {
     dispatch(fetchJobs());
@@ -69,10 +77,32 @@ export default function ShortlistsPage() {
 
   return (
     <div className="stagger">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--text)]" style={{ fontFamily: "var(--font-bricolage), sans-serif" }}>
+            Candidate Shortlists
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Access AI-screened candidate pools for your completed job postings.
+          </p>
+        </div>
+
+        <div className="relative w-full md:w-[320px]">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input 
+            type="text" 
+            placeholder="Search shortlists..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xs font-semibold tracking-widest uppercase text-text-muted">
-            Recent Shortlists
+            {search ? `Search Results (${screenedJobs.length})` : "Recent Shortlists"}
           </h2>
           {totalPages > 1 && (
             <div className="text-[12px] font-bold text-text-muted">
