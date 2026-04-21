@@ -6,6 +6,8 @@ import JobCard from "@/components/jobs/JobCard";
 import JobDetailsModal from "@/components/jobs/JobDetailsModal";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks/redux";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
+import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
+import { fetchShortlist } from "@/lib/slices/screeningSlice";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { Search, Plus, Briefcase, CheckCircle2, Users, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
@@ -19,8 +21,17 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
-    dispatch(fetchJobs());
+    dispatch(fetchJobs()).then((action) => {
+      if (fetchJobs.fulfilled.match(action)) {
+        action.payload.forEach((job: Job) => {
+          dispatch(fetchApplicantsByJob(job._id));
+          dispatch(fetchShortlist(job._id));
+        });
+      }
+    });
   }, [dispatch]);
+
+  const totalApplicantsCount = useAppSelector(s => s.applicants.items.length);
 
   const activeJobs = jobs.filter((j) => j.status === "Open" || j.status === "Screening");
   const screenedJobs = jobs.filter((j) => j.status === "Closed");
@@ -79,7 +90,7 @@ export default function JobsPage() {
             <Users size={22} />
           </div>
           <div>
-            <div className="text-2xl font-black">248</div>
+            <div className="text-2xl font-black">{totalApplicantsCount}</div>
             <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Applicants</div>
           </div>
         </div>

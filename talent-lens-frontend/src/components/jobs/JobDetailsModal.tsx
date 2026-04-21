@@ -2,8 +2,12 @@
 
 import React from "react";
 import { Job } from "@/lib/types";
-import { X, Briefcase, Calendar, Users, Target, CheckCircle2, ChevronRight, FileText, Settings } from "lucide-react";
+import { X, Briefcase, Calendar, Users, Target, CheckCircle2, ChevronRight, FileText, Settings, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
+import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
+import { fetchShortlist } from "@/lib/slices/screeningSlice";
+import { useEffect } from "react";
 
 interface JobDetailsModalProps {
   job: Job;
@@ -13,6 +17,18 @@ interface JobDetailsModalProps {
 
 export default function JobDetailsModal({ job, isOpen, onClose }: JobDetailsModalProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const applicants = useAppSelector(s => s.applicants.items.filter(a => a.jobId === job._id));
+  const shortlist = useAppSelector(s => s.screening.shortlists[job._id] || []);
+  const loadingApplicants = useAppSelector(s => s.applicants.loading);
+
+  useEffect(() => {
+    if (isOpen && job._id) {
+      dispatch(fetchApplicantsByJob(job._id));
+      dispatch(fetchShortlist(job._id));
+    }
+  }, [isOpen, job._id, dispatch]);
 
   if (!isOpen) return null;
 
@@ -64,15 +80,21 @@ export default function JobDetailsModal({ job, isOpen, onClose }: JobDetailsModa
         <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
              <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                <div className="text-2xl font-black text-gray-900">42</div>
+                <div className="text-2xl font-black text-gray-900">
+                  {loadingApplicants && applicants.length === 0 ? <Loader2 size={20} className="animate-spin mx-auto" /> : applicants.length}
+                </div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Applicants</div>
              </div>
              <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                <div className="text-2xl font-black text-blue-600">12</div>
+                <div className="text-2xl font-black text-blue-600">
+                  {shortlist.filter(s => s.status === "Completed").length}
+                </div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Screened</div>
              </div>
              <div className="bg-gray-50 rounded-2xl p-4 text-center">
-                <div className="text-2xl font-black text-green-600">8</div>
+                <div className="text-2xl font-black text-green-600">
+                  {shortlist.length}
+                </div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Shortlisted</div>
              </div>
           </div>

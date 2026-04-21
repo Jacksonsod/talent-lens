@@ -81,6 +81,7 @@ export default function JobCard({ job, mode = "default", onViewDetails }: JobCar
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { shortlists } = useAppSelector((state) => state.screening);
+  const applicants = useAppSelector((state) => state.applicants.items.filter(a => a.jobId === job._id));
   const hasShortlist = shortlists[job._id] && shortlists[job._id].length > 0;
 
   const [loading, setLoading] = useState(false);
@@ -205,11 +206,15 @@ export default function JobCard({ job, mode = "default", onViewDetails }: JobCar
           {/* Middle: Mini Pipeline */}
           <div className="flex items-center gap-8 px-6 lg:border-x lg:border-gray-50">
             <div className="text-center">
-              <div className="text-sm font-black text-gray-900">{job.status === "Closed" ? Math.floor(job.shortlistSize * 4.2) : "—"}</div>
+              <div className="text-sm font-black text-gray-900">
+                {applicants.length}
+              </div>
               <div className="text-[10px] font-bold text-gray-400 uppercase">Applied</div>
             </div>
             <div className="text-center">
-              <div className="text-sm font-black text-blue-600">{job.status === "Closed" ? Math.floor(job.shortlistSize * 2.5) : "—"}</div>
+              <div className="text-sm font-black text-blue-600">
+                {shortlists[job._id]?.filter(r => r.status === "Completed").length || 0}
+              </div>
               <div className="text-[10px] font-bold text-gray-400 uppercase">Screened</div>
             </div>
             <div className="text-center">
