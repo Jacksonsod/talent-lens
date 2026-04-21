@@ -144,7 +144,7 @@ export default function ShortlistsPage() {
                       {job.roleTitle} Shortlist
                     </div>
                     <div className="text-[12px] text-text-muted mt-1 font-medium">
-                      AI Screening completed · Gemini 1.5 Pro
+                      AI Screening completed · Gemini AI
                     </div>
                   </Link>
                 );

@@ -125,7 +125,7 @@ export default function JobDetailsPage() {
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-lg" style={{ color: "var(--text)" }}>Step 2: AI Screening</h3>
-                  <p className="text-[12px]" style={{ color: "var(--text3)" }}>Phase 4: Run Gemini 1.5 Pro analysis</p>
+                  <p className="text-[12px]" style={{ color: "var(--text3)" }}>Phase 4: Run Gemini AI analysis</p>
                 </div>
               </div>
               <p className="text-[13px] mb-4" style={{ color: "var(--text2)" }}>

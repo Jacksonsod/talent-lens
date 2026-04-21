@@ -39,7 +39,7 @@ export default function ScreeningModal({ onComplete }: ScreeningModalProps) {
           Gemini AI Analysis
         </div>
         <div className="text-sm mb-6" style={{ color: "var(--text3)" }}>
-          Processing candidates with Gemini 1.5 Pro...
+          Processing candidates with Gemini AI...
         </div>
 
         {/* Progress Bar */}

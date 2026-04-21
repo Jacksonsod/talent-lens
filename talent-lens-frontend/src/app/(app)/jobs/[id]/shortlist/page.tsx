@@ -91,7 +91,7 @@ export default function ShortlistPage() {
             {job?.roleTitle ?? "Shortlist"}
           </h1>
           <p className="text-[13px] text-[var(--text3)]">
-            AI Screening completed · Reviewed {shortlist.length} applicants · Results ranked by Gemini 1.5 Pro
+            AI Screening completed · Reviewed {shortlist.length} applicants · Results ranked by Gemini AI
           </p>
         </div>
         <div className="flex items-center gap-2.5 mt-1">
@@ -156,7 +156,7 @@ export default function ShortlistPage() {
             <div className="text-[11.5px] text-[var(--text3)] mt-0.5 flex items-center gap-1.5">
               {job?.experienceLevel} · Target shortlist: {job?.shortlistSize ?? "—"} ·
               <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Gemini 1.5 Pro
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Gemini AI
               </span>
             </div>
           </div>
