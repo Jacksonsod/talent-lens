@@ -58,6 +58,8 @@ export default function ApplicantHubPage() {
     a.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const isDraft = job.status === "Draft" || job.status === "Closed";
+
   return (
     <>
       <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-up">
@@ -79,7 +81,9 @@ export default function ApplicantHubPage() {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div className="max-w-3xl">
               <div className="flex items-center gap-3 mb-4">
-                 <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
+                 <span className={`px-3 py-1 rounded-full backdrop-blur-md text-[10px] font-black uppercase tracking-wider border ${
+                   isDraft ? "bg-amber-500/20 text-amber-200 border-amber-500/30" : "bg-white/20 text-white border-white/10"
+                 }`}>
                    {job.status}
                  </span>
                  <span className="text-blue-200 text-sm font-medium flex items-center gap-1.5">
@@ -97,7 +101,7 @@ export default function ApplicantHubPage() {
             <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 shrink-0">
                <div className="text-center px-4">
                  <div className="text-3xl font-black">{applicants.length}</div>
-                 <div className="text-[10px] uppercase tracking-widest text-blue-200 font-bold mt-1">Total Apps</div>
+                 <div className="text-[10px] uppercase tracking-widest text-blue-200 font-bold mt-1">Total Applicants</div>
                </div>
                <div className="w-px h-12 bg-white/20" />
                <div className="text-center px-4">
@@ -108,6 +112,27 @@ export default function ApplicantHubPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Draft Warning Banner ─── */}
+      {isDraft && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <Zap size={24} className="text-amber-600 fill-amber-600" />
+          </div>
+          <div>
+            <h4 className="font-bold text-amber-900 text-sm">Action Required: Publish Job Posting</h4>
+            <p className="text-amber-700 text-xs mt-0.5">
+              This job is currently in Draft mode. You must finish the job setup and open it to enable applicant management and AI screening.
+            </p>
+          </div>
+          <button 
+            onClick={() => router.push(`/jobs/${id}/edit`)}
+            className="ml-auto px-4 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 transition-all"
+          >
+            Finish Job & Open →
+          </button>
+        </div>
+      )}
 
       {/* ─── Toolbar ─── */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -125,14 +150,22 @@ export default function ApplicantHubPage() {
          <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="flex bg-white border border-[var(--border2)] rounded-2xl p-1 shadow-sm w-full md:w-auto overflow-x-auto">
                <button 
-                 onClick={() => setShowManualAdd(true)}
-                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium text-sm transition-all whitespace-nowrap"
+                 onClick={() => !isDraft && setShowManualAdd(true)}
+                 disabled={isDraft}
+                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                   isDraft ? "opacity-40 cursor-not-allowed grayscale" : "hover:bg-gray-50 text-gray-700"
+                 }`}
+                 title={isDraft ? "Finish job to enable adding applicants" : ""}
                >
                  <UserPlus size={16} /> Add Manually
                </button>
                <button 
-                 onClick={() => setShowImport(true)}
-                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium text-sm transition-all whitespace-nowrap"
+                 onClick={() => !isDraft && setShowImport(true)}
+                 disabled={isDraft}
+                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                   isDraft ? "opacity-40 cursor-not-allowed grayscale" : "hover:bg-gray-50 text-gray-700"
+                 }`}
+                 title={isDraft ? "Finish job to enable importing applicants" : ""}
                >
                  <Upload size={16} /> Import Resumes/CSV
                </button>
@@ -140,8 +173,10 @@ export default function ApplicantHubPage() {
 
             <button 
               onClick={handleScreenAll}
-              disabled={screening || applicants.length === 0}
-              className="btn flex-1 md:flex-none h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 rounded-2xl whitespace-nowrap"
+              disabled={screening || applicants.length === 0 || isDraft}
+              className={`btn flex-1 md:flex-none h-12 px-6 rounded-2xl whitespace-nowrap transition-all ${
+                isDraft ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200" : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
+              }`}
             >
               {screening ? (
                 <svg className="animate-spin mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">

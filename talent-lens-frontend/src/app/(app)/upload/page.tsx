@@ -10,7 +10,7 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown } from "lucide-react";
+import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
 
@@ -36,8 +36,8 @@ export default function UploadPage() {
   useEffect(() => { dispatch(fetchJobs()); }, [dispatch]);
 
   const selectedJob = jobs.find(j => j._id === selectedJobId);
-  const openJobs = jobs.filter(j => j.status === "Open");
-  const filteredJobs = openJobs.filter(j =>
+  const selectableJobs = jobs.filter(j => j.status === "Open" || j.status === "Draft");
+  const filteredJobs = selectableJobs.filter(j =>
     j.roleTitle.toLowerCase().includes(jobSearch.toLowerCase())
   );
 
@@ -151,7 +151,7 @@ export default function UploadPage() {
                 {selectedJobId ? <CheckCircle size={13} /> : "1"}
               </div>
               <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Select target job posting</span>
-              <span className="ml-auto text-[11px] text-[var(--text3)]">{openJobs.length} jobs available</span>
+              <span className="ml-auto text-[11px] text-[var(--text3)]">{selectableJobs.length} jobs available</span>
             </div>
 
             {/* Combobox */}
@@ -207,18 +207,36 @@ export default function UploadPage() {
 
           {/* STEP 2: METHOD */}
           {selectedJobId && (
-            <>
-              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-[22px] h-[22px] rounded-full bg-blue-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">2</div>
-                  <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Choose upload method</span>
+            <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+              {(selectedJob?.status === "Draft" || selectedJob?.status === "Closed") ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Zap size={32} className="text-amber-600 fill-amber-600" />
+                  </div>
+                  <h3 className="font-display font-bold text-xl text-amber-900 mb-2">Job is in Draft Mode</h3>
+                  <p className="text-amber-700 text-sm max-w-md mx-auto mb-6 leading-relaxed">
+                    You cannot add participants or perform screening on a draft job. Please finish the job setup and publish it to &quot;Open&quot; status to make it ready for applicants.
+                  </p>
+                  <button 
+                    onClick={() => router.push(`/jobs/${selectedJobId}/edit`)}
+                    className="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold text-sm hover:bg-amber-700 transition-all shadow-lg shadow-amber-200 flex items-center gap-2 mx-auto"
+                  >
+                    Finish Job & Open →
+                  </button>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — Gemini extracts details automatically" />
-                  <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green" icon="📊" title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
-                  <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple" icon="👤" title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-[22px] h-[22px] rounded-full bg-blue-600 flex items-center justify-center text-[11px] font-bold text-white shrink-0">2</div>
+                      <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Choose upload method</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — Gemini extracts details automatically" />
+                      <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green" icon="📊" title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
+                      <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple" icon="👤" title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
+                    </div>
+                  </div>
 
               {/* UPLOAD ZONE */}
               {mode !== "profile" && (
@@ -310,7 +328,9 @@ export default function UploadPage() {
                   {loading ? "Extracting with Gemini..." : `Upload & Extract ${files.length} PDF${files.length !== 1 ? "s" : ""} with Gemini`}
                 </button>
               )}
-            </>
+                </>
+              )}
+            </div>
           )}
         </div>
 
