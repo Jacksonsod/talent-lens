@@ -248,7 +248,7 @@ export default function JobCard({ job, mode = "default", onViewDetails }: JobCar
             <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
               {hasShortlist || job.status === "Closed" ? (
                 <button
-                  className="h-10 px-5 rounded-xl bg-gray-900 text-white text-[13px] font-bold hover:bg-black transition-all shadow-lg shadow-gray-200"
+                  className="h-10 px-5 rounded-xl bg-emerald-600 text-white text-[13px] font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
                   onClick={handleViewResults}
                 >
                   View Results
