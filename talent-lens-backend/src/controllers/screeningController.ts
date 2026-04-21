@@ -503,10 +503,21 @@ export const getJobShortlist = async (req: Request, res: Response): Promise<void
         .sort({ matchScore: -1 })
         .limit(shortlistSize);
 
+    const incompleteApplicants = await Applicant.find({ jobId, isResumeIncomplete: true })
+      .select('firstName lastName resumeFetchError');
+
+    const incompleteSummary = incompleteApplicants.length > 0
+      ? `We skipped ${incompleteApplicants.length} candidates due to incomplete or unreadable resumes: ${incompleteApplicants
+          .map((a) => `${a.firstName} ${a.lastName} (${a.resumeFetchError || 'Missing core history/identity'})`)
+          .join(', ')}`
+      : 'All resumes were processed successfully.';
+
     res.status(200).json({
       jobId,
       shortlistSize,
       count: results.length,
+      incompleteSummary,
+      incompleteApplicants,
       results,
     });
   } catch (error) {

@@ -22,6 +22,9 @@ const normalizeStringArray = (value: unknown): string[] | null => {
 
 const ownsJob = (jobUserId: unknown, userId: string): boolean => String(jobUserId) === userId;
 
+const isValidShortlistSize = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value > 0;
+
 export const createJob = async (req: Request, res: Response): Promise<void> => {
   const userId = getAuthenticatedUserId(req);
 
@@ -59,8 +62,8 @@ export const createJob = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (shortlistSize !== undefined && shortlistSize !== 10 && shortlistSize !== 20) {
-      res.status(400).json({ message: 'shortlistSize must be either 10 or 20.' });
+    if (shortlistSize !== undefined && !isValidShortlistSize(shortlistSize)) {
+      res.status(400).json({ message: 'shortlistSize must be a positive integer.' });
       return;
     }
 
@@ -190,8 +193,8 @@ export const updateJob = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (shortlistSize !== undefined) {
-      if (shortlistSize !== 10 && shortlistSize !== 20) {
-        res.status(400).json({ message: 'shortlistSize must be either 10 or 20.' });
+      if (!isValidShortlistSize(shortlistSize)) {
+        res.status(400).json({ message: 'shortlistSize must be a positive integer.' });
         return;
       }
       job.shortlistSize = shortlistSize;
