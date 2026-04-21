@@ -36,11 +36,21 @@ export default function JobsPage() {
   const activeJobs = jobs.filter((j) => j.status === "Open" || j.status === "Screening");
   const draftJobs = jobs.filter((j) => j.status === "Draft");
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search]);
+  
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.roleTitle.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === "All" || job.status === filter;
     return matchesSearch && matchesFilter;
   });
+
+  const totalPages = Math.ceil(filteredJobs.length / pageSize);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   if (loading && jobs.length === 0) return <LoadingSpinner />;
 
@@ -132,14 +142,51 @@ export default function JobsPage() {
 
       {/* ─── Jobs List ─────────────────────────────── */}
       <div className="space-y-4">
-        {filteredJobs.length > 0 ? (
-          filteredJobs.map((job) => (
-            <JobCard 
-              key={job._id} 
-              job={job} 
-              onViewDetails={() => setSelectedJob(job)} 
-            />
-          ))
+        {paginatedJobs.length > 0 ? (
+          <>
+            {paginatedJobs.map((job) => (
+              <JobCard 
+                key={job._id} 
+                job={job} 
+                onViewDetails={() => setSelectedJob(job)} 
+              />
+            ))}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-12">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2.5 rounded-xl border border-gray-100 bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-all ${
+                        currentPage === i + 1 
+                          ? "bg-gray-900 text-white shadow-md" 
+                          : "bg-white text-gray-500 hover:bg-gray-50 border border-gray-100"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2.5 rounded-xl border border-gray-100 bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
