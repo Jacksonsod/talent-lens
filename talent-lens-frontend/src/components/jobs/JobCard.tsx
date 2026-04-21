@@ -255,9 +255,14 @@ export default function JobCard({ job, mode = "default", onViewDetails }: JobCar
                 </button>
               ) : (
                 <button
-                  className="h-10 px-5 rounded-xl bg-blue-600 text-white text-[13px] font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
+                  className={`h-10 px-5 rounded-xl text-[13px] font-bold transition-all shadow-lg flex items-center gap-2 ${
+                    job.status === "Draft" 
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200" 
+                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200"
+                  }`}
                   onClick={handleRunScreening}
-                  disabled={loading}
+                  disabled={loading || job.status === "Draft"}
+                  title={job.status === "Draft" ? "Cannot screen a draft job. Publish it first." : ""}
                 >
                   {loading ? "Screening..." : "Run Screening"}
                 </button>

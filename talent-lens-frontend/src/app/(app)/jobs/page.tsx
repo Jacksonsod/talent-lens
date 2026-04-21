@@ -34,7 +34,7 @@ export default function JobsPage() {
   const totalApplicantsCount = useAppSelector(s => s.applicants.items.length);
 
   const activeJobs = jobs.filter((j) => j.status === "Open" || j.status === "Screening");
-  const screenedJobs = jobs.filter((j) => j.status === "Closed");
+  const draftJobs = jobs.filter((j) => j.status === "Draft");
   
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.roleTitle.toLowerCase().includes(search.toLowerCase());
@@ -77,12 +77,12 @@ export default function JobsPage() {
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
-            <CheckCircle2 size={22} />
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <Briefcase size={22} />
           </div>
           <div>
-            <div className="text-2xl font-black">{screenedJobs.length}</div>
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Completed</div>
+            <div className="text-2xl font-black">{draftJobs.length}</div>
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Draft Jobs</div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
@@ -110,7 +110,7 @@ export default function JobsPage() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          {["All", "Open", "Screening", "Closed"].map((s) => (
+          {["All", "Open", "Draft", "Closed"].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
