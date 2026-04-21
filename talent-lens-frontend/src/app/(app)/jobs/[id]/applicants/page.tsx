@@ -58,7 +58,8 @@ export default function ApplicantHubPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-up">
+    <>
+      <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-up">
       
       {/* ─── Premium Header ─── */}
       <div className="relative overflow-hidden rounded-[2rem] bg-[#2563EB] text-white p-8 md:p-10 shadow-xl shadow-blue-900/10">
@@ -283,6 +284,8 @@ export default function ApplicantHubPage() {
         </div>
       )}
 
+      </div>
+
       {/* Modals */}
       <ProfileWizardModal 
         open={showManualAdd}
@@ -300,7 +303,6 @@ export default function ApplicantHubPage() {
         jobId={id}
         onClose={() => setShowImport(false)}
       />
-
-    </div>
+    </>
   );
 }

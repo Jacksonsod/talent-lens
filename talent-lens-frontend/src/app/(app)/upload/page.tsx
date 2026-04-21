@@ -132,16 +132,17 @@ export default function UploadPage() {
   if (jobsLoading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-[1060px] mx-auto pb-20 animate-fade-up">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
+    <>
+      <div className="max-w-[1060px] mx-auto pb-20 animate-fade-up">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-5">
 
-        {/* ─── LEFT COLUMN ─── */}
-        <div>
-          {/* PAGE HEADER */}
-          <div className="mb-5">
-            <h1 className="font-display font-extrabold text-[24px] tracking-tight text-[var(--text)] mb-1">Upload Candidates</h1>
-            <p className="text-[13px] text-[var(--text3)]">Add applicants to any job via PDF resumes, CSV spreadsheet, or manual profile entry — Gemini extracts and structures data automatically.</p>
-          </div>
+          {/* ─── LEFT COLUMN ─── */}
+          <div>
+            {/* PAGE HEADER */}
+            <div className="mb-5">
+              <h1 className="font-display font-extrabold text-[24px] tracking-tight text-[var(--text)] mb-1">Upload Candidates</h1>
+              <p className="text-[13px] text-[var(--text3)]">Add applicants to any job via PDF resumes, CSV spreadsheet, or manual profile entry — Gemini extracts and structures data automatically.</p>
+            </div>
 
           {/* STEP 1: JOB SELECTOR */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 mb-3.5 focus-within:border-blue-300 transition-colors">
@@ -352,6 +353,8 @@ export default function UploadPage() {
         </div>
       </div>
 
+      </div>
+
       {/* Profile Wizard Modal */}
       <ProfileWizardModal
         open={wizardOpen}
@@ -360,7 +363,7 @@ export default function UploadPage() {
         onClose={() => { setWizardOpen(false); setMode("pdf"); }}
         onSuccess={() => { setWizardOpen(false); router.push(`/jobs/${selectedJobId}/applicants`); }}
       />
-    </div>
+    </>
   );
 }
 

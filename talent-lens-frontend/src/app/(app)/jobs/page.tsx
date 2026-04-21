@@ -55,13 +55,14 @@ export default function JobsPage() {
   if (loading && jobs.length === 0) return <LoadingSpinner />;
 
   return (
-    <div className="stagger max-w-[1200px] mx-auto pb-20">
-      {/* ─── Header Section ─────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-bricolage), sans-serif" }}>
-            Job Postings
-          </h1>
+    <>
+      <div className="stagger max-w-[1200px] mx-auto pb-20">
+        {/* ─── Header Section ─────────────────────────── */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ fontFamily: "var(--font-bricolage), sans-serif" }}>
+              Job Postings
+            </h1>
           <p className="text-gray-500 text-sm">
             Manage your recruitment pipeline and track candidate progress.
           </p>
@@ -200,6 +201,8 @@ export default function JobsPage() {
         )}
       </div>
 
+      </div>
+
       {/* ─── Modals ────────────────────────────────── */}
       {selectedJob && (
         <JobDetailsModal 
@@ -208,6 +211,6 @@ export default function JobsPage() {
           onClose={() => setSelectedJob(null)} 
         />
       )}
-    </div>
+    </>
   );
 }
