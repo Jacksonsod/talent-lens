@@ -18,7 +18,8 @@ export default function ApplicantHubPage() {
   const dispatch = useAppDispatch();
 
   const job = useAppSelector(s => s.jobs.selected);
-  const { items: applicants, loading: appsLoading } = useAppSelector(s => s.applicants);
+  const { items: allApplicants, loading: appsLoading } = useAppSelector(s => s.applicants);
+  const applicants = allApplicants.filter(a => a.jobId === id);
   
   const [screening, setScreening] = useState(false);
   const [search, setSearch] = useState("");
