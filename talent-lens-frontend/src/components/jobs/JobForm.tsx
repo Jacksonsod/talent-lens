@@ -138,6 +138,31 @@ export default function JobForm() {
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!formData.roleTitle) return toast.error("Please enter a role title to save a draft.");
+
+    setLoading(true);
+    try {
+      const payload: CreateJobInput = {
+        roleTitle: formData.roleTitle,
+        description: formData.description || "Draft job description.",
+        experienceLevel: formData.experienceLevel || "Mid-level",
+        shortlistSize: formData.shortlistSize,
+        status: "Draft",
+        requiredSkills,
+        requirements,
+      };
+
+      await dispatch(createJob(payload)).unwrap();
+      toast.success("Draft saved successfully!");
+      router.push("/jobs");
+    } catch (err) {
+      toast.error("Failed to save draft.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-[1100px] mx-auto animate-fade-up">
       
@@ -383,8 +408,12 @@ export default function JobForm() {
                 </>
               )}
             </button>
-            <button className="h-[48px] px-6 bg-transparent border-[1.5px] border-[var(--border2)] rounded-xl text-[13.5px] font-semibold text-[var(--text2)] hover:bg-[var(--surface3)] transition-colors whitespace-nowrap">
-              Save as Draft
+            <button 
+              onClick={handleSaveDraft}
+              disabled={loading}
+              className="h-[48px] px-6 bg-transparent border-[1.5px] border-[var(--border2)] rounded-xl text-[13.5px] font-semibold text-[var(--text2)] hover:bg-[var(--surface3)] transition-colors whitespace-nowrap disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save as Draft"}
             </button>
             <button className="h-[48px] px-6 bg-transparent border-[1.5px] border-red-200 text-red-600 rounded-xl text-[13.5px] font-semibold hover:bg-red-50 transition-colors whitespace-nowrap" onClick={() => router.push('/jobs')}>
               Cancel
