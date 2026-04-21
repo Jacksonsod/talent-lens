@@ -332,24 +332,7 @@ export default function UploadPage() {
             ))}
           </div>
 
-          {/* Recent Uploads */}
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
-            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">🕐 Recent Uploads</div>
-            {[
-              { dot: "bg-emerald-500", text: <><strong>5 candidates</strong> added to Senior Full Stack via CSV</>, time: "2 hours ago" },
-              { dot: "bg-blue-500", text: <><strong>Alice Mutoni</strong> added via PDF resume</>, time: "5 hours ago" },
-              { dot: "bg-amber-500", text: <><strong>3 PDFs</strong> bulk-imported to Junior AI Engineers</>, time: "1 day ago" },
-              { dot: "bg-emerald-500", text: <><strong>12 candidates</strong> imported to Backend Developer</>, time: "3 days ago" },
-            ].map((r, i) => (
-              <div key={i} className="flex gap-2.5 py-2.5 border-b border-[var(--border)] last:border-0 items-start">
-                <div className={`w-[7px] h-[7px] rounded-full shrink-0 mt-1.5 ${r.dot}`} />
-                <div className="flex-1">
-                  <div className="text-[12px] text-[var(--text2)] leading-snug">{r.text}</div>
-                  <div className="text-[10.5px] text-[var(--text3)] mt-0.5">{r.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+
 
           {/* Tips */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
