@@ -156,7 +156,7 @@ export default function JobDetailsModal({ job, isOpen, onClose }: JobDetailsModa
              </button>
              <button 
                onClick={() => router.push(`/jobs/${job._id}/applicants`)}
-               className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-black transition-all shadow-lg shadow-gray-200"
+               className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
              >
                View More
                <Users size={16} />
