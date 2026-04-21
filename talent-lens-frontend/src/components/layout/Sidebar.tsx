@@ -60,6 +60,12 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (href: string) => {
+    // If we are on a specific job's shortlist, highlight "Shortlists" instead of "Jobs"
+    if (pathname.includes("/shortlist")) {
+      if (href === "/shortlists") return true;
+      if (href === "/jobs") return false;
+    }
+
     if (pathname === href) return true;
     return pathname.startsWith(href + "/");
   };
