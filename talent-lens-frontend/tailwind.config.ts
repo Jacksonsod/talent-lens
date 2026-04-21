@@ -20,7 +20,7 @@ const config: Config = {
           surface3: "#D8DCE6",
         },
         brand: {
-          blue:          "#2F6FE4",                    // ✅ exact Umurava CTA blue
+          blue:          "#2F6FE4",                    // exact Umurava CTA blue
           "blue-dim":    "rgba(47, 111, 228, 0.12)",
           "blue-mid":    "rgba(47, 111, 228, 0.22)",
           cobalt:        "#1A47C8",                    // sidebar deep cobalt

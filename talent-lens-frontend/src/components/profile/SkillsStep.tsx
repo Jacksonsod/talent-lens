@@ -78,7 +78,7 @@ export default function SkillsStep({ data, onChange }: Props) {
           Skills & Languages
         </h2>
         <p className="text-[13.5px] mt-1.5 leading-relaxed" style={{ color: "var(--text3)" }}>
-          Add each skill with proficiency level. Gemini uses skill levels to weight the match score.
+          Add each skill with proficiency level. The AI uses skill levels to weight the match score.
         </p>
       </div>
 

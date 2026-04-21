@@ -59,8 +59,16 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const [openGroup, setOpenGroup] = useState<string | null>("/jobs");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const isActive = (href: string) => {
+  const isActive = (href: string, exact = false) => {
     if (pathname === href) return true;
+    if (exact) return false;
+
+    // If we are on a specific job's shortlist, highlight "Shortlists" instead of "Jobs"
+    if (pathname.includes("/shortlist")) {
+      if (href === "/shortlists") return true;
+      if (href === "/jobs") return false;
+    }
+
     return pathname.startsWith(href + "/");
   };
 
@@ -190,11 +198,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
                         className="flex items-center gap-2 rounded-lg text-[13px] font-medium transition-all duration-150"
                         style={{
                           padding: "9px 12px",
-                          color: isActive(child.href) ? "#FFFFFF" : "rgba(255,255,255,0.72)",
-                          background: isActive(child.href) ? "rgba(255,255,255,0.18)" : "transparent",
+                          color: isActive(child.href, true) ? "#FFFFFF" : "rgba(255,255,255,0.72)",
+                          background: isActive(child.href, true) ? "rgba(255,255,255,0.18)" : "transparent",
                         }}
                       >
-                         <span className={`w-1 h-1 rounded-full ${isActive(child.href) ? 'bg-white' : 'bg-white/40'}`} />
+                         <span className={`w-1 h-1 rounded-full ${isActive(child.href, true) ? 'bg-white' : 'bg-white/40'}`} />
                          {child.label}
                       </Link>
                     ))}

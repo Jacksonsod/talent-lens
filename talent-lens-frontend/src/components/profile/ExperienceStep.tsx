@@ -59,7 +59,7 @@ export default function ExperienceStep({ data, onChange }: Props) {
           Work Experience
         </h2>
         <p className="text-[13.5px] mt-1.5 leading-relaxed" style={{ color: "var(--text3)" }}>
-          Full employment history. The more detail provided, the better Gemini can evaluate this candidate.
+          Full employment history. The more detail provided, the better the AI can evaluate this candidate.
         </p>
       </div>
 

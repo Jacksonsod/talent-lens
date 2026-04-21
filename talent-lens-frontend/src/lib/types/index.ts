@@ -133,6 +133,7 @@ export interface ScreeningState {
 export interface UIState {
   sidebarOpen: boolean;
   theme: "dark" | "light";
+  searchTerm: string;
 }
 
 // ─── USER PROFILE ────────────────────────────

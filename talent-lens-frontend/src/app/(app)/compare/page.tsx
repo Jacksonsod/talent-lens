@@ -31,10 +31,16 @@ function CompareContent() {
     }
   }, [jobId, dispatch, shortlist]);
   
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const pageSize = 10;
+  
   if (!jobId) {
     if (jobsLoading) return <div className="text-center py-20 text-[var(--text3)] font-bold">Loading Screening Data...</div>;
     const screenedJobs = jobs.filter(j => j.status === "Closed" || j.status === "Screening" || (j as any).status === "screened");
     
+    const totalPages = Math.ceil(screenedJobs.length / pageSize);
+    const paginatedJobs = screenedJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
       <div className="stagger pb-20 max-w-5xl mx-auto">
         <div className="mb-8">
@@ -49,11 +55,48 @@ function CompareContent() {
             action={{ label: "Go to Dashboard", href: "/dashboard" }}
           />
         ) : (
-          <div className="flex flex-col gap-3">
-            {screenedJobs.map(job => (
-               <JobCard key={job._id} job={job} mode="compare" />
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-3">
+              {paginatedJobs.map(job => (
+                 <JobCard key={job._id} job={job} mode="compare" />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-12">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2.5 rounded-xl border border-[var(--border)] bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-all ${
+                        currentPage === i + 1 
+                          ? "bg-gray-900 text-white" 
+                          : "bg-white text-gray-500 hover:bg-gray-50 border border-gray-100"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2.5 rounded-xl border border-[var(--border)] bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     );

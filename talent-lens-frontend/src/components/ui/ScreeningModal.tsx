@@ -36,10 +36,10 @@ export default function ScreeningModal({ onComplete }: ScreeningModalProps) {
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300">
       <div className="bg-[var(--surface)] border border-[var(--border2)] rounded-2xl p-8 w-[480px] shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="font-display font-bold text-xl mb-1" style={{ color: "var(--text)" }}>
-          Gemini AI Analysis
+          System AI Analysis
         </div>
         <div className="text-sm mb-6" style={{ color: "var(--text3)" }}>
-          Processing candidates with Gemini 1.5 Pro...
+          Processing candidates with System AI...
         </div>
 
         {/* Progress Bar */}

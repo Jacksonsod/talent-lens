@@ -9,9 +9,23 @@ interface EmptyStateProps {
   title: string;
   description: string;
   action?: { label: string; href: string };
+  compact?: boolean;
 }
 
-export function EmptyState({ title, description, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action, compact = false }: EmptyStateProps) {
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-center">
+        <div className="text-[13px] font-bold mb-1" style={{ color: "var(--text)" }}>{title}</div>
+        <div className="text-[11px] text-gray-400 italic mb-3">{description}</div>
+        {action && (
+          <Link href={action.href} className="text-[11px] font-bold text-[#2563EB] hover:underline">
+            {action.label}
+          </Link>
+        )}
+      </div>
+    );
+  }
   return (
     <div
       className="flex flex-col items-center justify-center py-16 text-center rounded-xl border animate-fade-up"

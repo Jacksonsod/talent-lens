@@ -1,27 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* ── Page surfaces ── */
-  --bg: #F0F2F5;          /* warm light grey — matches Umurava page bg */
+  /* -- Page surfaces -- */
+  --bg: #F0F2F5;          /* warm light grey - matches Umurava page bg */
   --surface: #FFFFFF;
   --surface2: #F0F2F5;   /* subtle inner backgrounds */
   --surface3: #D8DCE6;   /* borders, dividers */
 
-  /* ── Borders ── */
+  /* -- Borders -- */
   --border:  rgba(0,0,0,0.06);
   --border2: rgba(0,0,0,0.11);
 
-  /* ── Text ── */
+  /* -- Text -- */
   --text:  #1A1F36;      /* blue-tinted near-black (Umurava heading tone) */
   --text2: #6B7480;      /* secondary labels */
   --text3: #9EA6B4;      /* muted / placeholder */
 
-  /* ── Sidebar ── */
-  --sidebar-bg:        #2563EB;   /* royal blue — exact Umurava sidebar */
+  /* -- Sidebar -- */
+  --sidebar-bg:        #2563EB;   /* royal blue - exact Umurava sidebar */
   --sidebar-active-bg: rgba(255,255,255,0.13);  /* glass pill on active item */
   --sidebar-active-border: rgba(255,255,255,0.22);
   --sidebar-text:      rgba(255,255,255,0.72);  /* inactive nav text */
@@ -29,15 +29,15 @@
   --sidebar-section:   rgba(255,255,255,0.38);  /* section label */
   --sidebar-divider:   rgba(255,255,255,0.10);
 
-  /* ── Brand accent (matches Umurava CTA / active card) ── */
-  --blue:        #2F6FE4;  /* ✅ already matched Umurava */
+  /* -- Brand accent -- */
+  --blue:        #2F6FE4;  /* already matched Umurava */
   --blue-dim:    rgba(47, 111, 228, 0.12);
   --blue-mid:    rgba(47, 111, 228, 0.22);
   --accent:      #2F6FE4;
   --accent-dim:  rgba(47, 111, 228, 0.14);
   --accent-hover:#245FCD;
 
-  /* ── Semantic colours ── */
+  /* -- Semantic colours -- */
   --green:      #10B981;
   --green-dim:  rgba(16, 185, 129, 0.12);
   --green-mid:  rgba(16, 185, 129, 0.25);
@@ -46,7 +46,7 @@
   --red:        #EF4444;
   --red-dim:    rgba(239, 68, 68, 0.12);
 
-  /* ── Badge / chip tints ── */
+  /* -- Badge / chip tints -- */
   --chip-blue-bg:   #E8F0FE;
   --chip-blue-text: #2F6FE4;
   --chip-green-bg:  #E6F7F1;

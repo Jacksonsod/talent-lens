@@ -101,7 +101,10 @@ const applicantsSlice = createSlice({
       })
       .addCase(fetchApplicantsByJob.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload; // Usually returns all for job
+        // Merge without duplicates - filter out old items for this jobId and add new ones
+        const jobId = action.meta.arg;
+        const otherApplicants = state.items.filter(a => a.jobId !== jobId);
+        state.items = [...otherApplicants, ...action.payload];
       })
       .addCase(fetchApplicantsByJob.rejected, (state, action) => {
         state.loading = false;
