@@ -52,9 +52,14 @@ function getJobIcon(title: string): IconConfig {
 export default function ShortlistsPage() {
   const dispatch = useAppDispatch();
   const { items: jobs, loading } = useAppSelector((s) => s.jobs);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const pageSize = 10;
   
   // A shortlist exists for any job that has completed screening
   const screenedJobs = jobs.filter(j => j.status === "Closed" || j.status === "screened" as any);
+  
+  const totalPages = Math.ceil(screenedJobs.length / pageSize);
+  const paginatedJobs = screenedJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   useEffect(() => {
     dispatch(fetchJobs());
@@ -65,9 +70,17 @@ export default function ShortlistsPage() {
   return (
     <div className="stagger">
       <div className="mb-6">
-        <h2 className="text-xs font-semibold tracking-widest uppercase mb-4 text-text-muted">
-          Recent Shortlists
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xs font-semibold tracking-widest uppercase text-text-muted">
+            Recent Shortlists
+          </h2>
+          {totalPages > 1 && (
+            <div className="text-[12px] font-bold text-text-muted">
+              Page {currentPage} of {totalPages}
+            </div>
+          )}
+        </div>
+
         {screenedJobs.length === 0 ? (
           <EmptyState
             title="Your Shortlists"
@@ -75,37 +88,74 @@ export default function ShortlistsPage() {
             action={{ label: "Go to Dashboard", href: "/dashboard" }}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {screenedJobs.map((job) => {
-              const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
-              
-              return (
-                <Link
-                  key={job._id}
-                  href={`/jobs/${job._id}/shortlist`}
-                  className="p-5 rounded-xl border border-bg-surface3 bg-bg-surface hover:border-brand-accent transition-all group"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paginatedJobs.map((job) => {
+                const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
+                
+                return (
+                  <Link
+                    key={job._id}
+                    href={`/jobs/${job._id}/shortlist`}
+                    className="p-5 rounded-xl border border-bg-surface3 bg-bg-surface hover:border-brand-accent transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-sm"
+                        style={{ background: bg, border: `1.5px solid ${border}` }}
+                      >
+                        <Icon size={20} color={color} strokeWidth={1.8} />
+                      </div>
+                      <div className="text-[12px] text-text-muted font-medium">
+                        Target: {job.shortlistSize || 10} candidates
+                      </div>
+                    </div>
+                    <div className="font-display font-bold text-lg text-text group-hover:text-brand-accent transition-colors mt-3">
+                      {job.roleTitle} Shortlist
+                    </div>
+                    <div className="text-[12px] text-text-muted mt-1 font-medium">
+                      AI Screening completed · Gemini 1.5 Pro
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-10">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-6 py-2.5 rounded-xl border border-[var(--border)] bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-sm"
-                      style={{ background: bg, border: `1.5px solid ${border}` }}
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-all ${
+                        currentPage === i + 1 
+                          ? "bg-gray-900 text-white" 
+                          : "bg-white text-gray-500 hover:bg-gray-50 border border-gray-100"
+                      }`}
                     >
-                      <Icon size={20} color={color} strokeWidth={1.8} />
-                    </div>
-                    <div className="text-[12px] text-text-muted font-medium">
-                      Target: {job.shortlistSize || 10} candidates
-                    </div>
-                  </div>
-                  <div className="font-display font-bold text-lg text-text group-hover:text-brand-accent transition-colors mt-3">
-                    {job.roleTitle} Shortlist
-                  </div>
-                  <div className="text-[12px] text-text-muted mt-1 font-medium">
-                    AI Screening completed · Gemini 1.5 Pro
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2.5 rounded-xl border border-[var(--border)] bg-white font-bold text-[13px] hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

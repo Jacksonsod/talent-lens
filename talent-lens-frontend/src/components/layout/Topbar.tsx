@@ -180,14 +180,6 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Notification Bell */}
-        <button 
-          className="relative w-[36px] h-[36px] flex items-center justify-center rounded-[9px] bg-gray-50 border border-[var(--border)] text-gray-500 hover:text-[var(--accent)] hover:bg-gray-100 transition-all"
-        >
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-        </button>
-
         <Link
           href="/jobs/new"
           className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#2563EB] text-white hover:bg-blue-700 transition-all font-semibold text-xs"
