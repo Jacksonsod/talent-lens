@@ -6,7 +6,19 @@ import { useAppDispatch } from "@/lib/hooks/redux";
 import { createJob, updateJob } from "@/lib/slices/jobsSlice";
 import toast from "react-hot-toast";
 import { CreateJobInput, Job, JobStatus } from "@/lib/types";
-import { Sparkles, X, Target, Zap, ClipboardList, Trophy, Save } from "lucide-react";
+import { 
+  Sparkles, 
+  X, 
+  Target, 
+  Zap, 
+  ClipboardList, 
+  Trophy, 
+  Save, 
+  Eye, 
+  Lightbulb, 
+  PenTool, 
+  GraduationCap
+} from "lucide-react";
 
 const SKILL_SUGGESTIONS: Record<string, string[]> = {
   'full stack': ['React', 'Next.js', 'Node.js', 'TypeScript', 'MongoDB', 'REST API', 'Git', 'Docker'],
@@ -229,9 +241,9 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
           
           {/* SECTION 1: Role Details */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 transition-colors focus-within:border-blue-400">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-[10px] bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <Target size={18} />
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border-[1.5px] border-blue-200 flex items-center justify-center shrink-0 shadow-sm">
+                <Target size={20} strokeWidth={1.8} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Role Details</h2>
@@ -286,9 +298,9 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
 
           {/* SECTION 2: Required Skills */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 transition-colors focus-within:border-blue-400">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-[10px] bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                <Zap size={18} />
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 border-[1.5px] border-purple-200 flex items-center justify-center shrink-0 shadow-sm">
+                <Zap size={20} strokeWidth={1.8} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Required Skills</h2>
@@ -355,9 +367,9 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
 
           {/* SECTION 3: Requirements */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 transition-colors focus-within:border-blue-400">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-[10px] bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <ClipboardList size={18} />
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border-[1.5px] border-emerald-200 flex items-center justify-center shrink-0 shadow-sm">
+                <ClipboardList size={20} strokeWidth={1.8} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">General Requirements</h2>
@@ -389,9 +401,9 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
 
           {/* SECTION 4: Shortlist Settings */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 transition-colors focus-within:border-blue-400">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-[10px] bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <Trophy size={18} />
+            <div className="flex items-center gap-3.5 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border-[1.5px] border-amber-200 flex items-center justify-center shrink-0 shadow-sm">
+                <Trophy size={20} strokeWidth={1.8} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-[15px] text-[var(--text)]">Shortlist Settings</h2>
@@ -460,34 +472,34 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
           
           {/* AI Readiness Score Panel */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[18px_20px]">
-            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-3.5">
-              <span className="text-[14px]">✦</span> AI Readiness Score
+            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-3.5 text-slate-900">
+              <Sparkles size={16} className="text-slate-800" fill="currentColor" /> AI Readiness Score
             </h3>
             <div className="text-center py-2 pb-4">
               <div className={`font-display font-extrabold text-[44px] leading-none tracking-[-2px] transition-colors duration-500 ${textColor}`}>
                 {score}
               </div>
               <div className="text-[12px] text-[var(--text3)] mt-1 font-medium">
-                {score >= 80 ? '🎯 Excellent — ready for screening' :
-                 score >= 60 ? '⚡ Good — add more detail to improve' :
-                 score >= 30 ? '📝 Getting there — keep filling in' :
+                {score >= 80 ? 'Excellent — ready for screening' :
+                 score >= 60 ? 'Good — add more detail to improve' :
+                 score >= 30 ? 'Getting there — keep filling in' :
                  'Fill in the form to improve'}
               </div>
             </div>
 
             <div className="flex flex-col gap-2.5 mt-2">
-              <ReadinessFactor icon="🎯" iconBg="bg-blue-50" label="Role title" score={f1} color="bg-blue-600" />
-              <ReadinessFactor icon="📝" iconBg="bg-amber-50" label="Description" score={f2} color="bg-amber-500" />
-              <ReadinessFactor icon="⚡" iconBg="bg-purple-50" label="Skills added" score={f3} color="bg-purple-500" />
-              <ReadinessFactor icon="📋" iconBg="bg-emerald-50" label="Requirements" score={f4} color="bg-emerald-500" />
-              <ReadinessFactor icon="🎓" iconBg="bg-blue-50" label="Exp. level" score={f5} color="bg-blue-600" />
+              <ReadinessFactor icon={<Target size={12} strokeWidth={2.5} />} iconBg="bg-rose-50 text-rose-500 border border-rose-200" label="Role title" score={f1} color="bg-slate-300" />
+              <ReadinessFactor icon={<PenTool size={12} strokeWidth={2.5} />} iconBg="bg-amber-50 text-amber-500 border border-amber-200" label="Description" score={f2} color="bg-slate-300" />
+              <ReadinessFactor icon={<Zap size={12} strokeWidth={2.5} />} iconBg="bg-purple-50 text-purple-500 border border-purple-200" label="Skills added" score={f3} color="bg-slate-300" />
+              <ReadinessFactor icon={<ClipboardList size={12} strokeWidth={2.5} />} iconBg="bg-emerald-50 text-emerald-500 border border-emerald-200" label="Requirements" score={f4} color="bg-slate-300" />
+              <ReadinessFactor icon={<GraduationCap size={12} strokeWidth={2.5} />} iconBg="bg-slate-50 text-slate-500 border border-slate-200" label="Exp. level" score={f5} color="bg-slate-300" />
             </div>
           </div>
 
           {/* Live Preview Panel */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[18px_20px]">
-            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-4">
-              <span className="text-[14px]">👁</span> System Will See
+            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-4 text-slate-900">
+              <Eye size={16} className="text-slate-800" /> System Will See
             </h3>
             
             <PreviewField label="Role" empty={!formData.roleTitle}>
@@ -528,8 +540,8 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
 
           {/* Tips Panel */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[18px_20px]">
-            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-3.5">
-              <span className="text-[14px]">💡</span> Screening Tips
+            <h3 className="font-display font-bold text-[13px] flex items-center gap-2 mb-3.5 text-slate-900">
+              <Lightbulb size={16} className="text-amber-400" fill="currentColor" strokeWidth={1} /> Screening Tips
             </h3>
             <div className="flex flex-col gap-3">
               <TipItem dot="bg-blue-600">Add <strong>5–10 specific skills</strong> — System AI weights each one against candidate profiles</TipItem>
@@ -553,8 +565,8 @@ function ReadinessFactor({ icon, iconBg, label, score, color }: any) {
       <div className="w-[60px] h-1 bg-[var(--surface3)] rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ease-out ${color}`} style={{ width: `${score}%` }} />
       </div>
-      <div className="text-[14px] ml-0.5 text-gray-300 w-4 text-center">
-        {score === 100 ? <span className="text-green-500">✅</span> : score > 0 ? <span className="text-amber-500">⏳</span> : '○'}
+      <div className="ml-1 text-slate-300 flex items-center justify-center">
+        <div className={`w-3.5 h-3.5 rounded-full border-[1.5px] ${score === 100 ? 'border-blue-600 bg-blue-600' : score > 0 ? 'border-slate-300 bg-transparent' : 'border-slate-200 bg-transparent'}`} />
       </div>
     </div>
   );
