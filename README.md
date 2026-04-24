@@ -1,6 +1,30 @@
-# TalentLens Backend API
+# TalentLens - Umurava AI Hackathon Submission (Team Arc Lab)
 
-TalentLens backend for the AI HR Hackathon, built with Express, Mongoose, JWT, and TypeScript.
+An AI-powered talent profile screening engine designed to augment recruiter decision-making with transparent reasoning, native OCR, and resilient architecture.
+
+## Alignment with Hackathon Goals (The Problem & Solution)
+
+TalentLens addresses the practical bottleneck of high-volume hiring: recruiters must evaluate large numbers of unstructured resumes quickly, fairly, and with traceable logic.
+
+- **Handling Unstructured Data**: We use Gemini 1.5 Flash native vision with inline PDF processing so the system can read complex, scanned resumes without depending on heavy third-party OCR stacks.
+- **Standardization**: Parsed outputs are mapped into the Umurava Talent Profile Schema, converting noisy documents into consistent structured profiles for objective comparison.
+- **AI Clarity & Human-in-the-Loop**: TalentLens does not auto-reject candidates. It generates `matchScore`, detailed `scoreBreakdown`, and an `incompleteSummary` that explains exactly why a profile was flagged (for example `404 Not Found` or `Unreadable Scan`). Final hiring decisions remain with the recruiter.
+
+## Engineering Quality & Product Thinking
+
+Our backend is built for production-like resilience under real recruitment load.
+
+- **Zero-Data-Entry Pipeline**: Recruiters can upload files or provide resume URLs; the API handles Axios buffer fetching, Gemini extraction, schema mapping, and persistence in one flow.
+- **Failure-Tolerant Processing**: Strict `try/catch` boundaries prevent pipeline collapse. If URL fetching fails or core identity/history fields are missing, processing continues safely.
+- **Resilience Tracking**: The system marks such profiles with `isResumeIncomplete`, stores exact diagnostics in `resumeFetchError`, and keeps batch operations running so one bad resume never blocks shortlist generation.
+
+## Technical Stack
+
+- Node.js
+- Express
+- TypeScript
+- Mongoose + MongoDB
+- Google Generative AI (Gemini Flash)
 
 ## Quick start
 
@@ -47,11 +71,10 @@ Authorization: Bearer {{token}}
 
 Suggested request body modes in Postman:
 
-- `POST /api/auth/register` → `raw` JSON
 - `POST /api/auth/login` → `raw` JSON
 - `POST /api/jobs` and `PUT /api/jobs/:id` → `raw` JSON
 - `POST /api/applicants/umurava` → `raw` JSON
-- `POST /api/applicants/external` → `form-data`
+- `POST /api/applicants/external` → `form-data` (file key must be exactly `resume`)
 - `POST /api/applicants/bulk-upload` → `form-data`
 - Screening routes → no body required unless noted
 
@@ -76,19 +99,7 @@ Authorization: Bearer <jwt_token>
 
 ### Auth (`/api/auth`)
 
-- `POST /register` - register recruiter
 - `POST /login` - login recruiter
-
-Register body example:
-
-```json
-{
-  "firstName": "Jackson",
-  "lastName": "Doe",
-  "email": "jackson.doe@example.com",
-  "password": "StrongPass123!"
-}
-```
 
 Login body example:
 
@@ -117,11 +128,9 @@ Common auth errors:
 
 - `400` missing required fields
 - `401` invalid credentials/token
-- `409` user already exists
 
 Postman sample:
 
-- `POST {{baseUrl}}/api/auth/register`
 - `POST {{baseUrl}}/api/auth/login`
 
 ### Jobs (`/api/jobs`)
@@ -131,6 +140,7 @@ Postman sample:
 - `GET /:id` - get one job (owner only)
 - `PUT /:id` - update job fields (owner only)
 - `PATCH /:id/status` - update only status (owner only)
+- `DELETE /:id` - delete one job (owner only)
 
 Create/Update body example:
 
@@ -141,10 +151,12 @@ Create/Update body example:
   "requirements": ["Node.js", "TypeScript"],
   "requiredSkills": ["Express", "MongoDB"],
   "experienceLevel": "Mid-level",
-  "shortlistSize": 10,
+  "shortlistSize": 15,
   "status": "Draft"
 }
 ```
+
+`shortlistSize` accepts any positive integer.
 
 Valid job status values:
 
@@ -160,6 +172,7 @@ Postman sample:
 - `GET {{baseUrl}}/api/jobs/{{jobId}}`
 - `PUT {{baseUrl}}/api/jobs/{{jobId}}`
 - `PATCH {{baseUrl}}/api/jobs/{{jobId}}/status`
+- `DELETE {{baseUrl}}/api/jobs/{{jobId}}`
 
 ### Applicants (`/api/applicants`)
 
@@ -200,11 +213,11 @@ External applicant request uses `multipart/form-data`.
 
 - In Postman, set **Body** to `form-data`
 
-- File field: `resume`
+- File field: `resume` (exact key name required)
 - Allowed type: `application/pdf`
 - Max size: `5MB`
 - `jobId` must be sent as a text field in the same form data
-- If a PDF is uploaded, the raw text is extracted and stored in `profileData.rawResumeText`
+- If a PDF is uploaded, Gemini extracts structured profile data and a snapshot is stored in `profileData.rawResumeText`
 - If you want to test the URL-based flow, send `resumeUrl` and leave `resume` empty
 
 External applicant form fields example:
@@ -320,6 +333,7 @@ Shortlist behavior summary:
 - Uses job `shortlistSize` (defaults to `10`)
 - Returns only `Completed` screenings
 - Sorts by `matchScore` descending
+- Also returns `incompleteSummary` and `incompleteApplicants` so recruiters can see exactly which candidates were skipped and why (for example, URL access denied or missing core resume data)
 
 Screening detail behavior summary:
 
@@ -348,430 +362,9 @@ Common screening errors:
 - `404` job/applicant/screening result not found
 - `500` Gemini/parsing/internal failure
 
-## Sample data for each API endpoint
-
-Use `{{baseUrl}}` and `Authorization: Bearer {{token}}` for protected routes.
-
-### Auth endpoints
-
-`POST {{baseUrl}}/api/auth/register`
-
-```json
-{
-  "firstName": "Jackson",
-  "lastName": "Doe",
-  "email": "jackson.doe@example.com",
-  "password": "StrongPass123!"
-}
-```
-
-Sample success response (`201`):
-
-```json
-{
-  "token": "<jwt_token>",
-  "user": {
-    "firstName": "Jackson",
-    "lastName": "Doe",
-    "email": "jackson.doe@example.com",
-    "role": "recruiter"
-  }
-}
-```
-
-`POST {{baseUrl}}/api/auth/login`
-
-```json
-{
-  "email": "jackson.doe@example.com",
-  "password": "StrongPass123!"
-}
-```
-
-Sample success response (`200`):
-
-```json
-{
-  "token": "<jwt_token>",
-  "user": {
-    "firstName": "Jackson",
-    "lastName": "Doe",
-    "email": "jackson.doe@example.com",
-    "role": "recruiter"
-  }
-}
-```
-
-### Job endpoints
-
-`POST {{baseUrl}}/api/jobs`
-
-```json
-{
-  "roleTitle": "Backend Engineer",
-  "description": "Build and maintain API services.",
-  "requirements": ["Node.js", "TypeScript"],
-  "requiredSkills": ["Express", "MongoDB"],
-  "experienceLevel": "Mid-level",
-  "shortlistSize": 10,
-  "status": "Draft"
-}
-```
-
-Sample success response (`201`):
-
-```json
-{
-  "_id": "<job_id>",
-  "createdBy": "<user_id>",
-  "roleTitle": "Backend Engineer",
-  "description": "Build and maintain API services.",
-  "requirements": ["Node.js", "TypeScript"],
-  "requiredSkills": ["Express", "MongoDB"],
-  "experienceLevel": "Mid-level",
-  "shortlistSize": 10,
-  "status": "Draft",
-  "createdAt": "2026-04-07T10:30:00.000Z",
-  "updatedAt": "2026-04-07T10:30:00.000Z"
-}
-```
-
-`GET {{baseUrl}}/api/jobs`
-
-Sample success response (`200`):
-
-```json
-[
-  {
-    "_id": "<job_id>",
-    "roleTitle": "Backend Engineer",
-    "status": "Draft"
-  }
-]
-```
-
-`GET {{baseUrl}}/api/jobs/{{jobId}}`
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "{{jobId}}",
-  "roleTitle": "Backend Engineer",
-  "description": "Build and maintain API services.",
-  "requirements": ["Node.js", "TypeScript"],
-  "requiredSkills": ["Express", "MongoDB"],
-  "experienceLevel": "Mid-level",
-  "shortlistSize": 10,
-  "status": "Draft"
-}
-```
-
-`PUT {{baseUrl}}/api/jobs/{{jobId}}`
-
-```json
-{
-  "roleTitle": "Senior Backend Engineer",
-  "description": "Design and maintain backend services.",
-  "requirements": ["Node.js", "TypeScript", "System Design"],
-  "requiredSkills": ["Express", "MongoDB", "Redis"],
-  "experienceLevel": "Senior",
-  "shortlistSize": 20
-}
-```
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "{{jobId}}",
-  "roleTitle": "Senior Backend Engineer",
-  "shortlistSize": 20,
-  "status": "Draft"
-}
-```
-
-`PATCH {{baseUrl}}/api/jobs/{{jobId}}/status`
-
-```json
-{
-  "status": "Open"
-}
-```
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "{{jobId}}",
-  "status": "Open"
-}
-```
-
-### Applicant endpoints
-
-`POST {{baseUrl}}/api/applicants/umurava`
-
-```json
-{
-  "jobId": "{{jobId}}",
-  "firstName": "Aline",
-  "lastName": "Mukamana",
-  "email": "aline@example.com",
-  "phone": "+250700000000",
-  "skills": ["Node.js", "TypeScript"],
-  "yearsOfExperience": 4,
-  "educationLevel": "Bachelor",
-  "currentRole": "Software Engineer",
-  "profileData": {
-    "umuravaId": "umr_123"
-  }
-}
-```
-
-Sample success response (`201`):
-
-```json
-{
-  "_id": "<applicant_id>",
-  "jobId": "{{jobId}}",
-  "source": "Umurava",
-  "firstName": "Aline",
-  "lastName": "Mukamana",
-  "email": "aline@example.com",
-  "status": "pending"
-}
-```
-
-`POST {{baseUrl}}/api/applicants/external` (form-data)
-
-Text fields:
-
-- `jobId`: `{{jobId}}`
-- `firstName`: `Eric`
-- `lastName`: `Niyonzima`
-- `email`: `eric@example.com`
-- `skills`: `MongoDB` (repeat key for multiple values)
-- `yearsOfExperience`: `3`
-- `educationLevel`: `Bachelor`
-- `currentRole`: `Backend Developer` (optional)
-- `resumeUrl`: `https://example.com/resumes/eric.pdf` (optional)
-
-File field:
-
-- `resume`: attach PDF (`application/pdf`, max `5MB`)
-
-Sample success response (`201`):
-
-```json
-{
-  "_id": "<applicant_id>",
-  "jobId": "{{jobId}}",
-  "source": "External",
-  "firstName": "Eric",
-  "lastName": "Niyonzima",
-  "email": "eric@example.com",
-  "profileData": {
-    "rawResumeText": "...extracted PDF text..."
-  },
-  "status": "pending"
-}
-```
-
-`POST {{baseUrl}}/api/applicants/bulk-upload` (form-data)
-
-Text fields:
-
-- `jobId`: `{{jobId}}`
-
-File fields:
-
-- `resumes`: attach one or more PDF files (repeat the same key)
-
-Sample success response (`200`):
-
-```json
-{
-  "message": "Bulk upload and extraction completed.",
-  "successfulUploads": 2,
-  "failedUploads": 1,
-  "results": [
-    {
-      "_id": "<applicant_id_1>",
-      "jobId": "{{jobId}}",
-      "source": "External",
-      "firstName": "Aline",
-      "lastName": "Mukamana",
-      "email": "aline@example.com",
-      "status": "pending"
-    },
-    {
-      "_id": "<applicant_id_2>",
-      "jobId": "{{jobId}}",
-      "source": "External",
-      "firstName": "Eric",
-      "lastName": "Niyonzima",
-      "email": "eric@example.com",
-      "status": "pending"
-    }
-  ],
-  "errors": [
-    {
-      "fileName": "corrupted.pdf",
-      "error": "Failed to process file."
-    }
-  ]
-}
-```
-
-`GET {{baseUrl}}/api/applicants/job/{{jobId}}`
-
-Sample success response (`200`):
-
-```json
-[
-  {
-    "_id": "<applicant_id>",
-    "jobId": "{{jobId}}",
-    "firstName": "Aline",
-    "lastName": "Mukamana",
-    "status": "pending"
-  }
-]
-```
-
-`GET {{baseUrl}}/api/applicants/{{applicantId}}`
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "{{applicantId}}",
-  "jobId": {
-    "_id": "{{jobId}}",
-    "roleTitle": "Backend Engineer"
-  },
-  "firstName": "Aline",
-  "lastName": "Mukamana",
-  "email": "aline@example.com",
-  "status": "pending"
-}
-```
-
-### Screening endpoints
-
-`POST {{baseUrl}}/api/screening/job/{{jobId}}/applicant/{{applicantId}}/screen`
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "<screening_result_id>",
-  "jobId": "{{jobId}}",
-  "applicantId": "{{applicantId}}",
-  "status": "Completed",
-  "matchScore": 84,
-  "scoreBreakdown": {
-    "skills": 88,
-    "experience": 80,
-    "education": 78,
-    "relevance": 90
-  },
-  "strengths": ["Strong TypeScript fundamentals"],
-  "gaps": ["Limited distributed systems exposure"],
-  "reasoning": "The applicant has strong matching backend skills and relevant experience.",
-  "finalRecommendation": "Hire"
-}
-```
-
-`POST {{baseUrl}}/api/screening/job/{{jobId}}/screen-all`
-
-Sample success response (`200`):
-
-```json
-{
-  "jobId": "{{jobId}}",
-  "totalScreened": 2,
-  "totalFailed": 0,
-  "results": [
-    {
-      "_id": "<screening_result_id_1>",
-      "status": "Completed",
-      "matchScore": 91
-    },
-    {
-      "_id": "<screening_result_id_2>",
-      "status": "Completed",
-      "matchScore": 79
-    }
-  ]
-}
-```
-
-`GET {{baseUrl}}/api/screening/job/{{jobId}}/shortlist`
-
-Sample success response (`200`):
-
-```json
-{
-  "jobId": "{{jobId}}",
-  "shortlistSize": 10,
-  "count": 2,
-  "results": [
-    {
-      "_id": "<screening_result_id_1>",
-      "matchScore": 91,
-      "status": "Completed",
-      "applicantId": {
-        "_id": "<applicant_id>",
-        "firstName": "Aline",
-        "lastName": "Mukamana"
-      }
-    }
-  ]
-}
-```
-
-`GET {{baseUrl}}/api/screening/{{screeningResultId}}`
-
-Sample success response (`200`):
-
-```json
-{
-  "_id": "{{screeningResultId}}",
-  "jobId": {
-    "_id": "{{jobId}}",
-    "roleTitle": "Backend Engineer",
-    "description": "Build and maintain API services."
-  },
-  "applicantId": {
-    "_id": "{{applicantId}}",
-    "firstName": "Aline",
-    "lastName": "Mukamana",
-    "email": "aline@example.com"
-  },
-  "status": "Completed",
-  "matchScore": 84,
-  "scoreBreakdown": {
-    "skills": 88,
-    "experience": 80,
-    "education": 78,
-    "relevance": 90
-  },
-  "strengths": ["Strong TypeScript fundamentals"],
-  "gaps": ["Limited distributed systems exposure"],
-  "reasoning": "The applicant has strong matching backend skills and relevant experience.",
-  "finalRecommendation": "Hire"
-}
-```
-
 ## Quick test flow (curl)
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H 'Content-Type: application/json' \
-  -d '{"firstName":"Jackson","lastName":"Doe","email":"jackson.doe@example.com","password":"StrongPass123!"}'
-
 curl -X POST http://localhost:5000/api/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"jackson.doe@example.com","password":"StrongPass123!"}'
@@ -781,6 +374,13 @@ Use the returned token for protected routes:
 
 ```bash
 curl -X GET http://localhost:5000/api/jobs \
+  -H 'Authorization: Bearer <jwt_token>'
+```
+
+Delete a job:
+
+```bash
+curl -X DELETE http://localhost:5000/api/jobs/<job_id> \
   -H 'Authorization: Bearer <jwt_token>'
 ```
 
@@ -848,5 +448,4 @@ If startup fails with Atlas connection errors:
 - verify DB user credentials and read/write permissions
 
 If MongoDB is unreachable, server startup exits until connectivity is fixed.
-Backennd workflows added
 
