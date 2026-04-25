@@ -18,6 +18,19 @@ Our backend is built for production-like resilience under real recruitment load.
 - **Failure-Tolerant Processing**: Strict `try/catch` boundaries prevent pipeline collapse. If URL fetching fails or core identity/history fields are missing, processing continues safely.
 - **Resilience Tracking**: The system marks such profiles with `isResumeIncomplete`, stores exact diagnostics in `resumeFetchError`, and keeps batch operations running so one bad resume never blocks shortlist generation.
 
+## System Architecture
+
+```mermaid
+graph TD
+    User((Recruiter)) -->|Manage Jobs & Applicants| Frontend[Frontend - Next.js]
+    Frontend -->|REST API| Backend[Backend - Express/TS]
+    Backend -->|Identity & Storage| MongoDB[(MongoDB)]
+    Backend -->|Native PDF Processing| Gemini[Gemini 1.5 Flash]
+    Gemini -->|Structured JSON| Backend
+    Backend -->|Screening & Scoring| Gemini
+    Backend -->|Analytics| Dashboard[Dashboard View]
+```
+
 ## Technical Stack
 
 - Node.js
@@ -362,7 +375,22 @@ Common screening errors:
 - `404` job/applicant/screening result not found
 - `500` Gemini/parsing/internal failure
 
-## Quick test flow (curl)
+## AI Decision Flow
+
+TalentLens uses a multi-stage AI pipeline to ensure accuracy and transparency:
+
+1.  **Native Extraction**: Gemini 1.5 Flash reads raw PDF bytes. It extracts skills, experience, and education, mapping them to the structured Umurava schema.
+2.  **Validation**: The system checks for "Core History" (identity and experience). If a resume is unreadable or missing these fields, it is flagged as `isResumeIncomplete` rather than silently ignored.
+3.  **Contextual Screening**: The AI evaluates the candidate against specific `requirements` and `requiredSkills` of the job. It considers years of experience, education level, and skill relevance.
+4.  **Scoring & Reasoning**: Each screening produces a `matchScore` (0-100) and a `scoreBreakdown`. Crucially, the AI provides a `reasoning` string explaining its logic.
+5.  **Heuristic Resilience**: If the Gemini API is unreachable (e.g., quota exceeded), the system falls back to a deterministic heuristic scorer to estimate alignment, ensuring recruiters always have a baseline.
+
+## Assumptions & Limitations
+
+-   **AI Accuracy**: While Gemini 1.5 Flash is highly capable, some edge-case formatting in resumes may lead to parsing errors.
+-   **Rate Limiting**: The free tier of Gemini has strict rate limits. The system uses a batching strategy (5 applicants per batch) and artificial delays to maintain stability.
+-   **File Types**: Native PDF text extraction is preferred. Scanned images are processed via vision, but results may vary based on image quality.
+-   **Language**: The current prompting and evaluation logic is optimized for English-language resumes.
 
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \
