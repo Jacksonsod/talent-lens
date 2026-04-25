@@ -41,30 +41,53 @@ graph TD
 
 ## Quick start
 
-1. Create local env file from template.
+### 1. Backend Setup
 
 ```bash
-cp talent-lens-backend/.env.example talent-lens-backend/.env
-```
+# Navigate to backend
+cd talent-lens-backend
 
-2. Fill in the backend env values:
+# Create env file
+cp .env.example .env
 
-- `MONGO_URI`
-- `JWT_SECRET`
-- `GEMINI_API_KEY` (required for AI extraction/screening)
-- `FRONTEND_URL` (allowed CORS origin(s), comma-separated if you need more than one)
-- `GEMINI_MODEL` (optional override)
-- `PORT` (optional; defaults to `5000`)
-
-The backend also supports optional tuning values for MongoDB timeouts and upload limits.
-3. Install and run.
-
-```bash
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-Base URL (default): `http://localhost:5000`
+**Backend Environment Variables (.env):**
+- `MONGO_URI`: Your MongoDB connection string.
+- `JWT_SECRET`: Secret key for authentication.
+- `GEMINI_API_KEY`: Required for AI extraction/screening.
+- `FRONTEND_URL`: Allowed CORS origin (e.g., `http://localhost:3000`).
+- `PORT`: Server port (defaults to `5000`).
+
+### 2. Frontend Setup
+
+```bash
+# Navigate to frontend
+cd talent-lens-frontend
+
+# Create env file
+cp .env.example .env
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+**Frontend Environment Variables (.env):**
+- `NEXT_PUBLIC_API_URL`: The URL of your running backend (e.g., `http://localhost:5000`).
+
+---
+
+**Default Access:**
+- Backend API: `http://localhost:5000`
+- Frontend UI: `http://localhost:3000`
 
 ## Postman setup
 
