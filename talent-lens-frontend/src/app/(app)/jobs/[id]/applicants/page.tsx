@@ -8,7 +8,7 @@ import { fetchJobById, updateJobStatus } from "@/lib/slices/jobsSlice";
 import { screenAll } from "@/lib/slices/screeningSlice";
 import toast from "react-hot-toast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Users, Zap, Plus, Upload, UserPlus, Search, ArrowLeft, Mail, Briefcase, GraduationCap, MapPin } from "lucide-react";
+import { Users, Zap, Plus, Upload, UserPlus, Search, ArrowLeft, Mail, ScrollText, GraduationCap, MapPin } from "lucide-react";
 import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
 import ImportCandidateModal from "@/components/applicants/ImportCandidateModal";
 
@@ -87,7 +87,7 @@ export default function ApplicantHubPage() {
                    {job.status}
                  </span>
                  <span className="text-blue-200 text-sm font-medium flex items-center gap-1.5">
-                   <Briefcase size={14} /> {job.experienceLevel}
+                   <ScrollText size={14} /> {job.experienceLevel}
                  </span>
               </div>
               <h1 className="font-display font-extrabold text-4xl md:text-5xl tracking-tight leading-tight mb-2">
@@ -281,7 +281,7 @@ export default function ApplicantHubPage() {
                        <span className="truncate">{app.email}</span>
                      </div>
                      <div className="flex items-center gap-3 text-[13px] text-gray-600">
-                       <Briefcase size={14} className="text-gray-400 shrink-0" />
+                       <ScrollText size={14} className="text-gray-400 shrink-0" />
                        {app.yearsOfExperience} Years Exp.
                      </div>
                      <div className="flex items-center gap-3 text-[13px] text-gray-600">

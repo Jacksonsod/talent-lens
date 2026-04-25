@@ -10,7 +10,7 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown, Zap, TrendingUp, Lightbulb } from "lucide-react";
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown, Zap, TrendingUp, Lightbulb, ScrollText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
 
@@ -160,7 +160,7 @@ export default function UploadPage() {
                 className={`flex items-center gap-2.5 px-3.5 py-3 border-[1.5px] rounded-xl cursor-pointer transition-all ${selectedJob ? "border-blue-300 bg-blue-50" : "border-[var(--border2)] bg-[var(--surface2)] hover:border-blue-300"}`}
                 onClick={() => { if (!selectedJob) setJobOpen(o => !o); }}
               >
-                <span className="text-[18px]">{selectedJob ? "💻" : "🔍"}</span>
+                <span className="text-blue-600">{selectedJob ? <ScrollText size={18} /> : "🔍"}</span>
                 {selectedJob ? (
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-[14px] text-[var(--text)] truncate">{selectedJob.roleTitle}</div>
@@ -191,7 +191,9 @@ export default function UploadPage() {
                       <div className="p-6 text-center text-[13px] text-[var(--text3)]">No jobs match your search</div>
                     ) : filteredJobs.map(j => (
                       <div key={j._id} className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-[var(--border)] transition-colors" onClick={() => { setSelectedJobId(j._id); setJobSearch(""); setJobOpen(false); }}>
-                        <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[14px] shrink-0">💻</div>
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <ScrollText size={14} />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-medium text-[var(--text)] truncate">{j.roleTitle}</div>
                           <div className="text-[11px] text-[var(--text3)]">{j.experienceLevel} · {j.status}</div>
@@ -232,9 +234,47 @@ export default function UploadPage() {
                       <span className="text-[11px] font-bold text-[var(--text3)] uppercase tracking-wider">Choose upload method</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2.5">
-                      <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended" icon="📄" title="PDF Resumes" desc="Multiple PDFs — System AI extracts details automatically" />
-                      <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green" icon="📊" title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
-                      <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple" icon="👤" title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
+                      <ModeTab active={mode === "pdf"} onClick={() => { setMode("pdf"); dispatch(clearParsedPreview()); }} color="blue" badge="Recommended"
+                        icon={
+                          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                            <rect x="6" y="3" width="28" height="36" rx="3" fill="#EF4444" />
+                            <path d="M34 3L42 11H36a2 2 0 01-2-2V3z" fill="#FCA5A5" />
+                            <path d="M34 3v6a2 2 0 002 2h6" stroke="#B91C1C" strokeWidth="1" />
+                            <rect x="11" y="18" width="16" height="2" rx="1" fill="white" fillOpacity="0.9" />
+                            <rect x="11" y="23" width="20" height="2" rx="1" fill="white" fillOpacity="0.7" />
+                            <rect x="11" y="28" width="13" height="2" rx="1" fill="white" fillOpacity="0.5" />
+                            <rect x="11" y="11" width="8" height="3" rx="1.5" fill="#FEE2E2" />
+                          </svg>
+                        }
+                        title="PDF Resumes" desc="Multiple PDFs — System AI extracts details automatically" />
+                      <ModeTab active={mode === "csv"} onClick={() => { setMode("csv"); setFiles([]); }} color="green"
+                        icon={
+                          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                            <rect x="4" y="4" width="40" height="40" rx="4" fill="#10B981" />
+                            <rect x="4" y="4" width="40" height="12" rx="4" fill="#059669" />
+                            <rect x="10" y="9" width="8" height="2" rx="1" fill="white" fillOpacity="0.8" />
+                            <rect x="22" y="9" width="8" height="2" rx="1" fill="white" fillOpacity="0.6" />
+                            <rect x="34" y="9" width="6" height="2" rx="1" fill="white" fillOpacity="0.6" />
+                            <rect x="10" y="20" width="8" height="6" rx="1" fill="#D1FAE5" />
+                            <rect x="22" y="20" width="8" height="6" rx="1" fill="#A7F3D0" />
+                            <rect x="34" y="20" width="6" height="6" rx="1" fill="#6EE7B7" />
+                            <rect x="10" y="30" width="8" height="6" rx="1" fill="#A7F3D0" />
+                            <rect x="22" y="30" width="8" height="6" rx="1" fill="#D1FAE5" />
+                            <rect x="34" y="30" width="6" height="6" rx="1" fill="#A7F3D0" />
+                          </svg>
+                        }
+                        title="CSV / Excel" desc="Spreadsheet import with preview before upload" />
+                      <ModeTab active={mode === "profile"} onClick={() => { setMode("profile"); setWizardOpen(true); }} color="purple"
+                        icon={
+                          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+                            <circle cx="24" cy="24" r="22" fill="#7C3AED" />
+                            <circle cx="24" cy="18" r="7" fill="#DDD6FE" />
+                            <path d="M8 38c0-8.837 7.163-12 16-12s16 3.163 16 12" fill="#C4B5FD" />
+                            <circle cx="36" cy="12" r="7" fill="#059669" />
+                            <path d="M33 12l2 2 4-4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        }
+                        title="Structured Profile" desc="Full 7-step wizard for a single candidate" />
                     </div>
                   </div>
 
@@ -391,12 +431,12 @@ export default function UploadPage() {
   );
 }
 
-function ModeTab({ active, onClick, color, badge, icon, title, desc }: { active: boolean; onClick: () => void; color: string; badge?: string; icon: string; title: string; desc: string; }) {
+function ModeTab({ active, onClick, color, badge, icon, title, desc }: { active: boolean; onClick: () => void; color: string; badge?: string; icon: React.ReactNode; title: string; desc: string; }) {
   const colors: Record<string, string> = { blue: "border-blue-400 bg-blue-50", green: "border-emerald-400 bg-emerald-50", purple: "border-purple-400 bg-purple-50" };
   return (
     <div onClick={onClick} className={`relative p-[14px_16px] rounded-xl border-[1.5px] cursor-pointer transition-all ${active ? colors[color] : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border2)]"}`}>
       {badge && <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-600 text-white uppercase tracking-wider">{badge}</span>}
-      <div className="text-[20px] mb-2">{icon}</div>
+      <div className="mb-2.5">{icon}</div>
       <div className="font-bold text-[13px] text-[var(--text)] mb-0.5">{title}</div>
       <div className="text-[11px] text-[var(--text3)] leading-snug">{desc}</div>
     </div>

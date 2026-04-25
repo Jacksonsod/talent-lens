@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { setSearchTerm } from "@/lib/slices/uiSlice";
-import { Search, Bell, Plus, Menu, Briefcase, User, ChevronRight } from "lucide-react";
+import { Search, Bell, Plus, Menu, ScrollText, User, ChevronRight } from "lucide-react";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -122,7 +122,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                         className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors group text-left"
                       >
                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                          <Briefcase size={14} />
+                          <ScrollText size={14} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-bold text-gray-700 truncate">{job.roleTitle}</div>

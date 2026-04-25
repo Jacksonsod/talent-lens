@@ -28,30 +28,53 @@ Our backend is built for production-like resilience under real recruitment load.
 
 ## Quick start
 
-1. Create local env file from template.
+### 1. Backend Setup
 
 ```bash
-cp talent-lens-backend/.env.example talent-lens-backend/.env
-```
+# Navigate to backend
+cd talent-lens-backend
 
-2. Fill in the backend env values:
+# Create env file
+cp .env.example .env
 
-- `MONGO_URI`
-- `JWT_SECRET`
-- `GEMINI_API_KEY` (required for AI extraction/screening)
-- `FRONTEND_URL` (allowed CORS origin(s), comma-separated if you need more than one)
-- `GEMINI_MODEL` (optional override)
-- `PORT` (optional; defaults to `5000`)
-
-The backend also supports optional tuning values for MongoDB timeouts and upload limits.
-3. Install and run.
-
-```bash
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-Base URL (default): `http://localhost:5000`
+**Backend Environment Variables (.env):**
+- `MONGO_URI`: Your MongoDB connection string.
+- `JWT_SECRET`: Secret key for authentication.
+- `GEMINI_API_KEY`: Required for AI extraction/screening.
+- `FRONTEND_URL`: Allowed CORS origin (e.g., `http://localhost:3000`).
+- `PORT`: Server port (defaults to `5000`).
+
+### 2. Frontend Setup
+
+```bash
+# Navigate to frontend
+cd talent-lens-frontend
+
+# Create env file
+cp .env.example .env
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+**Frontend Environment Variables (.env):**
+- `NEXT_PUBLIC_API_URL`: The URL of your running backend (e.g., `http://localhost:5000`).
+
+---
+
+**Default Access:**
+- Backend API: `http://localhost:5000`
+- Frontend UI: `http://localhost:3000`
 
 ## Postman setup
 
@@ -362,7 +385,22 @@ Common screening errors:
 - `404` job/applicant/screening result not found
 - `500` Gemini/parsing/internal failure
 
-## Quick test flow (curl)
+## AI Decision Flow
+
+TalentLens uses a multi-stage AI pipeline to ensure accuracy and transparency:
+
+1.  **Native Extraction**: Gemini 1.5 Flash reads raw PDF bytes. It extracts skills, experience, and education, mapping them to the structured Umurava schema.
+2.  **Validation**: The system checks for "Core History" (identity and experience). If a resume is unreadable or missing these fields, it is flagged as `isResumeIncomplete` rather than silently ignored.
+3.  **Contextual Screening**: The AI evaluates the candidate against specific `requirements` and `requiredSkills` of the job. It considers years of experience, education level, and skill relevance.
+4.  **Scoring & Reasoning**: Each screening produces a `matchScore` (0-100) and a `scoreBreakdown`. Crucially, the AI provides a `reasoning` string explaining its logic.
+5.  **Heuristic Resilience**: If the Gemini API is unreachable (e.g., quota exceeded), the system falls back to a deterministic heuristic scorer to estimate alignment, ensuring recruiters always have a baseline.
+
+## Assumptions & Limitations
+
+-   **AI Accuracy**: While Gemini 1.5 Flash is highly capable, some edge-case formatting in resumes may lead to parsing errors.
+-   **Rate Limiting**: The free tier of Gemini has strict rate limits. The system uses a batching strategy (5 applicants per batch) and artificial delays to maintain stability.
+-   **File Types**: Native PDF text extraction is preferred. Scanned images are processed via vision, but results may vary based on image quality.
+-   **Language**: The current prompting and evaluation logic is optimized for English-language resumes.
 
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \

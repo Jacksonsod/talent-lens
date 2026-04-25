@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  Briefcase,
+  ScrollText,
   ListChecks,
   GitCompare,
-  Upload,
+  UploadCloud,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   {
     label: "Jobs",
     href: "/jobs",
-    icon: Briefcase,
+    icon: ScrollText,
     badge: "3",
     children: [
       { label: "All Jobs",  href: "/jobs" },
@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   },
   { label: "Shortlists", href: "/shortlists", icon: ListChecks },
   { label: "Compare",    href: "/compare",    icon: GitCompare },
-  { label: "Upload CVs", href: "/upload",     icon: Upload },
+  { label: "Upload CVs", href: "/upload",     icon: UploadCloud },
 ];
 
 interface SidebarProps {
