@@ -128,10 +128,16 @@ Login body example:
 
 ```json
 {
-  "email": "jackson.doe@example.com",
-  "password": "StrongPass123!"
+  "email": "edison@gmail.com",
+  "password": "Admin@123"
 }
 ```
+
+#### Sample Test Accounts
+| Email | Password | Role |
+|---|---|---|
+| `edison@gmail.com` | `Admin@123` | Recruiter |
+| `jacksonbimenyimana3@gmail.com` | `Admin@123` | Recruiter |
 
 Success response shape:
 
