@@ -18,19 +18,6 @@ Our backend is built for production-like resilience under real recruitment load.
 - **Failure-Tolerant Processing**: Strict `try/catch` boundaries prevent pipeline collapse. If URL fetching fails or core identity/history fields are missing, processing continues safely.
 - **Resilience Tracking**: The system marks such profiles with `isResumeIncomplete`, stores exact diagnostics in `resumeFetchError`, and keeps batch operations running so one bad resume never blocks shortlist generation.
 
-## System Architecture
-
-```mermaid
-graph TD
-    User((Recruiter)) -->|Manage Jobs & Applicants| Frontend[Frontend - Next.js]
-    Frontend -->|REST API| Backend[Backend - Express/TS]
-    Backend -->|Identity & Storage| MongoDB[(MongoDB)]
-    Backend -->|Native PDF Processing| Gemini[Gemini 1.5 Flash]
-    Gemini -->|Structured JSON| Backend
-    Backend -->|Screening & Scoring| Gemini
-    Backend -->|Analytics| Dashboard[Dashboard View]
-```
-
 ## Technical Stack
 
 - Node.js
