@@ -26,6 +26,21 @@ Our backend is built for production-like resilience under real recruitment load.
 - Mongoose + MongoDB
 - Google Generative AI (Gemini Flash)
 
+## Architecture diagram
+https://drive.google.com/drive/folders/14g8y5uaxj6WgstPcrYo3enNs7WLd6X_K?usp=sharing
+
+## Assumptions and Limitations
+
+**Assumptions:**
+- **Format Dependency:** The system assumes resumes are provided in PDF format or standard image formats supported by Gemini's native vision.
+- **AI Availability:** The architecture assumes stable uptime and sufficient quota from the Google Generative AI API (handling rate limits gracefully via retry logic).
+- **Job Definitions:** Screening accuracy relies on recruiters providing clear, structured job descriptions and requirements.
+
+**Limitations:**
+- **Encrypted Documents:** PDFs protected by DRM or passwords cannot be parsed by the AI and will automatically trigger the `isResumeIncomplete` fallback.
+- **Third-Party Bot Protections:** Resume URLs hosted on platforms with strict anti-bot walls (e.g., restricted Google Drive links or Slack attachments) cannot be fetched directly. The system traps these as `403` or `404` errors and safely logs them for the recruiter.
+- **Context Window Limits:** Exceptionally long documents (e.g., 20+ page academic CVs) may experience truncation or degraded schema extraction due to LLM context window constraints.
+
 ## Quick start
 
 ### 1. Backend Setup
