@@ -274,3 +274,40 @@ export const updateJobStatus = async (req: Request, res: Response): Promise<void
   }
 };
 
+export const deleteJob = async (req: Request, res: Response): Promise<void> => {
+  const userId = getAuthenticatedUserId(req);
+
+  if (!userId) {
+    res.status(401).json({ message: 'Not authorized.' });
+    return;
+  }
+
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      res.status(404).json({ message: 'Job not found.' });
+      return;
+    }
+
+    if (!ownsJob(job.createdBy, userId)) {
+      res.status(403).json({ message: 'You do not have permission to delete this job.' });
+      return;
+    }
+
+    await job.deleteOne();
+    res.status(200).json({ message: 'Job deleted successfully.' });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'CastError') {
+      res.status(404).json({ message: 'Job not found.' });
+      return;
+    }
+
+    if (error instanceof Error) {
+      console.error('Delete job error:', error.message);
+    }
+
+    res.status(500).json({ message: 'Failed to delete job.' });
+  }
+};
+

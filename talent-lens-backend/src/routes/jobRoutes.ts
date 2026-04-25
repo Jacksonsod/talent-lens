@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware';
-import { createJob, getJobById, getJobs, updateJob, updateJobStatus } from '../controllers/jobController';
+import { createJob, deleteJob, getJobById, getJobs, updateJob, updateJobStatus } from '../controllers/jobController';
 
 const router = Router();
 
@@ -11,6 +11,7 @@ router.get('/', getJobs);
 router.get('/:id', getJobById);
 router.put('/:id', updateJob);
 router.patch('/:id/status', updateJobStatus);
+router.delete('/:id', deleteJob);
 
 export default router;
 

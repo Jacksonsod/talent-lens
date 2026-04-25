@@ -17,6 +17,16 @@ import {
   ArrowRight,
   ChevronDown,
   TrendingUp,
+  Code2,
+  BrainCircuit,
+  PenTool,
+  Server,
+  BarChart2,
+  ShieldCheck,
+  Smartphone,
+  Database,
+  Globe,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -352,18 +362,30 @@ function StatBox({ label, value }: { label: string, value: string }) {
 }
 
 function JobRow({ job, shortlist, applicantsCount }: { job: Job, shortlist?: ScreeningResult[], applicantsCount: number }) {
-  const getIcon = (title: string) => {
+  const getJobIcon = (title: string) => {
     const t = title.toLowerCase();
-    if (t.includes("ai") || t.includes("ml")) return { e: "🤖", b: "#FEF9C3" };
-    if (t.includes("frontend") || t.includes("ui") || t.includes("design")) return { e: "🎨", b: "#FCE7F3" };
-    if (t.includes("backend")) return { e: "⚙️", b: "#DCFCE7" };
-    if (t.includes("full stack")) return { e: "💻", b: "#F3E8FF" };
-    if (t.includes("qa") || t.includes("test")) return { e: "🔍", b: "#ECFDF5" };
-    if (t.includes("design")) return { e: "✏️", b: "#FFEDD5" };
-    return { e: "📋", b: "#F3F4F6" };
+    if (t.includes("ai") || t.includes("ml") || t.includes("machine learning") || t.includes("llm"))
+      return { Icon: BrainCircuit, bg: "#7C3AED", color: "#ffffff", border: "#6D28D9" };
+    if (t.includes("design") || t.includes("ux") || t.includes("ui") || t.includes("figma"))
+      return { Icon: PenTool,     bg: "#E11D48", color: "#ffffff", border: "#BE123C" };
+    if (t.includes("mobile") || t.includes("ios") || t.includes("android") || t.includes("react native"))
+      return { Icon: Smartphone,  bg: "#EA580C", color: "#ffffff", border: "#C2410C" };
+    if (t.includes("data") || t.includes("analyst") || t.includes("analytics") || t.includes("qa") || t.includes("test"))
+      return { Icon: BarChart2,   bg: "#D97706", color: "#ffffff", border: "#B45309" };
+    if (t.includes("backend") || t.includes("back-end") || t.includes("server") || t.includes("node"))
+      return { Icon: Server,      bg: "#16A34A", color: "#ffffff", border: "#15803D" };
+    if (t.includes("security") || t.includes("cyber"))
+      return { Icon: ShieldCheck, bg: "#0D9488", color: "#ffffff", border: "#0F766E" };
+    if (t.includes("database") || t.includes("dba"))
+      return { Icon: Database,    bg: "#2563EB", color: "#ffffff", border: "#1D4ED8" };
+    if (t.includes("full stack") || t.includes("fullstack") || t.includes("engineer") || t.includes("developer"))
+      return { Icon: Code2,       bg: "#2563EB", color: "#ffffff", border: "#1D4ED8" };
+    if (t.includes("web") || t.includes("frontend") || t.includes("front-end"))
+      return { Icon: Globe,       bg: "#0284C7", color: "#ffffff", border: "#0369A1" };
+    return { Icon: Briefcase,     bg: "#475569", color: "#ffffff", border: "#334155" };
   };
 
-  const { e: emoji, b: bg } = getIcon(job.roleTitle);
+  const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
   const topScore = shortlist && shortlist.length > 0 
     ? Math.max(...shortlist.map(r => r.matchScore)) 
     : null;
@@ -377,10 +399,10 @@ function JobRow({ job, shortlist, applicantsCount }: { job: Job, shortlist?: Scr
   return (
     <div className="flex items-center gap-3 py-4 group hover:bg-gray-50/80 -mx-4 px-4 transition-all border-b border-gray-100 last:border-0">
       <div 
-        className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center shrink-0 border border-gray-200/50 shadow-sm"
-        style={{ backgroundColor: bg }}
+        className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center shrink-0 shadow-sm"
+        style={{ background: bg, border: `1.5px solid ${border}` }}
       >
-        <span className="text-lg">{emoji}</span>
+        <Icon size={18} color={color} strokeWidth={1.8} />
       </div>
 
       <div className="flex-1 min-w-0">

@@ -10,7 +10,7 @@ import { useDropzone } from "react-dropzone";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown, Zap } from "lucide-react";
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      import { UploadCloud, FileText, X, Database, Wand2, UserPlus, Download, CheckCircle, ChevronDown, Zap, TrendingUp, Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ProfileWizardModal from "@/components/profile/ProfileWizardModal";
 
@@ -339,7 +339,9 @@ export default function UploadPage() {
 
           {/* Upload Summary */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
-            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">📈 Upload Summary</div>
+            <div className="font-display font-bold text-[13px] flex items-center gap-2 mb-3 text-slate-900">
+              <TrendingUp size={16} className="text-red-400" strokeWidth={2} /> Upload Summary
+            </div>
             {[
               { label: "Ready to upload", val: mode === "pdf" ? files.length : parsedPreview.length, color: "text-blue-600" },
               { label: "Successfully added", val: doneCount, color: "text-emerald-600" },
@@ -357,7 +359,9 @@ export default function UploadPage() {
 
           {/* Tips */}
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-[17px_19px]">
-            <div className="font-display font-bold text-[13px] flex items-center gap-1.5 mb-3">💡 Upload Tips</div>
+            <div className="font-display font-bold text-[13px] flex items-center gap-2 mb-3 text-slate-900">
+              <Lightbulb size={16} className="text-amber-400" fill="currentColor" strokeWidth={1} /> Upload Tips
+            </div>
             {[
               "PDFs with text content extract better than scanned images",
               "CSV must include firstName, lastName, email, skills",
