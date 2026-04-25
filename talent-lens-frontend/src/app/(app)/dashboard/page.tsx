@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { fetchJobs } from "@/lib/slices/jobsSlice";
+import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
 import { fetchShortlist, screenAll } from "@/lib/slices/screeningSlice";
 import { Job, ScreeningResult } from "@/lib/types";
 import { timeAgo, getInitials } from "@/lib/utils/helpers";
@@ -26,7 +27,7 @@ import {
   Smartphone,
   Database,
   Globe,
-  Briefcase,
+  ScrollText,
 } from "lucide-react";
 import Link from "next/link";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -41,12 +42,15 @@ export default function DashboardPage() {
   const { shortlists } = useAppSelector((s) => s.screening);
   const { data: user } = useAppSelector((s) => s.profile);
   const { searchTerm } = useAppSelector((s) => s.ui);
+  // Real applicant data from Redux
+  const allApplicants = useAppSelector((s) => s.applicants.items);
 
   useEffect(() => {
     dispatch(fetchJobs()).then((action) => {
       if (fetchJobs.fulfilled.match(action)) {
-        // Fetch shortlists for all jobs to populate metrics
+        // Fetch shortlists AND applicants for all jobs to populate metrics
         action.payload.forEach((job: Job) => {
+          dispatch(fetchApplicantsByJob(job._id));
           if (job.status === "Closed" || job.status === "Screening") {
             dispatch(fetchShortlist(job._id));
           }
@@ -72,13 +76,30 @@ export default function DashboardPage() {
     ? [...allResults].sort((a, b) => b.matchScore - a.matchScore)[0]
     : null;
 
-  // Pipeline Metrics
-  // Since real counts aren't available, we estimate/mock as requested
-  const appliedCount = totalJobs * 12 + 42; // Fallback estimate
+  // Pipeline Metrics — real applicant count from Redux
+  const appliedCount = allApplicants.length;
   const screenedCount = allResults.length;
   const shortlistedCount = screenedCount;
   const reviewedCount = 0;
   const hiredCount = 0;
+
+  // Avg time to screen — computed from job.createdAt vs first screeningResult.createdAt
+  const avgScreenDays = (() => {
+    const diffs: number[] = [];
+    jobs.forEach(job => {
+      const results = shortlists[job._id];
+      if (results && results.length > 0) {
+        const earliest = results.reduce((min, r) =>
+          new Date(r.createdAt).getTime() < new Date(min.createdAt).getTime() ? r : min
+        );
+        const diffMs = new Date(earliest.createdAt).getTime() - new Date(job.createdAt).getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        if (diffDays >= 0) diffs.push(diffDays);
+      }
+    });
+    if (diffs.length === 0) return null;
+    return (diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(1);
+  })();
 
   // ─── Attention Logic ────────────────────────
   const attentionItems = [];
@@ -198,7 +219,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-3 pt-4 border-t border-gray-100">
-              <StatBox label="Avg time to screen" value="6.8d" />
+              <StatBox label="Avg time to screen" value={avgScreenDays ? `${avgScreenDays}d` : "—"} />
               <StatBox label="Shortlist rate" value={appliedCount > 0 ? `${Math.round((shortlistedCount/appliedCount)*100)}%` : "—"} />
               <StatBox label="Hire rate" value="—" />
               <StatBox label="Avg AI score" value={avgMatchScore ? `${avgMatchScore}%` : "—"} />
@@ -224,7 +245,7 @@ export default function DashboardPage() {
                     key={job._id} 
                     job={job} 
                     shortlist={shortlists[job._id]}
-                    applicantsCount={2}
+                    applicantsCount={allApplicants.filter(a => a.jobId === job._id).length}
                   />
                 ))
               ) : (
@@ -382,7 +403,7 @@ function JobRow({ job, shortlist, applicantsCount }: { job: Job, shortlist?: Scr
       return { Icon: Code2,       bg: "#2563EB", color: "#ffffff", border: "#1D4ED8" };
     if (t.includes("web") || t.includes("frontend") || t.includes("front-end"))
       return { Icon: Globe,       bg: "#0284C7", color: "#ffffff", border: "#0369A1" };
-    return { Icon: Briefcase,     bg: "#475569", color: "#ffffff", border: "#334155" };
+    return { Icon: ScrollText,    bg: "#475569", color: "#ffffff", border: "#334155" };
   };
 
   const { Icon, bg, color, border } = getJobIcon(job.roleTitle);
@@ -417,7 +438,7 @@ function JobRow({ job, shortlist, applicantsCount }: { job: Job, shortlist?: Scr
           </span>
         </div>
         <div className="text-[11px] text-gray-500 mb-2">
-          {timeAgo(job.createdAt)} · {applicantsCount} applicants · Shortlist: {job.shortlistSize}
+          {timeAgo(job.createdAt)} · {applicantsCount} applicant{applicantsCount !== 1 ? 's' : ''} · Shortlist: {job.shortlistSize}
         </div>
         <div className="flex gap-1">
           <div className="h-[3px] rounded-full flex-1 bg-blue-500" />
@@ -563,7 +584,9 @@ function TopCandidatesCard({ results, jobs }: { results: ScreeningResult[], jobs
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-[13px] truncate" style={{ color: "var(--text2)" }}>{name}</div>
-                <div className="text-[10px] text-gray-500 truncate">{role} · 5yr</div>
+                <div className="text-[10px] text-gray-500 truncate">
+                  {role} · {applicant && typeof applicant === 'object' && 'yearsOfExperience' in applicant ? `${(applicant as any).yearsOfExperience}yr` : '—'}
+                </div>
               </div>
               <div 
                 style={{ fontFamily: BRICOLAGE, fontWeight: 800, fontSize: "16px" }}

@@ -20,16 +20,45 @@ import {
   GraduationCap
 } from "lucide-react";
 
+// Keyword map: keys are lowercase substrings to match against the job title.
+// More specific multi-word keys are listed first to get priority over shorter ones.
 const SKILL_SUGGESTIONS: Record<string, string[]> = {
   'full stack': ['React', 'Next.js', 'Node.js', 'TypeScript', 'MongoDB', 'REST API', 'Git', 'Docker'],
   'frontend': ['React', 'Next.js', 'Tailwind CSS', 'TypeScript', 'Redux', 'Figma', 'Jest', 'Vite'],
+  'front-end': ['React', 'Next.js', 'Tailwind CSS', 'TypeScript', 'Redux', 'Figma', 'Jest', 'Vite'],
+  'react': ['React', 'Next.js', 'TypeScript', 'Redux', 'Tailwind CSS', 'Jest', 'Vite', 'REST API'],
+  'vue': ['Vue.js', 'Nuxt.js', 'TypeScript', 'Pinia', 'Tailwind CSS', 'Vite', 'Jest', 'REST API'],
+  'angular': ['Angular', 'TypeScript', 'RxJS', 'NgRx', 'SCSS', 'Jest', 'REST API', 'Git'],
   'backend': ['Node.js', 'TypeScript', 'MongoDB', 'PostgreSQL', 'REST API', 'Docker', 'Auth/JWT', 'Redis'],
-  'ai': ['Python', 'PyTorch', 'TensorFlow', 'LLM', 'Prompt Engineering', 'RAG', 'FastAPI'],
-  'ml': ['Python', 'scikit-learn', 'PyTorch', 'Pandas', 'NumPy', 'MLflow', 'Data Pipelines', 'SQL'],
-  'designer': ['Figma', 'UX Research', 'Prototyping', 'Design Systems', 'User Testing', 'Adobe XD'],
-  'devops': ['Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Terraform', 'Linux', 'GitHub Actions', 'Monitoring'],
-  'qa': ['Selenium', 'Cypress', 'Jest', 'Test Planning', 'Bug Tracking', 'Postman', 'Automation', 'JIRA'],
+  'back-end': ['Node.js', 'TypeScript', 'MongoDB', 'PostgreSQL', 'REST API', 'Docker', 'Auth/JWT', 'Redis'],
+  'node': ['Node.js', 'Express.js', 'TypeScript', 'MongoDB', 'PostgreSQL', 'REST API', 'Docker', 'Jest'],
+  'python': ['Python', 'FastAPI', 'Django', 'PostgreSQL', 'Docker', 'REST API', 'Celery', 'Redis'],
+  'django': ['Python', 'Django', 'PostgreSQL', 'REST API', 'Docker', 'Celery', 'Redis', 'AWS'],
+  'java': ['Java', 'Spring Boot', 'Maven', 'PostgreSQL', 'Docker', 'Kubernetes', 'REST API', 'JUnit'],
+  'golang': ['Go', 'gRPC', 'Docker', 'Kubernetes', 'PostgreSQL', 'REST API', 'Git', 'Microservices'],
+  'machine learning': ['Python', 'scikit-learn', 'PyTorch', 'TensorFlow', 'Pandas', 'NumPy', 'MLflow', 'SQL'],
+  'data scientist': ['Python', 'R', 'scikit-learn', 'Pandas', 'NumPy', 'Tableau', 'SQL', 'Jupyter'],
+  'data engineer': ['SQL', 'Python', 'Spark', 'Airflow', 'ETL', 'dbt', 'BigQuery', 'Data Modeling'],
+  'data analyst': ['SQL', 'Python', 'Tableau', 'Power BI', 'Excel', 'ETL', 'Looker', 'Data Modeling'],
   'data': ['SQL', 'Python', 'Tableau', 'Power BI', 'ETL', 'Spark', 'Airflow', 'Data Modeling'],
+  'artificial intelligence': ['Python', 'PyTorch', 'TensorFlow', 'LLM', 'Prompt Engineering', 'RAG', 'FastAPI', 'Hugging Face'],
+  'llm': ['Python', 'LangChain', 'LLM', 'Prompt Engineering', 'RAG', 'FastAPI', 'OpenAI API', 'Hugging Face'],
+  'devops': ['Docker', 'Kubernetes', 'CI/CD', 'AWS', 'Terraform', 'Linux', 'GitHub Actions', 'Monitoring'],
+  'cloud': ['AWS', 'GCP', 'Azure', 'Terraform', 'Docker', 'Kubernetes', 'CI/CD', 'Linux'],
+  'sre': ['Linux', 'Kubernetes', 'Docker', 'Prometheus', 'Grafana', 'CI/CD', 'AWS', 'Incident Management'],
+  'mobile': ['React Native', 'Flutter', 'TypeScript', 'iOS', 'Android', 'Firebase', 'REST API', 'Git'],
+  'ios': ['Swift', 'SwiftUI', 'Objective-C', 'Xcode', 'Core Data', 'REST API', 'Git', 'TestFlight'],
+  'android': ['Kotlin', 'Java', 'Android SDK', 'Jetpack Compose', 'Room', 'REST API', 'Git', 'Firebase'],
+  'flutter': ['Flutter', 'Dart', 'Firebase', 'REST API', 'BLoC', 'GetX', 'Git', 'Android/iOS'],
+  'designer': ['Figma', 'UX Research', 'Prototyping', 'Design Systems', 'User Testing', 'Adobe XD', 'Zeplin', 'Sketch'],
+  'ux': ['Figma', 'UX Research', 'Prototyping', 'Usability Testing', 'Wireframing', 'Adobe XD', 'Design Systems', 'Sketch'],
+  'ui': ['Figma', 'Design Systems', 'CSS/SCSS', 'Prototyping', 'Adobe XD', 'Zeplin', 'Responsive Design', 'Sketch'],
+  'product manager': ['Product Roadmap', 'Agile/Scrum', 'Jira', 'User Stories', 'A/B Testing', 'SQL', 'Figma', 'Stakeholder Mgmt'],
+  'scrum': ['Agile', 'Scrum', 'Jira', 'Confluence', 'Sprint Planning', 'Backlog Grooming', 'Stakeholder Mgmt', 'KPIs'],
+  'security': ['OWASP', 'Pen Testing', 'SIEM', 'Network Security', 'AWS Security', 'Cryptography', 'Incident Response', 'IAM'],
+  'qa engineer': ['Selenium', 'Cypress', 'Jest', 'Test Planning', 'Postman', 'JIRA', 'Automation', 'Playwright'],
+  'quality assurance': ['Selenium', 'Cypress', 'Jest', 'Test Planning', 'Postman', 'JIRA', 'Automation', 'Playwright'],
+  'blockchain': ['Solidity', 'Web3.js', 'Ethereum', 'Smart Contracts', 'Hardhat', 'IPFS', 'DeFi', 'TypeScript'],
 };
 
 interface JobFormProps {
@@ -106,6 +135,7 @@ export default function JobForm({ initialData, mode = "create", jobId }: JobForm
 
     if (matched && formData.roleTitle.length > 4) {
       setCurrentSuggestions(matched);
+      setShowChips(false); // Always reset so the banner re-appears on title change
     } else {
       setCurrentSuggestions([]);
       setShowChips(false);

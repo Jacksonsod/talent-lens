@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Job } from "@/lib/types";
-import { X, Briefcase, Calendar, Users, Target, CheckCircle2, ChevronRight, FileText, Settings, Loader2 } from "lucide-react";
+import { X, ScrollText, Calendar, Users, Target, CheckCircle2, ChevronRight, FileText, Settings, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks/redux";
 import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
@@ -66,7 +66,7 @@ export default function JobDetailsModal({ job, isOpen, onClose }: JobDetailsModa
           
           <div className="flex flex-wrap gap-4 text-sm font-medium text-blue-100">
             <div className="flex items-center gap-1.5">
-              <Briefcase size={16} />
+              <ScrollText size={16} />
               {job.experienceLevel}
             </div>
             <div className="flex items-center gap-1.5">

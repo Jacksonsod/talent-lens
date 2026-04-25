@@ -7,7 +7,7 @@ import { fetchJobById } from "@/lib/slices/jobsSlice";
 import { fetchShortlist, screenAll, resetScreeningState } from "@/lib/slices/screeningSlice";
 import StatCard from "@/components/ui/StatCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Briefcase, Users, Zap, Upload, ExternalLink } from "lucide-react";
+import { ScrollText, Users, Zap, Upload, ExternalLink } from "lucide-react";
 import ScreeningModal from "@/components/ui/ScreeningModal";
 import Link from "next/link";
 
@@ -42,7 +42,7 @@ export default function JobDetailsPage() {
               {job.roleTitle}
             </h1>
             <div className="flex items-center gap-4 text-sm" style={{ color: "var(--text3)" }}>
-              <span className="flex items-center gap-1.5"><Briefcase size={14}/> Engineering</span>
+              <span className="flex items-center gap-1.5"><ScrollText size={14}/> Engineering</span>
               <span className="flex items-center gap-1.5"><Users size={14}/> Active Requisition</span>
               <span className="px-2 py-0.5 rounded bg-[var(--surface3)] text-[10px] font-bold uppercase tracking-wider">
                 {job.status}

@@ -9,7 +9,7 @@ import { fetchJobs } from "@/lib/slices/jobsSlice";
 import { fetchApplicantsByJob } from "@/lib/slices/applicantsSlice";
 import { fetchShortlist } from "@/lib/slices/screeningSlice";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import { Search, Plus, Briefcase, CheckCircle2, Users, SlidersHorizontal } from "lucide-react";
+import { Search, Plus, ScrollText, CheckCircle2, Users, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { Job } from "@/lib/types";
 
@@ -80,7 +80,7 @@ export default function JobsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Briefcase size={22} />
+            <ScrollText size={22} />
           </div>
           <div>
             <div className="text-2xl font-black">{activeJobs.length}</div>
@@ -89,7 +89,7 @@ export default function JobsPage() {
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Briefcase size={22} />
+            <ScrollText size={22} />
           </div>
           <div>
             <div className="text-2xl font-black">{draftJobs.length}</div>

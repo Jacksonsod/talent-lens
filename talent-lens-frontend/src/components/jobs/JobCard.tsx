@@ -16,7 +16,7 @@ import {
   Smartphone,
   Database,
   Globe,
-  Briefcase,
+  ScrollText,
   MoreVertical,
   Pencil,
   Trash2,
@@ -74,7 +74,7 @@ function getJobIcon(title: string): IconConfig {
     return { Icon: Code2,       bg: "#2563EB", color: "#ffffff", border: "#1D4ED8" };
   if (t.includes("web") || t.includes("frontend") || t.includes("front-end"))
     return { Icon: Globe,       bg: "#0284C7", color: "#ffffff", border: "#0369A1" };
-  return { Icon: Briefcase,     bg: "#475569", color: "#ffffff", border: "#334155" };
+  return { Icon: ScrollText,    bg: "#475569", color: "#ffffff", border: "#334155" };
 }
 
 export default function JobCard({ job, mode = "default", onViewDetails }: JobCardProps) {
